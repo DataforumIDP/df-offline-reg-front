@@ -22,6 +22,10 @@ const ExportImportSection = () => {
         <Button view="outlined" size="l">
           Выгрузка сканов
         </Button>
+
+        <Button view="outlined-danger" size="l">
+          Очистить список пользователей
+        </Button>
       </div>
     </Card>
   )

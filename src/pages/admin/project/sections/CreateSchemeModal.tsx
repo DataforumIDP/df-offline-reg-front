@@ -1,0 +1,251 @@
+import { Dialog, TextInput, Text, Checkbox, Select } from '@gravity-ui/uikit'
+import { useState } from 'react'
+import { useSnackbar } from 'notistack'
+import { useCreateSchemeMutation } from '@/hooks/mutations/useSchemeMutations'
+import ListItemsInput from './ListItemsInput'
+
+interface ListItem {
+  id: string
+  value: string
+  color: string
+}
+
+interface CreateSchemeModalProps {
+  open: boolean
+  onClose: () => void
+  projectId: string
+}
+
+const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps) => {
+  const { enqueueSnackbar } = useSnackbar()
+  const createMutation = useCreateSchemeMutation(projectId)
+
+  const [formData, setFormData] = useState({
+    label: '',
+    key: '',
+    type: 'text' as 'text' | 'list' | 'bool' | 'id' | 'img' | 'code',
+    uniq: false,
+    maxLength: '',
+    listItems: [] as ListItem[],
+    listMultiple: false,
+  })
+
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const handleClose = () => {
+    setFormData({
+      label: '',
+      key: '',
+      type: 'text',
+      uniq: false,
+      maxLength: '',
+      listItems: [],
+      listMultiple: false,
+    })
+    setErrors({})
+    onClose()
+  }
+
+  const handleSubmit = async () => {
+    const newErrors: Record<string, string> = {}
+
+    if (!formData.label.trim()) newErrors.label = 'Название обязательно'
+    if (!formData.key.trim()) newErrors.key = 'Ключ обязателен'
+    if (formData.type === 'text' && formData.maxLength && isNaN(Number(formData.maxLength))) {
+      newErrors.maxLength = 'Максимальная длина должна быть числом'
+    }
+    if (formData.type === 'list' && formData.listItems.length === 0) {
+      newErrors.listItems = 'Добавьте хотя бы один вариант для списка'
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      return
+    }
+
+    const config: any = {
+      type: formData.type,
+      uniq: formData.uniq,
+    }
+
+    if (formData.type === 'text' && formData.maxLength) {
+      config.maxLength = Number(formData.maxLength)
+    }
+
+    if (formData.type === 'list') {
+      config.listSettings = {
+        multiple: formData.listMultiple,
+        items: formData.listItems.map((item) => ({
+          value: item.value,
+          color: item.color,
+        })),
+      }
+    }
+
+    createMutation.mutate(
+      {
+        label: formData.label,
+        key: formData.key,
+        config,
+      },
+      {
+        onSuccess: () => {
+          enqueueSnackbar('Поле создано', { variant: 'success' })
+          handleClose()
+        },
+        onError: () => {
+          enqueueSnackbar('Ошибка при создании поля', { variant: 'error' })
+        },
+      }
+    )
+  }
+
+  return (
+    <Dialog open={open} onClose={handleClose} aria-labelledby="create-scheme-modal-title">
+      <Dialog.Header caption="Добавить поле" id="create-scheme-modal-title" />
+      <Dialog.Body>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Название поля */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--g-color-text-secondary)' }}>
+              Название поля *
+            </label>
+            <TextInput
+              placeholder="Например: Email"
+              value={formData.label}
+              onUpdate={(value: string) => {
+                setFormData({ ...formData, label: value })
+                setErrors({ ...errors, label: '' })
+              }}
+              error={!!errors.label}
+              size="l"
+            />
+            {errors.label && (
+              <Text variant="caption-2" color="danger" style={{ marginTop: '4px', display: 'block' }}>
+                {errors.label}
+              </Text>
+            )}
+          </div>
+
+          {/* Ключ для API */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--g-color-text-secondary)' }}>
+              Ключ (для API) *
+            </label>
+            <TextInput
+              placeholder="Например: email"
+              value={formData.key}
+              onUpdate={(value: string) => {
+                setFormData({ ...formData, key: value })
+                setErrors({ ...errors, key: '' })
+              }}
+              error={!!errors.key}
+              size="l"
+            />
+            {errors.key && (
+              <Text variant="caption-2" color="danger" style={{ marginTop: '4px', display: 'block' }}>
+                {errors.key}
+              </Text>
+            )}
+          </div>
+
+          {/* Тип данных */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--g-color-text-secondary)' }}>
+              Тип данных *
+            </label>
+            <Select
+              value={[formData.type]}
+              width={"max"}
+              onUpdate={(value) => {
+                if (value.length > 0) {
+                  setFormData({ ...formData, type: value[0] as any })
+                }
+              }}
+              options={[
+                { value: 'text', content: 'Текст' },
+                { value: 'list', content: 'Список' },
+                { value: 'bool', content: 'Чекбокс' },
+                { value: 'id', content: 'Идентификатор' },
+                { value: 'img', content: 'Изображение' },
+                { value: 'code', content: 'Код' },
+              ]}
+              size="l"
+            />
+          </div>
+
+          {/* Уникальное значение - только для text */}
+          {formData.type === 'text' && (
+            <Checkbox
+              checked={formData.uniq}
+              onUpdate={(checked) => setFormData({ ...formData, uniq: checked })}
+            >
+              Уникальное значение
+            </Checkbox>
+          )}
+
+          {/* Максимальная длина для типа text */}
+          {formData.type === 'text' && (
+            <div>
+              <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--g-color-text-secondary)' }}>
+                Максимальная длина
+              </label>
+              <TextInput
+                placeholder="Например: 128"
+                value={formData.maxLength}
+                onUpdate={(value: string) => {
+                  setFormData({ ...formData, maxLength: value })
+                  setErrors({ ...errors, maxLength: '' })
+                }}
+                error={!!errors.maxLength}
+                size="l"
+                type="number"
+              />
+              {errors.maxLength && (
+                <Text variant="caption-2" color="danger" style={{ marginTop: '4px', display: 'block' }}>
+                  {errors.maxLength}
+                </Text>
+              )}
+            </div>
+          )}
+
+          {/* Варианты для типа list */}
+          {formData.type === 'list' && (
+            <>
+              <Checkbox
+                checked={formData.listMultiple}
+                onUpdate={(checked) => setFormData({ ...formData, listMultiple: checked })}
+              >
+                Множественный выбор
+              </Checkbox>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', color: 'var(--g-color-text-secondary)' }}>
+                  Варианты списка *
+                </label>
+                <ListItemsInput
+                  items={formData.listItems}
+                  onItemsChange={(items) => {
+                    setFormData({ ...formData, listItems: items })
+                    setErrors({ ...errors, listItems: '' })
+                  }}
+                  error={!!errors.listItems}
+                  errorMessage={errors.listItems}
+                />
+              </div>
+            </>
+          )}
+        </div>
+      </Dialog.Body>
+      <Dialog.Footer
+        onClickButtonCancel={handleClose}
+        onClickButtonApply={handleSubmit}
+        textButtonCancel="Отмена"
+        textButtonApply="Создать"
+        propsButtonApply={{ loading: createMutation.isPending }}
+      />
+    </Dialog>
+  )
+}
+
+export default CreateSchemeModal

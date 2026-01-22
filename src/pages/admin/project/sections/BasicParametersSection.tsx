@@ -83,7 +83,7 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
     <Card style={{ padding: '24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <Text variant="header-2">Основные параметры</Text>
-        <Label theme={status.theme}>{status.label}</Label>
+        <Label size="s" theme={status.theme}>{status.label}</Label>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <FormInput

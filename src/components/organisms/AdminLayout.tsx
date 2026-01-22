@@ -1,36 +1,30 @@
 import { useState } from 'react'
 import { Outlet, useNavigate, useParams, useLocation } from 'react-router-dom'
-import { Button, Text } from '@gravity-ui/uikit'
+import { Button } from '@gravity-ui/uikit'
+import { AsideHeader, FooterItem, type MenuItem as AsideMenuItem } from '@gravity-ui/navigation'
 import {
-  Bars,
   Persons,
   Gear,
   ChartLine,
   FileText,
   ArrowRightFromSquare,
 } from '@gravity-ui/icons'
+import logoUrl from '../../assets/logo.svg?react'
 import styles from './AdminLayout.module.css'
 
-interface MenuItem {
-  id: string
-  label: string
-  icon: React.ReactNode
-  path: string
-}
-
 const AdminLayout = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [sidebarCompact, setSidebarCompact] = useState(false)
   const navigate = useNavigate()
   const { id: projectId } = useParams()
   const location = useLocation()
 
   // Меню для страницы проекта
-  const projectMenuItems: MenuItem[] = [
-    { id: 'participants', label: 'Участники', icon: <Persons />, path: `/admin/projects/${projectId}/participants` },
-    { id: 'stats', label: 'Статистика', icon: <ChartLine />, path: `/admin/projects/${projectId}/stats` },
-    { id: 'templates', label: 'Шаблоны', icon: <FileText />, path: `/admin/projects/${projectId}/templates` },
-    { id: 'hooks', label: 'Вебхуки', icon: <ArrowRightFromSquare />, path: `/admin/projects/${projectId}/hooks` },
-    { id: 'settings', label: 'Настройки', icon: <Gear />, path: `/admin/projects/${projectId}/settings` },
+  const projectMenuItems: AsideMenuItem[] = [
+    { id: 'participants', title: 'Участники', icon: Persons, onItemClick: () => navigate(`/admin/projects/${projectId}/participants`) },
+    { id: 'stats', title: 'Статистика', icon: ChartLine, onItemClick: () => navigate(`/admin/projects/${projectId}/stats`) },
+    { id: 'templates', title: 'Шаблоны', icon: FileText, onItemClick: () => navigate(`/admin/projects/${projectId}/templates`) },
+    { id: 'hooks', title: 'Вебхуки', icon: ArrowRightFromSquare, onItemClick: () => navigate(`/admin/projects/${projectId}/hooks`) },
+    { id: 'settings', title: 'Настройки', icon: Gear, onItemClick: () => navigate(`/admin/projects/${projectId}/settings`) },
   ]
 
   // Определяем, находимся ли мы на странице проекта
@@ -40,68 +34,75 @@ const AdminLayout = () => {
     navigate('/admin/projects')
   }
 
-  const handleMenuItemClick = (path: string) => {
-    navigate(path)
-  }
+  const currentMenuItems = isProjectPage 
+    ? projectMenuItems.map(item => ({
+        ...item,
+        current: item.id === location.pathname.split('/').pop()
+      }))
+    : []
 
-  const isActive = (path: string) => location.pathname === path
+  const footerMenuItems: AsideMenuItem[] = isProjectPage
+    ? [
+        { id: 'back', title: 'На главную', icon: ArrowRightFromSquare, onItemClick: () => navigate('/admin/projects') },
+      ]
+    : []
+
+  const handleRenderFooter = () => (
+    <div>
+      {footerMenuItems.map((item) => (
+        <FooterItem
+          id={item.id}
+          key={item.id}
+          icon={item.icon}
+          title={item.title}
+          onItemClick={handleLogoClick}
+        />
+      ))}
+    </div>
+  )
 
   return (
     <div className={styles.layout}>
-      {/* Header */}
-      <header className={styles.header}>
-        <div className={styles.headerLeft}>
-          {isProjectPage && (
-            <Button
-              view="flat"
-              size="l"
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className={styles.menuButton}
-            >
-              <Bars />
-            </Button>
+      {isProjectPage ? (
+        <AsideHeader
+          compact={sidebarCompact}
+          onChangeCompact={setSidebarCompact}
+          logo={{
+            icon: logoUrl,
+            text: 'REGA',
+            onClick: () => setSidebarCompact(!sidebarCompact),
+          }}
+          hideCollapseButton={true}
+          menuItems={currentMenuItems}
+          renderFooter={handleRenderFooter}
+          renderContent={() => (
+            <div className={styles.mainContent}>
+              <Outlet />
+            </div>
           )}
-          <Text
-            variant="header-1"
-            className={styles.logo}
-            onClick={handleLogoClick}
-            style={{ cursor: 'pointer' }}
-          >
-            REGA
-          </Text>
-        </div>
-        <div className={styles.headerRight}>
-          <Button view="flat" size="m">
-            Выйти
-          </Button>
-        </div>
-      </header>
-
-      <div className={styles.body}>
-        {/* Sidebar - только на страницах проекта */}
-        {isProjectPage && (
-          <aside className={`${styles.sidebar} ${sidebarCollapsed ? styles.collapsed : ''}`}>
-            <nav className={styles.nav}>
-              {projectMenuItems.map((item) => (
-                <button
-                  key={item.id}
-                  className={`${styles.navItem} ${isActive(item.path) ? styles.active : ''}`}
-                  onClick={() => handleMenuItemClick(item.path)}
-                  title={sidebarCollapsed ? item.label : undefined}
-                >
-                  <span className={styles.navIcon}>{item.icon}</span>
-                  {!sidebarCollapsed && <span className={styles.navLabel}>{item.label}</span>}
-                </button>
-              ))}
-            </nav>
-          </aside>
-        )}
-
-        {/* Main content */}
-        <main className={`${styles.main} ${isProjectPage && !sidebarCollapsed ? styles.withSidebar : ''} ${isProjectPage && sidebarCollapsed ? styles.withCollapsedSidebar : ''}`}>
-          <Outlet />
-        </main>
-      </div>
+        />
+      ) : (
+        <>
+          <header className={styles.header}>
+            <div className={styles.headerLeft}>
+              <div
+                className={styles.logo}
+                onClick={handleLogoClick}
+              >
+                REGA
+              </div>
+            </div>
+            <div className={styles.headerRight}>
+              <Button view="flat" size="m" icon={<ArrowRightFromSquare />}>
+                Выйти
+              </Button>
+            </div>
+          </header>
+          <main className={styles.mainContent}>
+            <Outlet />
+          </main>
+        </>
+      )}
     </div>
   )
 }

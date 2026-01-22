@@ -31,13 +31,11 @@
   gap: 12px;
 }
 
-.menuButton {
-  padding: 8px;
-}
-
 .logo {
+  font-size: 20px;
   font-weight: 700;
   user-select: none;
+  cursor: pointer;
   transition: opacity 0.2s;
 }
 
@@ -45,112 +43,20 @@
   opacity: 0.8;
 }
 
-/* Body */
-.body {
-  display: flex;
-  flex: 1;
-}
-
-/* Sidebar */
-.sidebar {
-  width: 240px;
-  background-color: var(--g-color-base-float);
-  border-right: 1px solid var(--g-color-line-generic);
-  transition: width 0.2s ease;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.sidebar.collapsed {
-  width: 56px;
-}
-
-.nav {
-  display: flex;
-  flex-direction: column;
-  padding: 8px;
-  gap: 4px;
-}
-
-.navItem {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border: none;
-  background: none;
-  border-radius: 8px;
+.logoIcon {
+  font-size: 20px;
+  font-weight: 700;
+  user-select: none;
   cursor: pointer;
-  color: var(--g-color-text-primary);
-  text-align: left;
-  width: 100%;
-  transition: background-color 0.15s;
-  white-space: nowrap;
+  outline: none;
 }
 
-.navItem:hover {
-  background-color: var(--g-color-base-simple-hover);
-}
-
-.navItem.active {
-  background-color: var(--g-color-base-selection);
-  color: var(--g-color-text-brand);
-}
-
-.navIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-}
-
-.navLabel {
-  font-size: 14px;
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.logoIcon:hover {
+  opacity: 0.8;
 }
 
 /* Main content */
-.main {
+.mainContent {
   flex: 1;
   overflow-y: auto;
-  min-height: calc(100vh - 56px);
-}
-
-.main.withSidebar {
-  /* Сайдбар открыт */
-}
-
-.main.withCollapsedSidebar {
-  /* Сайдбар свёрнут */
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .sidebar {
-    position: fixed;
-    top: 56px;
-    left: 0;
-    bottom: 0;
-    z-index: 99;
-    transform: translateX(-100%);
-    transition: transform 0.2s ease;
-  }
-
-  .sidebar:not(.collapsed) {
-    transform: translateX(0);
-  }
-
-  .sidebar.collapsed {
-    width: 56px;
-    transform: translateX(0);
-  }
-
-  .main.withSidebar,
-  .main.withCollapsedSidebar {
-    margin-left: 0;
-  }
 }
