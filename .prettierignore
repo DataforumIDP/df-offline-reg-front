@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.git/
+.next/
+out/
+build/
+.env.local
+.env.*.local
