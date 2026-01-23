@@ -1,6 +1,6 @@
 {
-  "name": "front.offline-registration",
-  "version": "0.0.1-a",
+  "name": "registration.front-web",
+  "version": "0.0.3-a",
   "type": "module",
   "main": "index.js",
   "license": "MIT",
@@ -11,7 +11,9 @@
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\""
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "prepare": "husky",
+    "version:bump": "node scripts/version-bump.cjs"
   },
   "dependencies": {
     "@gravity-ui/navigation": "^4.0.8",
@@ -40,6 +42,7 @@
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "husky": "^9.0.0",
     "prettier": "^3.1.1",
     "typescript": "^5.3.3",
     "vite": "^5.0.8",
