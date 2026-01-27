@@ -1,8 +1,9 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { fetchParticipants, fetchParticipantById, fetchParticipantLogs, fetchParticipantLogsStats, type ParticipantsQuery } from '@/services/api/participants'
 
 /**
  * Запрос списка участников проекта
+ * placeholderData: keepPreviousData - показывать старые данные пока загружаются новые
  */
 export const useParticipantsQuery = (projectId: number, params?: ParticipantsQuery) => {
   return useQuery({
@@ -10,6 +11,7 @@ export const useParticipantsQuery = (projectId: number, params?: ParticipantsQue
     queryFn: () => fetchParticipants(projectId, params),
     enabled: !!projectId,
     staleTime: 2 * 60 * 1000, // 2 минуты
+    placeholderData: keepPreviousData, // Показывать предыдущие данные во время загрузки
   })
 }
 

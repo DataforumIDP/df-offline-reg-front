@@ -20,6 +20,7 @@ export interface Project {
   description?: string
   dateStart: string
   dateEnd: string
+  isOperatorEditable?: boolean
   stats?: ProjectStats
   createdAt: string
   updatedAt: string

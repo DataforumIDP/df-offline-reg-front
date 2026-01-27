@@ -1,6 +1,6 @@
-import { Text, Card, Label } from '@gravity-ui/uikit'
+import { Text, Card, Label, Checkbox } from '@gravity-ui/uikit'
 import { FormInput } from '@/components/molecules'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSnackbar } from 'notistack'
 import { useUpdateProjectMutation } from '@/hooks/mutations/useProjectMutations'
 import { useDebounce } from '@/hooks'
@@ -35,6 +35,7 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
   const [title, setTitle] = useState('')
   const [slug, setSlug] = useState('')
   const [description, setDescription] = useState('')
+  const [isOperatorEditable, setIsOperatorEditable] = useState(false)
 
   // Дебаунс для каждого поля
   const debouncedTitle = useDebounce(title, 1000)
@@ -45,6 +46,7 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
     setTitle(project.title)
     setSlug(project.slug)
     setDescription(project.description || '')
+    setIsOperatorEditable(project.isOperatorEditable ?? false)
   }, [project])
 
   // Дебаунс обновление название
@@ -74,6 +76,19 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
       )
     }
   }, [debouncedDescription])
+
+  // Обновление права редактирования оператором
+  const handleOperatorEditableChange = useCallback((checked: boolean) => {
+    setIsOperatorEditable(checked)
+    updateMutation.mutate(
+      { id: project.id, data: { isOperatorEditable: checked } },
+      {
+        onSuccess: () => {
+          enqueueSnackbar('Сохранено', { variant: 'success' })
+        },
+      }
+    )
+  }, [project.id, updateMutation, enqueueSnackbar])
 
   const status = getProjectStatus(project.dateStart, project.dateEnd)
   const formattedDateStart = new Date(project.dateStart).toLocaleDateString('ru-RU')
@@ -139,6 +154,16 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
             size="l"
             readOnly
           />
+        </div>
+
+        <div style={{ marginTop: '8px' }}>
+          <Checkbox
+            checked={isOperatorEditable}
+            onUpdate={handleOperatorEditableChange}
+            size="l"
+          >
+            Разрешить операторам редактировать данные участников
+          </Checkbox>
         </div>
       </div>
     </Card>

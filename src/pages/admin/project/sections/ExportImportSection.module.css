@@ -1,0 +1,33 @@
+.uploadZone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  border: 2px dashed var(--g-color-line-generic);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 60px;
+}
+
+.uploadZone:hover {
+  border-color: var(--g-color-line-generic-hover);
+  background: var(--g-color-base-generic);
+}
+
+.uploadZone.dragging {
+  border-color: var(--g-color-base-info);
+  background: var(--g-color-base-info-light);
+}
+
+.uploadZone.uploading {
+  cursor: default;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.uploadLoader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}

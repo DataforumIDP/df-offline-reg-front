@@ -1,7 +1,8 @@
-import { Text, Button, Card, TextInput, Skeleton, Label } from '@gravity-ui/uikit'
-import { Plus, Magnifier, ChevronLeft, ChevronRight } from '@gravity-ui/icons'
+import { Text, Button, Card, Skeleton, Label } from '@gravity-ui/uikit'
+import { Plus, ChevronLeft, ChevronRight } from '@gravity-ui/icons'
 import { useState } from 'react'
 import { useProjectsQuery } from '@/hooks'
+import { SearchInput } from '@/components/atoms'
 import CreateProjectModal from '@/components/organisms/CreateProjectModal'
 
 // Определяем статус проекта (прошедший, идущий, будущий)
@@ -78,8 +79,8 @@ const ProjectsPage = () => {
                 </Button>
             </div>
 
-            <div style={{ marginBottom: '24px', maxWidth: '400px' }}>
-                <TextInput
+            <div style={{ marginBottom: '24px' }}>
+                <SearchInput
                     placeholder="Поиск проектов..."
                     value={search}
                     onUpdate={(newValue) => {
@@ -87,7 +88,7 @@ const ProjectsPage = () => {
                         setCurrentPage(1) // Сброс на первую страницу при поиске
                     }}
                     size="l"
-                    startContent={<Magnifier />}
+                    fullWidth
                 />
             </div>
 

@@ -18,6 +18,7 @@ export interface ParticipantsQuery {
   search?: string
   order?: string
   direction?: 'ASC' | 'DESC'
+  filters?: Record<string, string | string[]>
 }
 
 /**
@@ -27,8 +28,14 @@ export const fetchParticipants = (
   projectId: number,
   params?: ParticipantsQuery
 ): Promise<any> => {
+  // Преобразуем filters в JSON строку для передачи на бэкенд
+  const queryParams = params ? {
+    ...params,
+    filters: params.filters ? JSON.stringify(params.filters) : undefined
+  } : undefined
+  
   return apiClient
-    .get(`/projects/${projectId}/participants`, { params })
+    .get(`/projects/${projectId}/participants`, { params: queryParams })
     .then(res => res.data)
 }
 
@@ -46,7 +53,7 @@ export const fetchParticipantById = (projectId: number, participantId: number): 
  */
 export const fetchCreateParticipant = (
   projectId: number,
-  data: { data: ParticipantFieldValue }
+  data: ParticipantFieldValue
 ): Promise<Participant> => {
   return apiClient
     .post<Participant>(`/projects/${projectId}/participants`, data)
@@ -59,10 +66,10 @@ export const fetchCreateParticipant = (
 export const fetchUpdateParticipant = (
   projectId: number,
   participantId: number,
-  data: { data: ParticipantFieldValue }
+  data: ParticipantFieldValue
 ): Promise<Participant> => {
   return apiClient
-    .patch<Participant>(`/projects/${projectId}/participants/${participantId}`, data)
+    .put<Participant>(`/projects/${projectId}/participants/${participantId}`, data)
     .then(res => res.data)
 }
 
@@ -106,5 +113,79 @@ export const fetchParticipantLogsStats = (projectId: number): Promise<any> => {
 export const fetchParticipantActionLogs = (projectId: number, params?: any): Promise<any> => {
   return apiClient
     .get(`/projects/${projectId}/participants/log`, { params })
+    .then(res => res.data)
+}
+
+/**
+ * Скачать шаблон Excel для импорта
+ */
+export const fetchExcelTemplate = (projectId: number): Promise<Blob> => {
+  return apiClient
+    .get(`/projects/${projectId}/participants/excel`, { responseType: 'blob' })
+    .then(res => res.data)
+}
+
+/**
+ * Импортировать участников из Excel
+ */
+export interface ImportExcelError {
+  row: number
+  field: string
+  message: string
+}
+
+export interface ImportExcelResult {
+  success: boolean
+  imported?: number
+  message?: string
+  errors?: ImportExcelError[]
+}
+
+export const fetchImportExcel = (projectId: number, file: File): Promise<ImportExcelResult> => {
+  const formData = new FormData()
+  formData.append('file', file)
+  
+  return apiClient
+    .post<ImportExcelResult>(`/projects/${projectId}/participants/excel`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    .then(res => res.data)
+}
+
+/**
+ * Экспортировать участников в Excel
+ */
+export const fetchExportExcel = (
+  projectId: number,
+  params?: ParticipantsQuery
+): Promise<Blob> => {
+  const queryParams = params ? {
+    ...params,
+    filters: params.filters ? JSON.stringify(params.filters) : undefined
+  } : undefined
+  
+  return apiClient
+    .get(`/projects/${projectId}/participants/export`, { 
+      params: queryParams,
+      responseType: 'blob' 
+    })
+    .then(res => res.data)
+}
+
+/**
+ * Очистить всех участников проекта
+ */
+export interface ClearParticipantsResult {
+  success: boolean
+  deleted: {
+    participants: number
+    logs: number
+  }
+  message: string
+}
+
+export const fetchClearParticipants = (projectId: number): Promise<ClearParticipantsResult> => {
+  return apiClient
+    .delete<ClearParticipantsResult>(`/projects/${projectId}/participants`)
     .then(res => res.data)
 }

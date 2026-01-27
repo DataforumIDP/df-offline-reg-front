@@ -13,7 +13,7 @@ export const useCreateParticipantMutation = (projectId: number) => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: { data: ParticipantFieldValue }) =>
+    mutationFn: (data: ParticipantFieldValue) =>
       fetchCreateParticipant(projectId, data),
     onSuccess: () => {
       // Инвалидируем список участников
@@ -35,7 +35,7 @@ export const useUpdateParticipantMutation = (projectId: number) => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ participantId, data }: { participantId: number; data: { data: ParticipantFieldValue } }) =>
+    mutationFn: ({ participantId, data }: { participantId: number; data: ParticipantFieldValue }) =>
       fetchUpdateParticipant(projectId, participantId, data),
     onSuccess: (data) => {
       // Инвалидируем список участников и отдельный участника

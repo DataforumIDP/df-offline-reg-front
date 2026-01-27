@@ -25,6 +25,7 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
     key: '',
     type: 'text' as 'text' | 'list' | 'bool' | 'id' | 'img' | 'code',
     uniq: false,
+    optional: true, // по умолчанию поле необязательное
     maxLength: '',
     listItems: [] as ListItem[],
     listMultiple: false,
@@ -38,6 +39,7 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
       key: '',
       type: 'text',
       uniq: false,
+      optional: true,
       maxLength: '',
       listItems: [],
       listMultiple: false,
@@ -66,6 +68,7 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
     const config: any = {
       type: formData.type,
       uniq: formData.uniq,
+      optional: formData.optional,
     }
 
     if (formData.type === 'text' && formData.maxLength) {
@@ -173,6 +176,16 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
               size="l"
             />
           </div>
+
+          {/* Обязательное поле - для всех типов кроме id */}
+          {formData.type !== 'id' && (
+            <Checkbox
+              checked={!formData.optional}
+              onUpdate={(checked) => setFormData({ ...formData, optional: !checked })}
+            >
+              Обязательное поле
+            </Checkbox>
+          )}
 
           {/* Уникальное значение - только для text */}
           {formData.type === 'text' && (

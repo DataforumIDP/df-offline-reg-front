@@ -8,6 +8,7 @@ export interface SchemeField {
   config: {
     type: 'text' | 'list' | 'bool' | 'id' | 'img' | 'code'
     uniq: boolean
+    optional: boolean // true = необязательное, false = обязательное
     maxLength?: number
     listSettings?: {
       multiple: boolean

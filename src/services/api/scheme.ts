@@ -8,13 +8,13 @@ export interface ProjectSchemeField {
   config: {
     type: 'text' | 'list' | 'bool' | 'id' | 'img' | 'code'
     uniq: boolean
+    optional?: boolean
     maxLength?: number
     listSettings?: {
-      options: { label: string; value: string }[]
+      items: { value: string; color: string }[]
+      multiple?: boolean
     }
   }
-  createdAt: string
-  updatedAt: string
 }
 
 /**
