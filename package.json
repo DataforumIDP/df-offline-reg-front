@@ -1,6 +1,6 @@
 {
   "name": "registration.front-web",
-  "version": "0.0.4-a",
+  "version": "0.0.5-a",
   "type": "module",
   "main": "index.js",
   "license": "MIT",
@@ -25,6 +25,7 @@
     "axios": "^1.6.7",
     "date-fns": "^2.30.0",
     "file-saver": "^2.0.5",
+    "jspdf": "^4.0.0",
     "notistack": "^3.0.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

@@ -1,66 +1,283 @@
-import { Text, Button, Card, Select } from '@gravity-ui/uikit'
-import { Plus } from '@gravity-ui/icons'
-import { useParams } from 'react-router-dom'
 import { useState } from 'react'
+import { Text, Button, DropdownMenu, Modal, TextInput, RadioGroup, Slider } from '@gravity-ui/uikit'
+import { Plus, Printer, FolderOpen, FloppyDisk } from '@gravity-ui/icons'
+import { useParams } from 'react-router-dom'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
+import {
+  setCanvasWidth,
+  setCanvasHeight,
+  setZoom,
+  setSizeUnit,
+  selectElement,
+  TextFieldElement,
+} from '@/store/slices/templateEditorSlice'
+import { useParticipantsQuery } from '@/hooks/queries/useParticipantQueries'
+import { previewBadgePdf, PrintTemplate } from '@/services/printService'
+import AddTextFieldModal from './components/AddTextFieldModal'
+import CanvasTextField from './components/CanvasTextField'
+import ElementToolbar from './components/ElementToolbar'
+import ElementsList from './components/ElementsList'
+import styles from './TemplatesPage.module.css'
+
+// Конвертация мм <-> px при 300 DPI (стандарт для печати)
+const MM_TO_PX_RATIO = 300 / 25.4 // ≈ 11.81 px на 1 мм
+const mmToPx = (mm: number) => Math.round(mm * MM_TO_PX_RATIO)
+const pxToMm = (px: number) => Math.round((px / MM_TO_PX_RATIO) * 10) / 10
 
 const ProjectTemplatesPage = () => {
-  const { id: _projectId } = useParams()
-  const [selectedTemplate, setSelectedTemplate] = useState<string[]>([])
+  const { id: projectId } = useParams()
+  const dispatch = useAppDispatch()
+  
+  // Данные из стора
+  const { canvas, elements, selectedElementId, isDirty } = useAppSelector(state => state.templateEditor)
+  const { widthMm: canvasWidthMm, heightMm: canvasHeightMm, zoom, sizeUnit } = canvas
+  
+  // Запрос участников для пробной печати
+  const { data: participantsData } = useParticipantsQuery(
+    Number(projectId),
+    { page: 1, limit: 50 }
+  )
+  
+  // Состояния модалок
+  const [fieldModalOpen, setFieldModalOpen] = useState(false)
+  const [qrModalOpen, setQrModalOpen] = useState(false)
 
-  // TODO: Загрузка шаблонов из API
-  const templates = [
-    { value: '1', content: 'Стандартный бейдж' },
-    { value: '2', content: 'VIP бейдж' },
-    { value: '3', content: 'Бейдж спикера' },
-  ]
+  // Значения для отображения в зависимости от единиц
+  const displayWidth = sizeUnit === 'mm' ? canvasWidthMm : mmToPx(canvasWidthMm)
+  const displayHeight = sizeUnit === 'mm' ? canvasHeightMm : mmToPx(canvasHeightMm)
+
+  const handleWidthChange = (value: string) => {
+    const numValue = parseFloat(value) || 0
+    if (sizeUnit === 'mm') {
+      dispatch(setCanvasWidth(numValue))
+    } else {
+      dispatch(setCanvasWidth(pxToMm(numValue)))
+    }
+  }
+
+  const handleHeightChange = (value: string) => {
+    const numValue = parseFloat(value) || 0
+    if (sizeUnit === 'mm') {
+      dispatch(setCanvasHeight(numValue))
+    } else {
+      dispatch(setCanvasHeight(pxToMm(numValue)))
+    }
+  }
+
+  // Размер холста на экране (с учётом масштаба)
+  // Используем 96 DPI для отображения на экране
+  const screenPxPerMm = 96 / 25.4 // ≈ 3.78
+  const canvasDisplayWidth = canvasWidthMm * screenPxPerMm * (zoom / 100)
+  const canvasDisplayHeight = canvasHeightMm * screenPxPerMm * (zoom / 100)
+
+  // Фильтруем только текстовые элементы
+  const textElements = elements.filter((el): el is TextFieldElement => el.type === 'text')
+
+  // Клик по холсту - снять выделение
+  const handleCanvasClick = () => {
+    dispatch(selectElement(null))
+  }
+
+  // Пробная печать - выбираем случайного участника и открываем PDF
+  const handleTestPrint = async () => {
+    const participants = participantsData?.records || []
+    
+    if (participants.length === 0) {
+      alert('В проекте нет участников для пробной печати')
+      return
+    }
+    
+    if (elements.length === 0) {
+      alert('Добавьте хотя бы один элемент в шаблон')
+      return
+    }
+    
+    // Выбираем случайного участника
+    const randomIndex = Math.floor(Math.random() * participants.length)
+    const participant = participants[randomIndex]
+    
+    // Формируем шаблон и данные
+    const template: PrintTemplate = {
+      widthMm: canvasWidthMm,
+      heightMm: canvasHeightMm,
+      elements: elements,
+    }
+    
+    try {
+      await previewBadgePdf(template, participant.data)
+    } catch (err) {
+      console.error('Preview error:', err)
+      alert(`Ошибка при генерации PDF: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    }
+  }
+
+  // Временно для отладки
+  console.log('Elements:', elements, 'Selected:', selectedElementId, 'Dirty:', isDirty)
 
   return (
-    <div style={{ padding: '24px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <Text variant="display-1">Шаблоны печати</Text>
-        <Button view="action" size="l">
-          <Button.Icon>
-            <Plus />
-          </Button.Icon>
-          Создать шаблон
-        </Button>
-      </div>
-
-      <Card style={{ padding: '24px', maxWidth: '600px', marginBottom: '24px' }}>
-        <Text variant="header-1" style={{ marginBottom: '16px', display: 'block' }}>
-          Активный шаблон проекта
+    <div className={styles.page}>
+      <div className={styles.header}>
+        <Text variant="display-1">
+          Шаблоны печати
         </Text>
-        <Select
-          placeholder="Выберите шаблон"
-          options={templates}
-          value={selectedTemplate}
-          onUpdate={setSelectedTemplate}
-          size="l"
-          width="max"
-        />
-        <Button view="action" size="l" style={{ marginTop: '16px' }}>
-          Сохранить
-        </Button>
-      </Card>
-
-      <Text variant="header-1" style={{ marginBottom: '16px', display: 'block' }}>
-        Все шаблоны
-      </Text>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '16px' }}>
-        {templates.map((template) => (
-          <Card key={template.value} style={{ padding: '20px' }}>
-            <Text variant="header-2">{template.content}</Text>
-            <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
-              <Button view="outlined" size="m">
-                Редактировать
-              </Button>
-              <Button view="outlined-danger" size="m">
-                Удалить
-              </Button>
-            </div>
-          </Card>
-        ))}
+        <div className={styles.headerActions}>
+          <Button view="outlined" size="l" onClick={handleTestPrint}>
+            <Button.Icon>
+              <Printer />
+            </Button.Icon>
+            Пробная печать
+          </Button>
+          <Button view="outlined" size="l" onClick={() => console.log('Выбрать шаблон')}>
+            <Button.Icon>
+              <FolderOpen />
+            </Button.Icon>
+            Выбрать шаблон
+          </Button>
+          <Button view="action" size="l" onClick={() => console.log('Сохранить')}>
+            <Button.Icon>
+              <FloppyDisk />
+            </Button.Icon>
+            Сохранить
+          </Button>
+        </div>
       </div>
+
+      <div className={styles.editor}>
+        {/* Тулбар */}
+        <div className={styles.toolbar}>
+          <ElementToolbar />
+        </div>
+
+        {/* Основная секция */}
+        <div className={styles.main}>
+          {/* Холст */}
+          <div className={styles.canvasWrapper}>
+            <div className={styles.canvas}>
+              <div 
+                className={styles.canvasArea}
+                style={{
+                  width: canvasDisplayWidth,
+                  height: canvasDisplayHeight,
+                }}
+                onClick={handleCanvasClick}
+              >
+                {textElements.length === 0 ? (
+                  <Text variant="caption-2" color="secondary">
+                    {canvasWidthMm}×{canvasHeightMm} мм
+                  </Text>
+                ) : (
+                  textElements.map((element) => (
+                    <CanvasTextField
+                      key={element.id}
+                      element={element}
+                      screenPxPerMm={screenPxPerMm}
+                      zoom={zoom}
+                      canvasWidthMm={canvasWidthMm}
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Футер холста */}
+            <div className={styles.canvasFooter}>
+              <div className={styles.sizeControls}>
+                <Text variant="body-2">Размер:</Text>
+                <TextInput
+                  value={String(displayWidth)}
+                  onUpdate={handleWidthChange}
+                  size="s"
+                  className={styles.sizeInput}
+                />
+                <Text variant="body-2">×</Text>
+                <TextInput
+                  value={String(displayHeight)}
+                  onUpdate={handleHeightChange}
+                  size="s"
+                  className={styles.sizeInput}
+                />
+                <RadioGroup
+                  value={sizeUnit}
+                  onUpdate={(value) => dispatch(setSizeUnit(value as 'mm' | 'px'))}
+                  size="m"
+                  options={[
+                    { value: 'mm', content: 'мм' },
+                    { value: 'px', content: 'px' },
+                  ]}
+                />
+              </div>
+
+              <div className={styles.zoomControls}>
+                <Text variant="body-2">Масштаб:</Text>
+                <Slider
+                  value={zoom}
+                  onUpdate={(value) => dispatch(setZoom(value))}
+                  min={50}
+                  max={150}
+                  step={10}
+                  className={styles.zoomSlider}
+                />
+                <Text variant="body-2" className={styles.zoomValue}>
+                  {zoom}%
+                </Text>
+              </div>
+            </div>
+          </div>
+
+          {/* Сайдбар */}
+          <div className={styles.sidebar}>
+            <DropdownMenu
+              items={[
+                {
+                  text: 'Текстовое поле',
+                  action: () => setFieldModalOpen(true),
+                },
+                {
+                  text: 'QR-код',
+                  action: () => setQrModalOpen(true),
+                },
+              ]}
+              menuProps={{style: { width: '200px' }}}
+              switcherWrapperClassName={styles.dropdownWrapper}
+              switcher={
+                <Button view="outlined-action" size="l" width="max">
+                  <Button.Icon>
+                    <Plus />
+                  </Button.Icon>
+                  Добавить
+                </Button>
+              }
+            />
+
+            <ElementsList />
+          </div>
+        </div>
+      </div>
+
+      {/* Модалка добавления поля */}
+      <AddTextFieldModal
+        open={fieldModalOpen}
+        onClose={() => setFieldModalOpen(false)}
+      />
+
+      {/* Модалка добавления QR */}
+      <Modal open={qrModalOpen} onClose={() => setQrModalOpen(false)}>
+        <div className={styles.modal}>
+          <Text variant="header-1">Добавить QR-код</Text>
+          <Text variant="body-1" color="secondary" style={{ marginTop: '16px' }}>
+            Настройки QR-кода будут здесь
+          </Text>
+          <div className={styles.modalActions}>
+            <Button view="flat" size="l" onClick={() => setQrModalOpen(false)}>
+              Отмена
+            </Button>
+            <Button view="action" size="l" onClick={() => setQrModalOpen(false)}>
+              Добавить
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
     </div>
   )
 }

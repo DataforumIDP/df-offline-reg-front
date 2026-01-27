@@ -7,8 +7,9 @@ import 'yet-another-react-lightbox/styles.css'
 import type { SchemeField } from '@/hooks/queries/useSchemeQueries'
 import { useParticipantQuery } from '@/hooks/queries/useParticipantQueries'
 import { useProjectQuery } from '@/hooks/queries/useProjectQueries'
-import { useUpdateParticipantMutation, useDeleteParticipantMutation, usePrintParticipantMutation } from '@/hooks/mutations/useParticipantMutations'
+import { useUpdateParticipantMutation, useDeleteParticipantMutation } from '@/hooks/mutations/useParticipantMutations'
 import { useAppSelector } from '@/store/hooks'
+import { previewBadgePdf, PrintTemplate } from '@/services/printService'
 import { UserRole } from '@/types/auth'
 import { ConfirmDeleteModal } from './ConfirmDeleteModal'
 
@@ -147,6 +148,7 @@ export const ParticipantModal = ({
 }: ParticipantModalProps) => {
   const { enqueueSnackbar } = useSnackbar()
   const user = useAppSelector((state) => state.auth.user)
+  const templateEditor = useAppSelector((state) => state.templateEditor)
   
   // Запросы
   const { data: participant, isLoading: participantLoading } = useParticipantQuery(
@@ -158,7 +160,9 @@ export const ParticipantModal = ({
   // Мутации
   const updateMutation = useUpdateParticipantMutation(Number(projectId))
   const deleteMutation = useDeleteParticipantMutation(Number(projectId))
-  const printMutation = usePrintParticipantMutation(Number(projectId))
+  
+  // Состояние печати
+  const [isPrinting, setIsPrinting] = useState(false)
 
   // Состояние формы
   const [formData, setFormData] = useState<Record<string, any>>({})
@@ -193,18 +197,33 @@ export const ParticipantModal = ({
     onClose()
   }, [onClose])
 
-  const handlePrint = useCallback(() => {
-    if (!participantId) return
+  const handlePrint = useCallback(async () => {
+    if (!participant) return
     
-    printMutation.mutate(participantId, {
-      onSuccess: () => {
-        enqueueSnackbar('Печать запущена', { variant: 'success' })
-      },
-      onError: () => {
-        enqueueSnackbar('Ошибка при печати', { variant: 'error' })
-      },
-    })
-  }, [participantId, printMutation, enqueueSnackbar])
+    const { canvas, elements } = templateEditor
+    
+    if (elements.length === 0) {
+      enqueueSnackbar('Добавьте элементы в шаблон печати', { variant: 'warning' })
+      return
+    }
+    
+    setIsPrinting(true)
+    
+    try {
+      const template: PrintTemplate = {
+        widthMm: canvas.widthMm,
+        heightMm: canvas.heightMm,
+        elements: elements,
+      }
+      
+      await previewBadgePdf(template, participant.data)
+    } catch (err) {
+      console.error('Print error:', err)
+      enqueueSnackbar('Ошибка при генерации PDF', { variant: 'error' })
+    } finally {
+      setIsPrinting(false)
+    }
+  }, [participant, templateEditor, enqueueSnackbar])
 
   const handleSubmit = useCallback(async () => {
     if (!participantId) return
@@ -472,7 +491,7 @@ export const ParticipantModal = ({
               <Button view="flat" size="l" onClick={handleClose}>
                 Отмена
               </Button>
-              <Button view="outlined" size="l" onClick={handlePrint} loading={printMutation.isPending}>
+              <Button view="outlined" size="l" onClick={handlePrint} loading={isPrinting}>
                 <Button.Icon>
                   <Printer />
                 </Button.Icon>

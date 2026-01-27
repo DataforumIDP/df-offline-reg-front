@@ -1,0 +1,165 @@
+import { Select, Button, Checkbox, RadioGroup } from '@gravity-ui/uikit'
+import { TrashBin } from '@gravity-ui/icons'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
+import { updateElement, removeElement, TextFieldElement, TextAlign, FontWeight, FontStyle } from '@/store/slices/templateEditorSlice'
+import styles from './ElementToolbar.module.css'
+
+const FONT_OPTIONS = [
+  { value: 'Roboto', content: 'Roboto' },
+  { value: 'Segoe UI', content: 'Segoe UI' },
+  { value: 'Times New Roman', content: 'Times New Roman' },
+]
+
+const FONT_SIZE_OPTIONS = [
+  { value: '8', content: '8' },
+  { value: '10', content: '10' },
+  { value: '12', content: '12' },
+  { value: '14', content: '14' },
+  { value: '16', content: '16' },
+  { value: '18', content: '18' },
+  { value: '20', content: '20' },
+  { value: '24', content: '24' },
+  { value: '28', content: '28' },
+  { value: '32', content: '32' },
+  { value: '36', content: '36' },
+  { value: '40', content: '40' },
+  { value: '48', content: '48' },
+  { value: '56', content: '56' },
+  { value: '64', content: '64' },
+  { value: '72', content: '72' },
+  { value: '80', content: '80' },
+  { value: '96', content: '96' },
+]
+
+const ElementToolbar = () => {
+  const dispatch = useAppDispatch()
+  const { elements, selectedElementId } = useAppSelector(state => state.templateEditor)
+
+  const selectedElement = elements.find(el => el.id === selectedElementId) as TextFieldElement | undefined
+
+  if (!selectedElement) {
+    return (
+      <div className={styles.toolbar}>
+        <span className={styles.placeholder}>Выберите элемент для редактирования</span>
+      </div>
+    )
+  }
+
+  const handleFontChange = (values: string[]) => {
+    dispatch(updateElement({ id: selectedElement.id, updates: { fontFamily: values[0] } }))
+  }
+
+  const handleSizeChange = (values: string[]) => {
+    dispatch(updateElement({ id: selectedElement.id, updates: { fontSize: parseInt(values[0], 10) } }))
+  }
+
+  const handleBoldChange = (checked: boolean) => {
+    const fontWeight: FontWeight = checked ? 'bold' : 'normal'
+    dispatch(updateElement({ id: selectedElement.id, updates: { fontWeight } }))
+  }
+
+  const handleItalicChange = (checked: boolean) => {
+    const fontStyle: FontStyle = checked ? 'italic' : 'normal'
+    dispatch(updateElement({ id: selectedElement.id, updates: { fontStyle } }))
+  }
+
+  const handleAlignChange = (value: string) => {
+    dispatch(updateElement({ id: selectedElement.id, updates: { textAlign: value as TextAlign } }))
+  }
+
+  const handleFullWidthChange = (checked: boolean) => {
+    dispatch(updateElement({ id: selectedElement.id, updates: { fullWidth: checked } }))
+  }
+
+  const handleAdaptiveChange = (checked: boolean) => {
+    dispatch(updateElement({ id: selectedElement.id, updates: { adaptive: checked } }))
+  }
+
+  const handleDelete = () => {
+    dispatch(removeElement(selectedElement.id))
+  }
+
+  return (
+    <div className={styles.toolbar}>
+      <div className={styles.group}>
+        <Select
+          value={[selectedElement.fontFamily]}
+          onUpdate={handleFontChange}
+          options={FONT_OPTIONS}
+          size="s"
+          width={140}
+        />
+        <Select
+          value={[String(selectedElement.fontSize)]}
+          onUpdate={handleSizeChange}
+          options={FONT_SIZE_OPTIONS}
+          size="s"
+          width={70}
+        />
+      </div>
+
+      <div className={styles.divider} />
+
+      <div className={styles.group}>
+        <Checkbox
+          checked={selectedElement.fontWeight === 'bold'}
+          onUpdate={handleBoldChange}
+          size="m"
+        >
+          <span className={styles.bold}>Ж</span>
+        </Checkbox>
+        <Checkbox
+          checked={selectedElement.fontStyle === 'italic'}
+          onUpdate={handleItalicChange}
+          size="m"
+        >
+          <span className={styles.italic}>К</span>
+        </Checkbox>
+      </div>
+
+      <div className={styles.divider} />
+
+      <div className={styles.group}>
+        <RadioGroup
+          value={selectedElement.textAlign}
+          onUpdate={handleAlignChange}
+          size="m"
+          options={[
+            { value: 'left', content: '◧' },
+            { value: 'center', content: '◫' },
+            { value: 'right', content: '◨' },
+          ]}
+        />
+      </div>
+
+      <div className={styles.divider} />
+
+      <div className={styles.group}>
+        <Checkbox
+          checked={selectedElement.fullWidth}
+          onUpdate={handleFullWidthChange}
+          size="m"
+        >
+          На всю ширину
+        </Checkbox>
+        <Checkbox
+          checked={selectedElement.adaptive}
+          onUpdate={handleAdaptiveChange}
+          size="m"
+        >
+          Авто-размер
+        </Checkbox>
+      </div>
+
+      <div className={styles.spacer} />
+
+      <Button view="flat-danger" size="s" onClick={handleDelete}>
+        <Button.Icon>
+          <TrashBin />
+        </Button.Icon>
+      </Button>
+    </div>
+  )
+}
+
+export default ElementToolbar

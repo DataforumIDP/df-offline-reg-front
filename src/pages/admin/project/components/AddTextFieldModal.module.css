@@ -1,0 +1,22 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 400px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.row .field {
+  flex: 1;
+}
