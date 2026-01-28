@@ -1,7 +1,7 @@
-import { Text, Button, Loader } from '@gravity-ui/uikit'
+import { Text, Button, Loader, Tooltip, Hotkey } from '@gravity-ui/uikit'
 import { Plus, Printer } from '@gravity-ui/icons'
 import { useParams } from 'react-router-dom'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useSnackbar } from 'notistack'
 import { SearchInput } from '@/components/atoms'
 import { ParticipantsTable, type FiltersState } from '@/components/organisms/ParticipantsTable'
@@ -33,7 +33,7 @@ const ProjectParticipantsPage = () => {
   
   // Состояние пагинации
   const [page, setPage] = useState(1)
-  const limit = 20
+  const [recordsPerPage, setRecordsPerPage] = useState(20)
   
   // Состояние модалки редактирования
   const [modalOpen, setModalOpen] = useState(false)
@@ -52,7 +52,7 @@ const ProjectParticipantsPage = () => {
     projectId ? Number(projectId) : 0,
     {
       page,
-      limit,
+      limit: recordsPerPage,
       search: search || undefined,
       order: sortColumn,
       direction: sortDirection,
@@ -72,7 +72,7 @@ const ProjectParticipantsPage = () => {
   const participants = participantsData?.records || []
   const totalRecords = participantsData?.totalRecords || 0
   const totalPages = participantsData?.totalPages || 1
-  const recordsPerPage = participantsData?.recordsPerPage || limit
+  const recordsPerPageResp = participantsData?.recordsPerPage || recordsPerPage
 
   // Обработчики
   const handleSearchChange = useCallback((value: string) => {
@@ -95,6 +95,11 @@ const ProjectParticipantsPage = () => {
     setPage(newPage)
   }, [])
 
+  const handleRecordsPerPageChange = useCallback((n: number) => {
+    setRecordsPerPage(n)
+    setPage(1)
+  }, [])
+
   const handleRowClick = useCallback((participant: Participant) => {
     setSelectedParticipant(participant.id)
     setModalOpen(true)
@@ -108,6 +113,34 @@ const ProjectParticipantsPage = () => {
   const handleCreateModalOpen = useCallback(() => {
     setCreateModalOpen(true)
   }, [])
+
+  // Горячая клавиша Alt+C для открытия модалки создания участника
+  const handleHotkey = useCallback((e: KeyboardEvent) => {
+    try {
+      // игнорируем если ввод в поле (input/textarea/contentEditable)
+      const active = document.activeElement as HTMLElement | null
+      if (active) {
+        const tag = active.tagName.toLowerCase()
+        const isEditable = active.isContentEditable
+        if (tag === 'input' || tag === 'textarea' || isEditable) return
+      }
+
+      // Используем физическую клавишу: e.code (KeyC) — устойчиво для любых раскладок.
+      // В качестве запасного варианта проверяем numeric keyCode (67).
+      if (e.altKey && (e.code === 'KeyC' || (e as any).keyCode === 67)) {
+        e.preventDefault()
+        setCreateModalOpen(true)
+      }
+    } catch (err) {
+      // ignore
+    }
+  }, [])
+
+  // Регистрируем слушатель горячей клавиши
+  useEffect(() => {
+    window.addEventListener('keydown', handleHotkey)
+    return () => window.removeEventListener('keydown', handleHotkey)
+  }, [handleHotkey])
 
   const handleCreateModalClose = useCallback(() => {
     setCreateModalOpen(false)
@@ -178,12 +211,14 @@ const ProjectParticipantsPage = () => {
               Печать ({selectedIds.length})
             </Button>
           )}
-          <Button view="action" size="l" onClick={handleCreateModalOpen}>
-            <Button.Icon>
-              <Plus />
-            </Button.Icon>
-            Добавить участника
-          </Button>
+          <Tooltip content={<Hotkey view="dark" value="alt+c" />} placement="top">
+            <Button view="action" size="l" onClick={handleCreateModalOpen}>
+              <Button.Icon>
+                <Plus />
+              </Button.Icon>
+              Добавить участника
+            </Button>
+          </Tooltip>
         </div>
       </div>
 
@@ -216,7 +251,8 @@ const ProjectParticipantsPage = () => {
           totalPages={totalPages}
           onPageChange={handlePageChange}
           totalRecords={totalRecords}
-          recordsPerPage={recordsPerPage}
+          recordsPerPage={recordsPerPageResp}
+          onRecordsPerPageChange={handleRecordsPerPageChange}
           filters={filters}
           onFiltersChange={handleFiltersChange}
         />

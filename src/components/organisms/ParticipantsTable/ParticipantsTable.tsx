@@ -1,4 +1,4 @@
-import { Table, withTableSelection, withTableSorting, withTableSettings, Checkbox, Tooltip, Pagination } from '@gravity-ui/uikit'
+import { Table, withTableSelection, withTableSorting, withTableSettings, Checkbox, Tooltip, Pagination, Select } from '@gravity-ui/uikit'
 import type { TableColumnConfig, TableDataItem, TableSettingsData } from '@gravity-ui/uikit'
 import { useMemo, useCallback, useState, useEffect } from 'react'
 import type { SchemeField } from '@/hooks/queries/useSchemeQueries'
@@ -30,6 +30,7 @@ export interface ParticipantsTableProps {
   onPageChange: (page: number) => void
   totalRecords: number
   recordsPerPage: number
+  onRecordsPerPageChange: (n: number) => void
   filters: FiltersState
   onFiltersChange: (filters: FiltersState) => void
 }
@@ -133,6 +134,7 @@ export const ParticipantsTable = ({
   onPageChange,
   totalRecords,
   recordsPerPage,
+  onRecordsPerPageChange,
   filters,
   onFiltersChange,
 }: ParticipantsTableProps) => {
@@ -281,13 +283,35 @@ export const ParticipantsTable = ({
       </div>
 
       {totalPages > 1 && (
-        <div className={styles.pagination}>
+        <div className={styles.pagination} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Pagination
             page={page}
             pageSize={recordsPerPage}
             total={totalRecords}
             onUpdate={(newPage) => onPageChange(newPage)}
           />
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ color: 'var(--g-color-text-secondary)', fontSize: 13 }}>Записей на странице</span>
+            <Select
+              value={[String(recordsPerPage)]}
+              onUpdate={(v) => {
+                if (v && v.length > 0) {
+                  const n = Number(v[0])
+                  onRecordsPerPageChange(n)
+                  onPageChange(1)
+                }
+              }}
+              options={[
+                { value: '15', content: '15' },
+                { value: '30', content: '30' },
+                { value: '50', content: '50' },
+                { value: '100', content: '100' },
+              ]}
+              width={120}
+              size="m"
+            />
+          </div>
         </div>
       )}
     </div>

@@ -17,6 +17,8 @@ interface CreateSchemeFieldPayload {
 }
 
 interface UpdateSchemeFieldPayload {
+  label?: string
+  key?: string
   config: {
     type?: 'text' | 'list' | 'bool' | 'id' | 'img' | 'code'
     uniq?: boolean

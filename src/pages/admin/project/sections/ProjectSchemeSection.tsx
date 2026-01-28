@@ -128,14 +128,10 @@ const ProjectSchemeSection = () => {
                                 
                                 <DropdownMenu
                                     items={[
-                                        ...(field.config.type === 'list'
-                                            ? [
-                                                {
-                                                    action: () => handleEditField(field),
-                                                    text: 'Изменить',
-                                                },
-                                            ]
-                                            : []),
+                                        {
+                                            action: () => handleEditField(field),
+                                            text: 'Изменить',
+                                        },
                                         {
                                             action: () => setDeleteConfirmFieldId(field.id),
                                             text: 'Удалить',
