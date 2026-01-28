@@ -10,7 +10,7 @@ import { CreateParticipantModal } from '@/components/organisms/CreateParticipant
 import { useParticipantsQuery } from '@/hooks/queries/useParticipantQueries'
 import { useSchemeQuery } from '@/hooks/queries/useSchemeQueries'
 import { useAppSelector } from '@/store/hooks'
-import { previewBadgePdf, generateMultipleBadgesPdf, PrintTemplate, PrintData } from '@/services/printService'
+import { generateMultipleBadgesPdf, PrintTemplate, PrintData } from '@/services/printService'
 import type { Participant } from '@/services/api/participants'
 
 const ProjectParticipantsPage = () => {
