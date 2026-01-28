@@ -9,12 +9,14 @@ import { ParticipantModal } from '@/components/organisms/ParticipantModal'
 import { CreateParticipantModal } from '@/components/organisms/CreateParticipantModal'
 import { useParticipantsQuery } from '@/hooks/queries/useParticipantQueries'
 import { useSchemeQuery } from '@/hooks/queries/useSchemeQueries'
-import { usePrintParticipantMutation } from '@/hooks/mutations/useParticipantMutations'
+import { useAppSelector } from '@/store/hooks'
+import { previewBadgePdf, generateMultipleBadgesPdf, PrintTemplate, PrintData } from '@/services/printService'
 import type { Participant } from '@/services/api/participants'
 
 const ProjectParticipantsPage = () => {
   const { id: projectId } = useParams<{ id: string }>()
   const { enqueueSnackbar } = useSnackbar()
+  const templateEditor = useAppSelector((state) => state.templateEditor)
   
   // Состояние поиска
   const [search, setSearch] = useState('')
@@ -63,9 +65,14 @@ const ProjectParticipantsPage = () => {
       }, {} as Record<string, string | string[]>),
     }
   )
-  
-  // Мутация печати
-  const printMutation = usePrintParticipantMutation(Number(projectId))
+
+  const isLoading = schemeLoading || participantsLoading
+  const isRefetching = isFetching && !participantsLoading // Загрузка при наличии предыдущих данных
+  const scheme = schemeData?.fields || []
+  const participants = participantsData?.records || []
+  const totalRecords = participantsData?.totalRecords || 0
+  const totalPages = participantsData?.totalPages || 1
+  const recordsPerPage = participantsData?.recordsPerPage || limit
 
   // Обработчики
   const handleSearchChange = useCallback((value: string) => {
@@ -106,42 +113,56 @@ const ProjectParticipantsPage = () => {
     setCreateModalOpen(false)
   }, [])
 
-  // Массовая печать
+  // Массовая печать - генерация одного PDF со всеми выбранными бейджами
   const handleMassPrint = useCallback(async () => {
     if (selectedIds.length === 0) return
     
+    const { canvas, elements } = templateEditor
+    
+    if (elements.length === 0) {
+      enqueueSnackbar('Добавьте элементы в шаблон печати', { variant: 'warning' })
+      return
+    }
+    
+    // Находим выбранных участников
+    const selectedParticipants = participants.filter((p: Participant) => selectedIds.includes(String(p.id)))
+    
+    if (selectedParticipants.length === 0) {
+      enqueueSnackbar('Не найдены выбранные участники', { variant: 'error' })
+      return
+    }
+    
     setIsPrinting(true)
-    let successCount = 0
-    let errorCount = 0
-
-    for (const id of selectedIds) {
-      try {
-        await printMutation.mutateAsync(Number(id))
-        successCount++
-      } catch {
-        errorCount++
+    
+    try {
+      const template: PrintTemplate = {
+        widthMm: canvas.widthMm,
+        heightMm: canvas.heightMm,
+        elements: elements,
       }
+      
+      // Собираем данные всех участников
+      const dataList: PrintData[] = selectedParticipants.map((p: Participant) => p.data as PrintData)
+      
+      // Генерируем PDF с несколькими страницами
+      const blob = await generateMultipleBadgesPdf(template, dataList)
+      
+      // Открываем PDF в новой вкладке
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank')
+      setTimeout(() => URL.revokeObjectURL(url), 60000)
+      
+      enqueueSnackbar(`PDF создан для ${selectedParticipants.length} участников`, { variant: 'success' })
+      
+      // Сбрасываем выделение
+      setSelectedIds([])
+    } catch (err) {
+      console.error('Mass print error:', err)
+      enqueueSnackbar('Ошибка при генерации PDF', { variant: 'error' })
+    } finally {
+      setIsPrinting(false)
     }
-
-    setIsPrinting(false)
-    
-    if (errorCount === 0) {
-      enqueueSnackbar(`Печать запущена для ${successCount} участников`, { variant: 'success' })
-    } else {
-      enqueueSnackbar(`Напечатано: ${successCount}, ошибок: ${errorCount}`, { variant: 'warning' })
-    }
-    
-    // Сбрасываем выделение после печати
-    setSelectedIds([])
-  }, [selectedIds, printMutation, enqueueSnackbar])
-
-  const isLoading = schemeLoading || participantsLoading
-  const isRefetching = isFetching && !participantsLoading // Загрузка при наличии предыдущих данных
-  const scheme = schemeData?.fields || []
-  const participants = participantsData?.records || []
-  const totalRecords = participantsData?.totalRecords || 0
-  const totalPages = participantsData?.totalPages || 1
-  const recordsPerPage = participantsData?.recordsPerPage || limit
+  }, [selectedIds, participants, templateEditor, enqueueSnackbar])
 
   return (
     <div style={{ padding: '24px' }}>
