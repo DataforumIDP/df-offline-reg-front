@@ -1,3 +1,9 @@
+/**
+ * Загрузить PNG-файл (без мини-версии)
+ */
+export const uploadPngFile = async (file: File | Blob, filename: string): Promise<string> => {
+  return await uploadFile(file, filename)
+}
 const FILES_CDN_URL = 'https://files-cdn.dataforum.pro/files/'
 const STORAGE_BASE_URL = 'https://51b6eea3-c170-488b-ba78-bef37c6ed524.selstorage.ru'
 
@@ -42,7 +48,7 @@ const compressImage = (file: File, quality: number): Promise<Blob> => {
 /**
  * Загрузить файл на CDN
  */
-const uploadFile = async (file: File | Blob, filename?: string): Promise<string> => {
+export const uploadFile = async (file: File | Blob, filename?: string): Promise<string> => {
   const formData = new FormData()
   formData.append('file', file, filename)
 

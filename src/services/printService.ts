@@ -1,3 +1,75 @@
+import { fetchPrintTemplateById } from '@/services/api/templates'
+/**
+ * Сгенерировать и скачать PDF бейджа по id шаблона
+ */
+export async function printBadgeByTemplateId(
+  templateId: number,
+  data: PrintData,
+  options: PrintOptions = {}
+): Promise<Blob> {
+  const template = await fetchPrintTemplateById(templateId)
+  // Преобразуем к формату PrintTemplate (elements, widthMm, heightMm)
+  const settings = template.settings || {}
+  const normalizedTemplate = {
+    widthMm: settings.widthMm,
+    heightMm: settings.heightMm,
+    elements: settings.elements || [],
+  }
+  return generateBadgePdf(normalizedTemplate, data, options)
+}
+
+/**
+ * Сгенерировать и скачать PDF для нескольких бейджей по id шаблона
+ */
+export async function printMultipleBadgesByTemplateId(
+  templateId: number,
+  dataList: PrintData[],
+  options: PrintOptions = {}
+): Promise<Blob> {
+  const template = await fetchPrintTemplateById(templateId)
+  const settings = template.settings || {}
+  const normalizedTemplate = {
+    widthMm: settings.widthMm,
+    heightMm: settings.heightMm,
+    elements: settings.elements || [],
+  }
+  return generateMultipleBadgesPdf(normalizedTemplate, dataList, options)
+}
+
+/**
+ * Открыть PDF в новой вкладке для предпросмотра по id шаблона
+ */
+export async function previewBadgeByTemplateId(
+  templateId: number,
+  data: PrintData
+): Promise<void> {
+  const blob = await printBadgeByTemplateId(templateId, data)
+  const url = URL.createObjectURL(blob)
+  window.open(url, '_blank')
+  setTimeout(() => URL.revokeObjectURL(url), 60000)
+}
+
+/**
+ * Скачать PDF файл по id шаблона
+ */
+export async function downloadBadgeByTemplateId(
+  templateId: number,
+  data: PrintData,
+  filename: string = 'badge.pdf'
+): Promise<void> {
+  await printBadgeByTemplateId(templateId, data, { download: true, filename })
+}
+
+/**
+ * Скачать PDF с несколькими бейджами по id шаблона
+ */
+export async function downloadMultipleBadgesByTemplateId(
+  templateId: number,
+  dataList: PrintData[],
+  filename: string = 'badges.pdf'
+): Promise<void> {
+  await printMultipleBadgesByTemplateId(templateId, dataList, { download: true, filename })
+}
 // --- QR PDF rendering ---
 async function renderQrElement(
   doc: jsPDF,

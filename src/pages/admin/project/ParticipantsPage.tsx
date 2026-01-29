@@ -9,14 +9,37 @@ import { ParticipantModal } from '@/components/organisms/ParticipantModal'
 import { CreateParticipantModal } from '@/components/organisms/CreateParticipantModal'
 import { useParticipantsQuery } from '@/hooks/queries/useParticipantQueries'
 import { useSchemeQuery } from '@/hooks/queries/useSchemeQueries'
-import { useAppSelector } from '@/store/hooks'
+import { useAppSelector, useAppDispatch } from '@/store/hooks'
 import { generateMultipleBadgesPdf, PrintTemplate, PrintData } from '@/services/printService'
+import { setCanvasSize, setElements, setTemplateId, setTemplateName } from '@/store/slices/templateEditorSlice'
+import { useProjectPrintTemplate } from '@/hooks/queries/useTemplateQueries'
 import type { Participant } from '@/services/api/participants'
 
 const ProjectParticipantsPage = () => {
   const { id: projectId } = useParams<{ id: string }>()
   const { enqueueSnackbar } = useSnackbar()
   const templateEditor = useAppSelector((state) => state.templateEditor)
+  const dispatch = useAppDispatch()
+
+  // Получаем шаблон проекта (если назначен)
+  const { data: projectTemplateData } = useProjectPrintTemplate(projectId ? Number(projectId) : undefined)
+    // Если elements пустой, пробуем загрузить шаблон проекта и инициализировать редактор
+    useEffect(() => {
+      if (
+        templateEditor.elements.length === 0 &&
+        projectTemplateData &&
+        projectTemplateData.template &&
+        projectTemplateData.template.settings &&
+        Array.isArray(projectTemplateData.template.settings.elements) &&
+        projectTemplateData.template.settings.elements.length > 0
+      ) {
+        const settings = projectTemplateData.template.settings
+        dispatch(setCanvasSize({ widthMm: settings.widthMm, heightMm: settings.heightMm }))
+        dispatch(setElements(settings.elements))
+        dispatch(setTemplateId(projectTemplateData.template.id))
+        dispatch(setTemplateName(projectTemplateData.template.name))
+      }
+    }, [templateEditor.elements.length, projectTemplateData, dispatch])
   
   // Состояние поиска
   const [search, setSearch] = useState('')

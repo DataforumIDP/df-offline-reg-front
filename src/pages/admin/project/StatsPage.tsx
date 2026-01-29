@@ -7,7 +7,7 @@ import ChartKit, { settings } from '@gravity-ui/chartkit'
 import { YagrPlugin } from '@gravity-ui/chartkit/yagr'
 import type { YagrWidgetData } from '@gravity-ui/chartkit/yagr'
 import { useStatsLogsQuery, useLogsQuery } from '../../../hooks/queries/useStatsQueries'
-import type { LogRecord } from '../../../services/statsService'
+import type { LogRecord } from '../../../services/api/statsService'
 
 import '@gravity-ui/yagr/dist/index.css'
 

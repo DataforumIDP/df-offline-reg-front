@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchStatsLogs, fetchLogs, type LogsQuery } from '@/services/statsService'
+import { fetchStatsLogs, fetchLogs, type LogsQuery } from '@/services/api/statsService'
 
 /**
  * Запрос статистики по типам действий
