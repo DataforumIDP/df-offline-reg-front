@@ -1,7 +1,7 @@
 import { Select, Button, Checkbox, RadioGroup } from '@gravity-ui/uikit'
 import { TrashBin } from '@gravity-ui/icons'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { updateElement, removeElement, TextFieldElement, TextAlign, FontWeight, FontStyle } from '@/store/slices/templateEditorSlice'
+import { updateElement, removeElement, TextFieldElement, TextAlign, FontWeight, FontStyle, QrElement } from '@/store/slices/templateEditorSlice'
 import styles from './ElementToolbar.module.css'
 
 const FONT_OPTIONS = [
@@ -35,7 +35,7 @@ const ElementToolbar = () => {
   const dispatch = useAppDispatch()
   const { elements, selectedElementId } = useAppSelector(state => state.templateEditor)
 
-  const selectedElement = elements.find(el => el.id === selectedElementId) as TextFieldElement | undefined
+  const selectedElement = elements.find(el => el.id === selectedElementId) as TextFieldElement | QrElement | undefined
 
   if (!selectedElement) {
     return (
@@ -77,6 +77,77 @@ const ElementToolbar = () => {
 
   const handleDelete = () => {
     dispatch(removeElement(selectedElement.id))
+  }
+
+  if (selectedElement.type === 'qr') {
+    const handleColorChange = (color: string, key: 'fgColor' | 'bgColor') => {
+      dispatch(updateElement({ id: selectedElement.id, updates: { [key]: color } }))
+    }
+    const handleStyleChange = (value: string, key: 'moduleStyle' | 'eyeStyle' | 'eyeBorderStyle') => {
+      dispatch(updateElement({ id: selectedElement.id, updates: { [key]: value } }))
+    }
+    const handlePrefixChange = (v: string) => {
+      dispatch(updateElement({ id: selectedElement.id, updates: { prefix: v } }))
+    }
+    const handleCenterChange = (checked: boolean) => {
+      dispatch(updateElement({ id: selectedElement.id, updates: { center: checked } }))
+    }
+    return (
+      <div className={styles.toolbar}>
+        <div className={styles.group}>
+          <span>Цвет:</span>
+          <input type="color" value={selectedElement.fgColor} onChange={e => handleColorChange(e.target.value, 'fgColor')} />
+          <input type="color" value={selectedElement.bgColor} onChange={e => handleColorChange(e.target.value, 'bgColor')} />
+        </div>
+        <div className={styles.group}>
+          <span>Стиль:</span>
+          <Select
+            value={[selectedElement.moduleStyle]}
+            onUpdate={v => handleStyleChange(v[0], 'moduleStyle')}
+            options={[
+              { value: 'squares', content: 'Квадраты' },
+              { value: 'dots', content: 'Точки' },
+              { value: 'fluid', content: 'Fluid' },
+            ]}
+            size="s"
+            width={90}
+          />
+          <Select
+            value={[selectedElement.eyeStyle]}
+            onUpdate={v => handleStyleChange(v[0], 'eyeStyle')}
+            options={[
+              { value: 'squares', content: 'Глаз: квадраты' },
+              { value: 'dots', content: 'Глаз: точки' },
+            ]}
+            size="s"
+            width={90}
+          />
+          <Select
+            value={[selectedElement.eyeBorderStyle]}
+            onUpdate={v => handleStyleChange(v[0], 'eyeBorderStyle')}
+            options={[
+              { value: 'squares', content: 'Граница: квадраты' },
+              { value: 'round', content: 'Граница: круглая' },
+            ]}
+            size="s"
+            width={110}
+          />
+        </div>
+        <div className={styles.group}>
+          <span>Префикс:</span>
+          <input type="text" value={selectedElement.prefix || ''} onChange={e => handlePrefixChange(e.target.value)} style={{ width: 80 }} />
+        </div>
+        <div className={styles.group}>
+          <Checkbox checked={selectedElement.center} onUpdate={handleCenterChange} size="m">Центрировать</Checkbox>
+        </div>
+        <div className={styles.spacer} />
+        <Button view="flat-danger" size="s" onClick={handleDelete}>
+          <Button.Icon>
+            <TrashBin />
+          </Button.Icon>
+        </Button>
+      </div>
+    )
   }
 
   return (

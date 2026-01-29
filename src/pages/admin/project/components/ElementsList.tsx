@@ -2,7 +2,7 @@ import { Text, Button, Select } from '@gravity-ui/uikit'
 import { TrashBin } from '@gravity-ui/icons'
 import { useParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { selectElement, removeElement, updateElement, TextFieldElement } from '@/store/slices/templateEditorSlice'
+import { selectElement, removeElement, updateElement, TextFieldElement, QrElement } from '@/store/slices/templateEditorSlice'
 import { useSchemeQuery } from '@/hooks/queries/useSchemeQueries'
 import styles from './ElementsList.module.css'
 
@@ -13,6 +13,7 @@ const ElementsList = () => {
   const { data: scheme } = useSchemeQuery(projectId || '')
 
   const textElements = elements.filter((el): el is TextFieldElement => el.type === 'text')
+  const qrElements = elements.filter((el): el is QrElement => el.type === 'qr')
 
   // Опции для выбора ресурса
   const fieldOptions = [
@@ -47,7 +48,7 @@ const ElementsList = () => {
     }))
   }
 
-  if (textElements.length === 0) {
+  if (textElements.length === 0 && qrElements.length === 0) {
     return (
       <div className={styles.empty}>
         <Text variant="body-2" color="secondary">
@@ -108,6 +109,46 @@ const ElementsList = () => {
                 {element.fontFamily}, {element.fontSize}pt
                 {element.fontWeight === 'bold' && ', жирный'}
                 {element.fontStyle === 'italic' && ', курсив'}
+              </Text>
+            </div>
+          </div>
+        )
+      })}
+      {qrElements.map((element, index) => {
+        const isSelected = selectedElementId === element.id
+        return (
+          <div
+            key={element.id}
+            className={`${styles.item} ${isSelected ? styles.selected : ''}`}
+            onClick={() => handleSelect(element.id)}
+          >
+            <div className={styles.itemHeader}>
+              <Text variant="body-2" className={styles.itemTitle}>
+                QR {index + 1}
+              </Text>
+              <Button
+                view="flat"
+                size="xs"
+                onClick={(e) => handleDelete(e, element.id)}
+              >
+                <Button.Icon>
+                  <TrashBin />
+                </Button.Icon>
+              </Button>
+            </div>
+            <div className={styles.itemContent}>
+              <Text variant="caption-2" color="secondary">
+                Ресурс:
+              </Text>
+              <Text variant="body-2">
+                {element.resourceType === 'field'
+                  ? (element.prefix || '') + (element.fieldKey || '')
+                  : element.fixedValue || ''}
+              </Text>
+            </div>
+            <div className={styles.itemMeta}>
+              <Text variant="caption-2" color="secondary">
+                {element.width}мм, {element.fgColor}, {element.bgColor}, {element.moduleStyle}
               </Text>
             </div>
           </div>

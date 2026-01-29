@@ -1,3 +1,90 @@
+// --- QR PDF rendering ---
+async function renderQrElement(
+  doc: jsPDF,
+  element: import('@/store/slices/templateEditorSlice').QrElement,
+  data: PrintData,
+  pageWidth: number
+): Promise<void> {
+  let value = ''
+  if (element.resourceType === 'field' && element.fieldKey) {
+    value = String(data[element.fieldKey] ?? '')
+  } else if (element.resourceType === 'fixed' && element.fixedValue) {
+    value = String(element.fixedValue)
+  }
+  if (element.prefix) value = element.prefix + value
+  if (!value) return
+  const sizeMm = element.width
+  const sizePx = Math.round(mmToScreenPx(sizeMm))
+  // Динамический импорт qr-code-styling (чтобы не ломать SSR)
+  const { default: QRCodeStyling } = await import('qr-code-styling')
+  // 1. Сначала создаём временный QR, чтобы узнать moduleCount (размер QR в "модулях")
+  const tmpQr = new QRCodeStyling({
+    width: sizePx,
+    height: sizePx,
+    margin: 0,
+    type: 'canvas',
+    data: value,
+    qrOptions: {
+      errorCorrectionLevel: element.ecLevel as any || 'Q',
+    },
+  })
+  // @ts-ignore
+  const moduleCount = tmpQr._qr ? tmpQr._qr.getModuleCount() : 21 // fallback на 21 (QR v1)
+  // 2. Рассчитываем нужный canvasPx, чтобы "активная" часть QR заняла sizePx
+  const quietZoneModules = 4 // qr-code-styling всегда добавляет 4 модуля
+  const canvasPx = Math.round(sizePx * (moduleCount + 2 * quietZoneModules) / moduleCount)
+  // 3. Формируем финальные опции QR
+  const qrOptions: any = {
+    width: canvasPx,
+    height: canvasPx,
+    margin: 0,
+    type: 'canvas',
+    data: value,
+    image: element.logoUrl || undefined,
+    qrOptions: {
+      errorCorrectionLevel: element.ecLevel || 'Q',
+    },
+    dotsOptions: {
+      color: element.fgColor || '#000000',
+      type: element.moduleStyle || 'square',
+    },
+    backgroundOptions: {
+      color: element.bgColor || '#ffffff00',
+    },
+    imageOptions: {
+      crossOrigin: 'anonymous',
+      margin: 0,
+    },
+    // Можно добавить cornersSquareOptions/cornersDotOptions при необходимости
+  }
+  let dataUrl: string | null = null
+  try {
+    const qr = new QRCodeStyling(qrOptions)
+    // Генерируем PNG как Blob, затем читаем как dataURL
+    const raw = await qr.getRawData('png')
+    if (!raw || typeof Blob === 'undefined' || !(raw instanceof Blob)) {
+      throw new Error('QR PNG generation failed')
+    }
+    const blob: Blob = raw
+    dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(blob)
+    })
+  } catch (err) {
+    console.error('Ошибка генерации QR PNG для PDF:', err)
+    dataUrl = null
+  }
+  if (!dataUrl) return
+  let x = element.x
+  if (element.center) {
+    x = (pageWidth - sizeMm) / 2
+  }
+  const y = element.y
+  // Вставляем QR в PDF, сжимая до sizeMm (теперь "активная" часть QR ровно sizeMm)
+  doc.addImage(dataUrl, 'PNG', x, y, sizeMm, sizeMm)
+}
 /**
  * Сервис для генерации PDF и печати бейджей
  * 
@@ -55,7 +142,7 @@ const MM_TO_PT = 72 / 25.4 // ≈ 2.834645669
 const DEFAULT_CYRILLIC_FONT = 'Roboto'
 
 /**
- * Загруженные кастомные шрифты (кэш)
+      doc.addImage(dataUrl, 'PNG', x, y, sizeMm, sizeMm)
  */
 const loadedFonts: Map<string, ArrayBuffer> = new Map()
 
@@ -302,7 +389,10 @@ function fitTextToWidth(
   return minFontSize
 }
 
-// ========== Основные функции ==========
+
+// ========== Основные функции ========== 
+
+// import React from 'react'
 
 /**
  * Отрисовать текстовый элемент на странице PDF
@@ -405,15 +495,14 @@ export async function generateBadgePdf(
   for (const element of template.elements) {
     if (element.type === 'text') {
       await renderTextElement(doc, element, data, template.widthMm)
+    } else if (element.type === 'qr') {
+      await renderQrElement(doc, element, data, template.widthMm)
     }
-    // В будущем: else if (element.type === 'qr') { ... }
   }
-  
   // Если нужно скачать
   if (download) {
     doc.save(filename)
   }
-  
   // Возвращаем Blob
   return doc.output('blob')
 }
@@ -450,6 +539,8 @@ export async function generateMultipleBadgesPdf(
     for (const element of template.elements) {
       if (element.type === 'text') {
         await renderTextElement(doc, element, data, template.widthMm)
+      } else if (element.type === 'qr') {
+        await renderQrElement(doc, element, data, template.widthMm)
       }
     }
   }
@@ -458,7 +549,6 @@ export async function generateMultipleBadgesPdf(
   if (download) {
     doc.save(filename)
   }
-  
   // Возвращаем Blob
   return doc.output('blob')
 }

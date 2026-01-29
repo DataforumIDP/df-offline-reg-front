@@ -1,0 +1,44 @@
+.element {
+  position: absolute;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  cursor: move;
+  user-select: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.element.selected {
+  border-color: var(--g-color-line-brand);
+  box-shadow: 0 0 0 2px rgba(var(--g-color-private-brand-550-solid-rgb), 0.2);
+}
+
+.element.dragging {
+  opacity: 0.8;
+  cursor: grabbing;
+}
+
+.resizeHandle {
+  position: absolute;
+  right: -4px;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: ew-resize;
+  background: transparent;
+}
+
+.resizeHandle::after {
+  content: '';
+  position: absolute;
+  right: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 16px;
+  background-color: var(--g-color-base-brand);
+  border-radius: 2px;
+}

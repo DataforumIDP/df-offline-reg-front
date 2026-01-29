@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Text, Button, DropdownMenu, Modal, TextInput, RadioGroup, Slider } from '@gravity-ui/uikit'
+import { Text, Button, DropdownMenu, TextInput, RadioGroup, Slider } from '@gravity-ui/uikit'
 import { Plus, Printer, FolderOpen, FloppyDisk } from '@gravity-ui/icons'
 import { useParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
@@ -10,11 +10,15 @@ import {
   setSizeUnit,
   selectElement,
   TextFieldElement,
+  addQrField,
 } from '@/store/slices/templateEditorSlice'
 import { useParticipantsQuery } from '@/hooks/queries/useParticipantQueries'
+import { useSchemeQuery } from '@/hooks/queries/useSchemeQueries'
 import { previewBadgePdf, PrintTemplate } from '@/services/printService'
 import AddTextFieldModal from './components/AddTextFieldModal'
+import AddQrModal from './components/AddQrModal'
 import CanvasTextField from './components/CanvasTextField'
+import CanvasQrField from './components/CanvasQrField'
 import ElementToolbar from './components/ElementToolbar'
 import ElementsList from './components/ElementsList'
 import styles from './TemplatesPage.module.css'
@@ -41,6 +45,7 @@ const ProjectTemplatesPage = () => {
   // Состояния модалок
   const [fieldModalOpen, setFieldModalOpen] = useState(false)
   const [qrModalOpen, setQrModalOpen] = useState(false)
+  const { data: schemeData } = useSchemeQuery(projectId || '')
 
   // Значения для отображения в зависимости от единиц
   const displayWidth = sizeUnit === 'mm' ? canvasWidthMm : mmToPx(canvasWidthMm)
@@ -70,8 +75,9 @@ const ProjectTemplatesPage = () => {
   const canvasDisplayWidth = canvasWidthMm * screenPxPerMm * (zoom / 100)
   const canvasDisplayHeight = canvasHeightMm * screenPxPerMm * (zoom / 100)
 
-  // Фильтруем только текстовые элементы
+  // Фильтруем элементы по типу
   const textElements = elements.filter((el): el is TextFieldElement => el.type === 'text')
+  const qrElements = elements.filter((el) => el.type === 'qr')
 
   // Клик по холсту - снять выделение
   const handleCanvasClick = () => {
@@ -161,20 +167,31 @@ const ProjectTemplatesPage = () => {
                 }}
                 onClick={handleCanvasClick}
               >
-                {textElements.length === 0 ? (
+                {textElements.length === 0 && qrElements.length === 0 ? (
                   <Text variant="caption-2" color="secondary">
                     {canvasWidthMm}×{canvasHeightMm} мм
                   </Text>
                 ) : (
-                  textElements.map((element) => (
-                    <CanvasTextField
-                      key={element.id}
-                      element={element}
-                      screenPxPerMm={screenPxPerMm}
-                      zoom={zoom}
-                      canvasWidthMm={canvasWidthMm}
-                    />
-                  ))
+                  <>
+                    {textElements.map((element) => (
+                      <CanvasTextField
+                        key={element.id}
+                        element={element}
+                        screenPxPerMm={screenPxPerMm}
+                        zoom={zoom}
+                        canvasWidthMm={canvasWidthMm}
+                      />
+                    ))}
+                    {qrElements.map((element) => (
+                      <CanvasQrField
+                        key={element.id}
+                        element={element as any}
+                        screenPxPerMm={screenPxPerMm}
+                        zoom={zoom}
+                        canvasWidthMm={canvasWidthMm}
+                      />
+                    ))}
+                  </>
                 )}
               </div>
             </div>
@@ -260,23 +277,12 @@ const ProjectTemplatesPage = () => {
         onClose={() => setFieldModalOpen(false)}
       />
 
-      {/* Модалка добавления QR */}
-      <Modal open={qrModalOpen} onClose={() => setQrModalOpen(false)}>
-        <div className={styles.modal}>
-          <Text variant="header-1">Добавить QR-код</Text>
-          <Text variant="body-1" color="secondary" style={{ marginTop: '16px' }}>
-            Настройки QR-кода будут здесь
-          </Text>
-          <div className={styles.modalActions}>
-            <Button view="flat" size="l" onClick={() => setQrModalOpen(false)}>
-              Отмена
-            </Button>
-            <Button view="action" size="l" onClick={() => setQrModalOpen(false)}>
-              Добавить
-            </Button>
-          </div>
-        </div>
-      </Modal>
+            <AddQrModal
+              open={qrModalOpen}
+              onClose={() => setQrModalOpen(false)}
+              onAdd={(payload) => dispatch(addQrField(payload))}
+              fields={schemeData?.fields || []}
+            />
 
     </div>
   )

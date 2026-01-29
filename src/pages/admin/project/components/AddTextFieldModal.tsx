@@ -12,16 +12,16 @@ interface AddTextFieldModalProps {
 }
 
 const FONT_OPTIONS = [
-  { value: 'Arial', content: 'Arial' },
+  // { value: 'Arial', content: 'Arial' },
   { value: 'Segoe UI', content: 'Segoe UI' },
   { value: 'Times New Roman', content: 'Times New Roman' },
   { value: 'Roboto', content: 'Roboto' },
-  { value: 'Open Sans', content: 'Open Sans' },
-  { value: 'PT Sans', content: 'PT Sans' },
-  { value: 'Montserrat', content: 'Montserrat' },
-  { value: 'Georgia', content: 'Georgia' },
-  { value: 'Verdana', content: 'Verdana' },
-  { value: 'Tahoma', content: 'Tahoma' },
+  // { value: 'Open Sans', content: 'Open Sans' },
+  // { value: 'PT Sans', content: 'PT Sans' },
+  // { value: 'Montserrat', content: 'Montserrat' },
+  // { value: 'Georgia', content: 'Georgia' },
+  // { value: 'Verdana', content: 'Verdana' },
+  // { value: 'Tahoma', content: 'Tahoma' },
 ]
 
 const FONT_SIZE_OPTIONS = [
@@ -52,12 +52,12 @@ const AddTextFieldModal = ({ open, onClose }: AddTextFieldModalProps) => {
 
   // Состояние формы
   const [selectedFieldKey, setSelectedFieldKey] = useState<string | undefined>(undefined)
-  const [fontFamily, setFontFamily] = useState('Arial')
-  const [fontSize, setFontSize] = useState('12')
+  const [fontFamily, setFontFamily] = useState('Roboto')
+  const [fontSize, setFontSize] = useState('18')
   const [fontWeight, setFontWeight] = useState<FontWeight>('normal')
   const [fontStyle, setFontStyle] = useState<FontStyle>('normal')
-  const [textAlign, setTextAlign] = useState<TextAlign>('left')
-  const [fullWidth, setFullWidth] = useState(false)
+  const [textAlign, setTextAlign] = useState<TextAlign>('center')
+  const [fullWidth, setFullWidth] = useState(true)
   const [adaptive, setAdaptive] = useState(false)
   const [width, setWidth] = useState('40')
 
@@ -68,12 +68,12 @@ const AddTextFieldModal = ({ open, onClose }: AddTextFieldModalProps) => {
     } else {
       // Сброс на значения по умолчанию
       setSelectedFieldKey(undefined)
-      setFontFamily('Arial')
-      setFontSize('12')
+      setFontFamily('Roboto')
+      setFontSize('18')
       setFontWeight('normal')
       setFontStyle('normal')
-      setTextAlign('left')
-      setFullWidth(false)
+      setTextAlign('center')
+      setFullWidth(true)
       setAdaptive(false)
       setWidth('40')
     }

@@ -28,8 +28,36 @@ export interface TextFieldElement {
   adaptive: boolean
 }
 
+export type ResourceType = 'field' | 'fixed'
+
+export interface QrElement {
+  id: string
+  type: 'qr'
+  // resource handling
+  resourceType: ResourceType
+  fieldKey?: string
+  fixedValue?: string
+  prefix?: string
+  // position
+  x: number
+  y: number
+  // width used as size in mm
+  width: number
+  // center flag: when true, element is centered on X and can be moved only on Y
+  center: boolean
+  // colors and styles
+  fgColor: string
+  bgColor: string
+  moduleStyle: string
+  eyeStyle: string
+  eyeBorderStyle: string
+  ecLevel: string // уровень коррекции (L, M, Q, H)
+  /** URL логотипа для центра QR (опционально) */
+  logoUrl?: string
+}
+
 // Объединённый тип для всех элементов (в будущем добавим QR и др.)
-export type TemplateElement = TextFieldElement
+export type TemplateElement = TextFieldElement | QrElement
 
 // Настройки холста
 export interface CanvasSettings {
@@ -53,9 +81,9 @@ export interface TemplateEditorState {
 
 const initialState: TemplateEditorState = {
   canvas: {
-    widthMm: 90, // Стандартный бейдж 90x55 мм
-    heightMm: 55,
-    zoom: 100,
+    widthMm: 70, // Стандартный бейдж 70х50 мм
+    heightMm: 50,
+    zoom: 150,
     sizeUnit: 'mm',
   },
   elements: [],
@@ -73,13 +101,31 @@ const defaultTextFieldProps: Omit<TextFieldElement, 'id'> = {
   x: 10,
   y: 10,
   width: 40,
-  fullWidth: false,
-  fontFamily: 'Arial',
-  fontSize: 12,
+  fullWidth: true,
+  fontFamily: 'Roboto',
+  fontSize: 16,
   fontWeight: 'normal',
   fontStyle: 'normal',
-  textAlign: 'left',
+  textAlign: 'center',
   adaptive: false,
+}
+
+const defaultQrProps: Omit<QrElement, 'id'> = {
+  type: 'qr',
+  resourceType: 'field',
+  fieldKey: undefined,
+  fixedValue: undefined,
+  prefix: undefined,
+  x: 35,
+  y: 25,
+  width: 20,
+  center: true,
+  fgColor: '#000000',
+  bgColor: '#ffffff',
+  moduleStyle: 'squares',
+  eyeStyle: 'squares',
+  eyeBorderStyle: 'squares',
+  ecLevel: 'M',
 }
 
 const templateEditorSlice = createSlice({
@@ -119,14 +165,29 @@ const templateEditorSlice = createSlice({
       state.selectedElementId = newField.id
       state.isDirty = true
     },
+    addQrField: (state, action: PayloadAction<Partial<QrElement> | undefined>) => {
+      const newField: QrElement = {
+        ...defaultQrProps,
+        ...action.payload,
+        id: generateId(),
+      }
+      state.elements.push(newField)
+      state.selectedElementId = newField.id
+      state.isDirty = true
+    },
 
     updateElement: (state, action: PayloadAction<{ id: string; updates: Partial<TemplateElement> }>) => {
       const { id, updates } = action.payload
       const index = state.elements.findIndex(el => el.id === id)
-      if (index !== -1) {
-        state.elements[index] = { ...state.elements[index], ...updates }
-        state.isDirty = true
+      if (index === -1) return
+
+      const existing = state.elements[index]
+      if (existing.type === 'text') {
+        state.elements[index] = { ...existing, ...(updates as Partial<TextFieldElement>) } as TextFieldElement
+      } else if (existing.type === 'qr') {
+        state.elements[index] = { ...existing, ...(updates as Partial<QrElement>) } as QrElement
       }
+      state.isDirty = true
     },
 
     removeElement: (state, action: PayloadAction<string>) => {
@@ -147,12 +208,22 @@ const templateEditorSlice = createSlice({
       const { id, x, y } = action.payload
       const element = state.elements.find(el => el.id === id)
       if (element) {
-        // Если fullWidth, меняем только Y
-        if (element.type === 'text' && element.fullWidth) {
-          element.y = y
-        } else {
-          element.x = x
-          element.y = y
+        // Для текстового поля с fullWidth меняем только Y
+        if (element.type === 'text') {
+          if (element.fullWidth) {
+            element.y = y
+          } else {
+            element.x = x
+            element.y = y
+          }
+        } else if (element.type === 'qr') {
+          // Если центрирован, только Y можно менять
+          if (element.center) {
+            element.y = y
+          } else {
+            element.x = x
+            element.y = y
+          }
         }
         state.isDirty = true
       }
@@ -162,7 +233,13 @@ const templateEditorSlice = createSlice({
     resizeElement: (state, action: PayloadAction<{ id: string; width: number }>) => {
       const { id, width } = action.payload
       const element = state.elements.find(el => el.id === id)
-      if (element && element.type === 'text' && !element.fullWidth) {
+      if (!element) return
+      if (element.type === 'text' && !element.fullWidth) {
+        element.width = width
+        state.isDirty = true
+      }
+      if (element.type === 'qr') {
+        // resize controls size (width) for QR
         element.width = width
         state.isDirty = true
       }
@@ -196,6 +273,7 @@ export const {
   setZoom,
   setSizeUnit,
   addTextField,
+  addQrField,
   updateElement,
   removeElement,
   selectElement,
