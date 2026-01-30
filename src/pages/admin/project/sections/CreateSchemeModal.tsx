@@ -29,6 +29,8 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
     maxLength: '',
     listItems: [] as ListItem[],
     listMultiple: false,
+    defaultValue: '',
+    boolDefault: 'none' as 'none' | 'true' | 'false',
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -43,6 +45,8 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
       maxLength: '',
       listItems: [],
       listMultiple: false,
+      defaultValue: '',
+      boolDefault: 'none',
     })
     setErrors({})
     onClose()
@@ -83,6 +87,23 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
           color: item.color,
         })),
       }
+    }
+
+    // defaultValue handling
+    if (formData.type === 'bool') {
+      if (formData.boolDefault === 'true') config.defaultValue = true
+      else if (formData.boolDefault === 'false') config.defaultValue = false
+      // if 'none' => do not set defaultValue
+    } else if (formData.type === 'list') {
+      if (formData.listMultiple) {
+        if (formData.defaultValue.trim()) {
+          config.defaultValue = formData.defaultValue.split(',').map(s => s.trim()).filter(Boolean)
+        }
+      } else {
+        if (formData.defaultValue.trim()) config.defaultValue = formData.defaultValue.trim()
+      }
+    } else {
+      if (formData.defaultValue.trim()) config.defaultValue = formData.defaultValue.trim()
     }
 
     createMutation.mutate(
@@ -248,6 +269,33 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
               </div>
             </>
           )}
+
+          {/* Default value */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--g-color-text-secondary)' }}>
+              Значение по умолчанию
+            </label>
+            {formData.type === 'bool' ? (
+              <Select
+                value={[formData.boolDefault]}
+                width="max"
+                onUpdate={(v) => v.length && setFormData({ ...formData, boolDefault: v[0] as any })}
+                options={[
+                  { value: 'none', content: 'Не задано' },
+                  { value: 'true', content: 'Да' },
+                  { value: 'false', content: 'Нет' },
+                ]}
+                size="l"
+              />
+            ) : (
+              <TextInput
+                placeholder={formData.type === 'list' && formData.listMultiple ? 'Например: VIP, Спикер' : 'Например: value'}
+                value={formData.defaultValue}
+                onUpdate={(v: string) => setFormData({ ...formData, defaultValue: v })}
+                size="l"
+              />
+            )}
+          </div>
         </div>
       </Dialog.Body>
       <Dialog.Footer

@@ -31,6 +31,8 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
   const [uniq, setUniq] = useState(false)
   const [optional, setOptional] = useState(true)
   const [maxLength, setMaxLength] = useState('')
+  const [defaultValue, setDefaultValue] = useState<string>('')
+  const [boolDefault, setBoolDefault] = useState<'none' | 'true' | 'false'>('none')
 
   useEffect(() => {
     if (!field) return
@@ -41,6 +43,19 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
     setUniq(!!field.config?.uniq)
     setOptional(field.config?.optional !== false)
     setMaxLength(field.config?.maxLength ? String(field.config.maxLength) : '')
+    // defaultValue
+    const dv = field.config?.defaultValue
+    if (dv === null || dv === undefined) {
+      setDefaultValue('')
+      setBoolDefault('none')
+    } else if (field.config?.type === 'bool') {
+      setBoolDefault(dv ? 'true' : 'false')
+      setDefaultValue('')
+    } else if (field.config?.type === 'list' && Array.isArray(dv)) {
+      setDefaultValue(dv.join(', '))
+    } else {
+      setDefaultValue(String(dv))
+    }
 
     if (field?.config?.type === 'list' && field?.config?.listSettings) {
       const items = field.config.listSettings.items.map((item: any, index: number) => ({
@@ -66,6 +81,8 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
     setUniq(false)
     setOptional(true)
     setMaxLength('')
+    setDefaultValue('')
+    setBoolDefault('none')
     onClose()
   }
 
@@ -104,6 +121,20 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
           color: item.color,
         })),
       }
+    }
+
+    // defaultValue handling
+    if (typeValue === 'bool') {
+      if (boolDefault === 'true') config.defaultValue = true
+      else if (boolDefault === 'false') config.defaultValue = false
+    } else if (typeValue === 'list') {
+      if (listMultiple) {
+        if (defaultValue.trim()) config.defaultValue = defaultValue.split(',').map(s => s.trim()).filter(Boolean)
+      } else {
+        if (defaultValue.trim()) config.defaultValue = defaultValue.trim()
+      }
+    } else {
+      if (defaultValue.trim()) config.defaultValue = defaultValue.trim()
     }
 
     // Если ключ изменился — спрашиваем подтверждение, что данные участников будут мигрированы
@@ -219,6 +250,33 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
               </div>
             </>
           )}
+
+          {/* Default value */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--g-color-text-secondary)' }}>
+              Значение по умолчанию
+            </label>
+            {typeValue === 'bool' ? (
+              <Select
+                value={[boolDefault]}
+                width="max"
+                onUpdate={(v) => v.length && setBoolDefault(v[0] as any)}
+                options={[
+                  { value: 'none', content: 'Не задано' },
+                  { value: 'true', content: 'Да' },
+                  { value: 'false', content: 'Нет' },
+                ]}
+                size="l"
+              />
+            ) : (
+              <TextInput
+                placeholder={typeValue === 'list' && listMultiple ? 'Например: VIP, Спикер' : 'Например: value'}
+                value={defaultValue}
+                onUpdate={(v: string) => setDefaultValue(v)}
+                size="l"
+              />
+            )}
+          </div>
         </div>
       </Dialog.Body>
       <Dialog.Footer
