@@ -60,6 +60,8 @@ const AddTextFieldModal = ({ open, onClose }: AddTextFieldModalProps) => {
   const [fullWidth, setFullWidth] = useState(true)
   const [adaptive, setAdaptive] = useState(false)
   const [width, setWidth] = useState('40')
+  const [multiline, setMultiline] = useState(false)
+  const [maxLines, setMaxLines] = useState(1)
 
   // Сброс формы при открытии
   const handleOpenChange = (isOpen: boolean) => {
@@ -76,6 +78,8 @@ const AddTextFieldModal = ({ open, onClose }: AddTextFieldModalProps) => {
       setFullWidth(true)
       setAdaptive(false)
       setWidth('40')
+      setMultiline(false)
+      setMaxLines(1)
     }
   }
 
@@ -88,8 +92,10 @@ const AddTextFieldModal = ({ open, onClose }: AddTextFieldModalProps) => {
       fontStyle,
       textAlign,
       fullWidth,
-      adaptive,
+      adaptive: multiline ? false : adaptive, // При многострочном режиме адаптив отключается
       width: parseFloat(width),
+      multiline,
+      maxLines: multiline ? maxLines : undefined,
     }))
     onClose()
   }
@@ -206,9 +212,42 @@ const AddTextFieldModal = ({ open, onClose }: AddTextFieldModalProps) => {
             <Checkbox
               checked={adaptive}
               onUpdate={setAdaptive}
+              disabled={multiline}
             >
               Адаптивный размер (уменьшать шрифт если не помещается)
             </Checkbox>
+          </div>
+
+          {/* Многострочный режим */}
+          <div className={styles.row}>
+            <div className={styles.field}>
+              <Checkbox
+                checked={multiline}
+                onUpdate={(checked) => {
+                  setMultiline(checked)
+                  if (checked) {
+                    setAdaptive(false) // Отключаем адаптивный размер при включении многострочки
+                  }
+                }}
+              >
+                Многострочный текст
+              </Checkbox>
+            </div>
+            {multiline && (
+              <div className={styles.field}>
+                <Text variant="body-2">Максимум строк</Text>
+                <TextInput
+                  value={String(maxLines)}
+                  onUpdate={(value) => {
+                    const num = parseInt(value, 10)
+                    if (!isNaN(num) && num >= 1 && num <= 10) {
+                      setMaxLines(num)
+                    }
+                  }}
+                  type="number"
+                />
+              </div>
+            )}
           </div>
         </div>
       </Dialog.Body>

@@ -10,6 +10,7 @@ import { useProjectQuery } from '@/hooks/queries/useProjectQueries'
 import { useUpdateParticipantMutation, useDeleteParticipantMutation } from '@/hooks/mutations/useParticipantMutations'
 import { useAppSelector } from '@/store/hooks'
 import { previewBadgePdf, PrintTemplate } from '@/services/printService'
+import { fetchPrintParticipant } from '@/services/api/participants'
 import { UserRole } from '@/types/auth'
 import { ConfirmDeleteModal } from './ConfirmDeleteModal'
 
@@ -217,6 +218,9 @@ export const ParticipantModal = ({
       }
       
       await previewBadgePdf(template, participant.data)
+      
+      // Отправляем запрос о печати на сервер
+      await fetchPrintParticipant(Number(projectId), participant.id)
     } catch (err) {
       console.error('Print error:', err)
       enqueueSnackbar('Ошибка при генерации PDF', { variant: 'error' })

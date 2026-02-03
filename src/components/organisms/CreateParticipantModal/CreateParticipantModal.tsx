@@ -4,6 +4,9 @@ import { useSnackbar } from 'notistack'
 import type { SchemeField } from '@/hooks/queries/useSchemeQueries'
 import { useCreateParticipantMutation } from '@/hooks/mutations/useParticipantMutations'
 import { uploadImageWithMini } from '@/services/api/files'
+import { fetchPrintParticipant } from '@/services/api/participants'
+import { useAppSelector } from '@/store/hooks'
+import { previewBadgePdf, PrintTemplate } from '@/services/printService'
 
 export interface CreateParticipantModalProps {
   open: boolean
@@ -152,6 +155,7 @@ export const CreateParticipantModal = ({
 }: CreateParticipantModalProps) => {
   const { enqueueSnackbar } = useSnackbar()
   const createMutation = useCreateParticipantMutation(Number(projectId))
+  const templateEditor = useAppSelector((state) => state.templateEditor)
 
   // Состояние формы - динамически формируется из схемы
   const [formData, setFormData] = useState<Record<string, any>>({})
@@ -215,11 +219,31 @@ export const CreateParticipantModal = ({
     onClose()
   }, [keepOpen, resetForm, onClose])
 
-  // Заглушка для печати
-  const handlePrint = useCallback((participantId: number) => {
-    console.log('TODO: Печать участника', participantId)
-    enqueueSnackbar('Печать запущена (заглушка)', { variant: 'info' })
-  }, [enqueueSnackbar])
+  // Печать участника после создания
+  const handlePrint = useCallback(async (participantId: number, participantData: Record<string, any>) => {
+    const { canvas, elements } = templateEditor
+    
+    if (elements.length === 0) {
+      enqueueSnackbar('Добавьте элементы в шаблон печати', { variant: 'warning' })
+      return
+    }
+    
+    try {
+      const template: PrintTemplate = {
+        widthMm: canvas.widthMm,
+        heightMm: canvas.heightMm,
+        elements: elements,
+      }
+      
+      await previewBadgePdf(template, participantData)
+      
+      // Отправляем запрос о печати на сервер
+      await fetchPrintParticipant(Number(projectId), participantId)
+    } catch (err) {
+      console.error('Print error:', err)
+      enqueueSnackbar('Ошибка при генерации PDF', { variant: 'error' })
+    }
+  }, [templateEditor, projectId, enqueueSnackbar])
 
   const handleSubmit = useCallback(async () => {
     // Валидация обязательных полей
@@ -254,7 +278,7 @@ export const CreateParticipantModal = ({
 
           // Печать если выбрано
           if (printAfterSave) {
-            handlePrint(createdParticipant.id)
+            handlePrint(createdParticipant.id, createdParticipant.data)
           }
 
           if (keepOpen) {

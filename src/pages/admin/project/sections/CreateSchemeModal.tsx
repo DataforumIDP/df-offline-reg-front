@@ -31,6 +31,7 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
     listMultiple: false,
     defaultValue: '',
     boolDefault: 'none' as 'none' | 'true' | 'false',
+    random: false,
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -47,6 +48,7 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
       listMultiple: false,
       defaultValue: '',
       boolDefault: 'none',
+      random: false,
     })
     setErrors({})
     onClose()
@@ -104,6 +106,11 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
       }
     } else {
       if (formData.defaultValue.trim()) config.defaultValue = formData.defaultValue.trim()
+    }
+
+    // random flag for code type
+    if (formData.type === 'code') {
+      config.random = formData.random
     }
 
     createMutation.mutate(
@@ -296,6 +303,16 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
               />
             )}
           </div>
+
+          {/* Флаг random для типа code */}
+          {formData.type === 'code' && (
+            <Checkbox
+              checked={formData.random || false}
+              onUpdate={(checked) => setFormData({ ...formData, random: checked })}
+            >
+              Генерировать случайное значение
+            </Checkbox>
+          )}
         </div>
       </Dialog.Body>
       <Dialog.Footer

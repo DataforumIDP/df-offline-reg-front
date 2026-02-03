@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Text, Card, Skeleton, Alert, Table } from '@gravity-ui/uikit'
+import { Text, Card, Skeleton, Alert, Table, Tooltip } from '@gravity-ui/uikit'
 import { useParams } from 'react-router-dom'
 import ChartKit, { settings } from '@gravity-ui/chartkit'
 import { YagrPlugin } from '@gravity-ui/chartkit/yagr'
@@ -175,7 +175,7 @@ const ProjectStatsPage = () => {
     { id: 'total', name: 'Всего' },
   ]
 
-  const statsMap = stats || { CREATE: 0, UPDATE: 0, DELETE: 0, PRINT: 0 }
+  const statsMap = stats || { CREATE: 0, UPDATE: 0, DELETE: 0, PRINT: 0, uniqPrints: 0 }
 
   return (
     <div style={{ padding: '24px' }}>
@@ -238,20 +238,22 @@ const ProjectStatsPage = () => {
           )}
         </Card>
 
-        <Card style={{ flex: 1, padding: '20px', textAlign: 'center', aspectRatio: '2 / 1', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          {statsLoading ? (
-            <Skeleton />
-          ) : (
-            <>
-              <Text variant="display-2" color="warning">
-                {statsMap.PRINT}
-              </Text>
-              <Text variant="body-2" color="secondary" style={{ marginTop: '8px', display: 'block' }}>
-                Напечатано
-              </Text>
-            </>
-          )}
-        </Card>
+        <Tooltip content={`Уникальных: ${statsMap.uniqPrints}`} placement="bottom">
+          <Card style={{ flex: 1, padding: '20px', textAlign: 'center', aspectRatio: '2 / 1', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            {statsLoading ? (
+              <Skeleton />
+            ) : (
+              <>
+                <Text variant="display-2" color="warning">
+                  {statsMap.PRINT}
+                </Text>
+                <Text variant="body-2" color="secondary" style={{ marginTop: '8px', display: 'block' }}>
+                  Напечатано
+                </Text>
+              </>
+            )}
+          </Card>
+        </Tooltip>
       </div>
 
       {/* График */}

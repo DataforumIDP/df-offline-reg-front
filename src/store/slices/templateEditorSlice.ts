@@ -26,6 +26,10 @@ export interface TextFieldElement {
     textAlign: TextAlign
     // Адаптивный размер - уменьшать шрифт если текст не помещается
     adaptive: boolean
+    // Многострочный режим - ограничить количество строк с троеточием
+    multiline?: boolean
+    // Максимальное количество строк (1-10), используется при multiline: true
+    maxLines?: number
 }
 
 export type ResourceType = 'field' | 'fixed'
@@ -115,6 +119,8 @@ const defaultTextFieldProps: Omit<TextFieldElement, 'id'> = {
     fontStyle: 'normal',
     textAlign: 'center',
     adaptive: false,
+    multiline: false,
+    maxLines: 1,
 }
 
 const defaultQrProps: Omit<QrElement, 'id'> = {

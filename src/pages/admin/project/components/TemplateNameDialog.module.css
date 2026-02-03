@@ -1,0 +1,20 @@
+.modal {
+    min-width: 320px;
+}
+
+.content {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.input {
+    width: 100%;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}

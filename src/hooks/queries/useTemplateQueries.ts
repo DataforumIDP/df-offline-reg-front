@@ -16,11 +16,10 @@ export const usePrintTemplate = (templateId: number | undefined) => {
 /**
  * Запрос всех шаблонов печати
  */
-export const usePrintTemplates = (search: string | undefined) => {
+export const usePrintTemplates = (search?: string) => {
   return useQuery({
-    queryKey: ['print-template', search],
-    queryFn: () => fetchPrintTemplates(search!),
-    enabled: !!search,
+    queryKey: ['print-templates', search ?? ''],
+    queryFn: () => fetchPrintTemplates(search),
     staleTime: 10 * 60 * 1000, // 10 минут
   })
 }

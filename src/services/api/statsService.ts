@@ -31,6 +31,7 @@ export interface StatsResponse {
   UPDATE: number
   DELETE: number
   PRINT: number
+  uniqPrints: number
 }
 
 export interface LogsQuery {

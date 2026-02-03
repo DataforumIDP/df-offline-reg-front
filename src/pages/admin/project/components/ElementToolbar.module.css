@@ -35,3 +35,7 @@
 .italic {
   font-style: italic;
 }
+
+.maxLinesInput {
+  width: 50px;
+}

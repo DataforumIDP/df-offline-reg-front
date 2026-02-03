@@ -33,6 +33,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
   const [maxLength, setMaxLength] = useState('')
   const [defaultValue, setDefaultValue] = useState<string>('')
   const [boolDefault, setBoolDefault] = useState<'none' | 'true' | 'false'>('none')
+  const [random, setRandom] = useState(false)
 
   useEffect(() => {
     if (!field) return
@@ -69,6 +70,8 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
       setListItems([])
       setListMultiple(false)
     }
+
+    setRandom(field.config?.random || false)
   }, [field, open])
 
   const handleClose = () => {
@@ -83,6 +86,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
     setMaxLength('')
     setDefaultValue('')
     setBoolDefault('none')
+    setRandom(false)
     onClose()
   }
 
@@ -135,6 +139,11 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
       }
     } else {
       if (defaultValue.trim()) config.defaultValue = defaultValue.trim()
+    }
+
+    // random flag for code type
+    if (typeValue === 'code') {
+      config.random = random
     }
 
     // Если ключ изменился — спрашиваем подтверждение, что данные участников будут мигрированы
@@ -277,6 +286,16 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
               />
             )}
           </div>
+
+          {/* Флаг random для типа code */}
+          {typeValue === 'code' && (
+            <Checkbox
+              checked={random}
+              onUpdate={(checked) => setRandom(checked)}
+            >
+              Генерировать случайное значение
+            </Checkbox>
+          )}
         </div>
       </Dialog.Body>
       <Dialog.Footer

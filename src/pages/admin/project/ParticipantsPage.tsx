@@ -1,19 +1,20 @@
 import { Text, Button, Loader, Tooltip, Hotkey } from '@gravity-ui/uikit'
-import { Plus, Printer } from '@gravity-ui/icons'
+import { Plus, Printer, Magnifier } from '@gravity-ui/icons'
 import { useParams } from 'react-router-dom'
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { useSnackbar } from 'notistack'
 import { SearchInput } from '@/components/atoms'
 import { ParticipantsTable, type FiltersState } from '@/components/organisms/ParticipantsTable'
 import { ParticipantModal } from '@/components/organisms/ParticipantModal'
 import { CreateParticipantModal } from '@/components/organisms/CreateParticipantModal'
+import SearchByCodeModal from '@/components/organisms/SearchByCodeModal'
 import { useParticipantsQuery } from '@/hooks/queries/useParticipantQueries'
 import { useSchemeQuery } from '@/hooks/queries/useSchemeQueries'
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
 import { generateMultipleBadgesPdf, PrintTemplate, PrintData } from '@/services/printService'
 import { setCanvasSize, setElements, setTemplateId, setTemplateName } from '@/store/slices/templateEditorSlice'
 import { useProjectPrintTemplate } from '@/hooks/queries/useTemplateQueries'
-import type { Participant } from '@/services/api/participants'
+import { fetchPrintParticipant, type Participant } from '@/services/api/participants'
 
 const ProjectParticipantsPage = () => {
   const { id: projectId } = useParams<{ id: string }>()
@@ -65,6 +66,9 @@ const ProjectParticipantsPage = () => {
   // Состояние модалки создания
   const [createModalOpen, setCreateModalOpen] = useState(false)
   
+  // Состояние модалки поиска по коду
+  const [searchByCodeModalOpen, setSearchByCodeModalOpen] = useState(false)
+  
   // Состояние массовой печати
   const [isPrinting, setIsPrinting] = useState(false)
 
@@ -96,6 +100,11 @@ const ProjectParticipantsPage = () => {
   const totalRecords = participantsData?.totalRecords || 0
   const totalPages = participantsData?.totalPages || 1
   const recordsPerPageResp = participantsData?.recordsPerPage || recordsPerPage
+
+  // Проверяем наличие полей типа code в схеме
+  const hasCodeField = useMemo(() => {
+    return scheme.some((field: any) => field.config?.type === 'code')
+  }, [scheme])
 
   // Обработчики
   const handleSearchChange = useCallback((value: string) => {
@@ -135,6 +144,19 @@ const ProjectParticipantsPage = () => {
 
   const handleCreateModalOpen = useCallback(() => {
     setCreateModalOpen(true)
+  }, [])
+
+  const handleSearchByCodeModalOpen = useCallback(() => {
+    setSearchByCodeModalOpen(true)
+  }, [])
+
+  const handleSearchByCodeModalClose = useCallback(() => {
+    setSearchByCodeModalOpen(false)
+  }, [])
+
+  const handleParticipantFoundByCode = useCallback((participantId: number) => {
+    setSelectedParticipant(participantId)
+    setModalOpen(true)
   }, [])
 
   // Горячая клавиша Alt+C для открытия модалки создания участника
@@ -208,6 +230,15 @@ const ProjectParticipantsPage = () => {
       window.open(url, '_blank')
       setTimeout(() => URL.revokeObjectURL(url), 60000)
       
+      // Отправляем запросы о печати для каждого участника
+      await Promise.all(
+        selectedParticipants.map((p: Participant) =>
+          fetchPrintParticipant(Number(projectId), p.id).catch((err) => {
+            console.error(`Failed to log print for participant ${p.id}:`, err)
+          })
+        )
+      )
+      
       enqueueSnackbar(`PDF создан для ${selectedParticipants.length} участников`, { variant: 'success' })
       
       // Сбрасываем выделение
@@ -232,6 +263,14 @@ const ProjectParticipantsPage = () => {
                 <Printer />
               </Button.Icon>
               Печать ({selectedIds.length})
+            </Button>
+          )}
+          {hasCodeField && (
+            <Button view="outlined" size="l" onClick={handleSearchByCodeModalOpen}>
+              <Button.Icon>
+                <Magnifier />
+              </Button.Icon>
+              Поиск по коду
             </Button>
           )}
           <Tooltip content={<Hotkey view="dark" value="alt+c" />} placement="top">
@@ -294,6 +333,13 @@ const ProjectParticipantsPage = () => {
         onClose={handleCreateModalClose}
         projectId={projectId || ''}
         scheme={scheme}
+      />
+
+      <SearchByCodeModal
+        open={searchByCodeModalOpen}
+        onClose={handleSearchByCodeModalClose}
+        projectId={projectId || ''}
+        onParticipantFound={handleParticipantFoundByCode}
       />
     </div>
   )

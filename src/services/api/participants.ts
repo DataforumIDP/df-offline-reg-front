@@ -189,3 +189,12 @@ export const fetchClearParticipants = (projectId: number): Promise<ClearParticip
     .delete<ClearParticipantsResult>(`/projects/${projectId}/participants`)
     .then(res => res.data)
 }
+
+/**
+ * Поиск участника по коду
+ */
+export const fetchParticipantByCode = (projectId: number, code: string): Promise<Participant> => {
+  return apiClient
+    .get<Participant>(`/projects/${projectId}/code/${encodeURIComponent(code)}`)
+    .then(res => res.data)
+}

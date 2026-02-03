@@ -2,7 +2,7 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { selectElement, moveElement, resizeElement, QrElement } from '@/store/slices/templateEditorSlice'
 import styles from './CanvasQrField.module.css'
-import { QRCode } from 'react-qrcode-logo'
+import QRCodeStyling from 'qr-code-styling'
 
 interface CanvasQrFieldProps {
   element: QrElement
@@ -15,6 +15,8 @@ const CanvasQrField = ({ element, screenPxPerMm, zoom, canvasWidthMm }: CanvasQr
   const dispatch = useAppDispatch()
   const selectedElementId = useAppSelector(state => state.templateEditor.selectedElementId)
   const elementRef = useRef<HTMLDivElement>(null)
+  const qrRef = useRef<HTMLDivElement>(null)
+  const qrInstanceRef = useRef<QRCodeStyling | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0, elementX: 0, elementY: 0 })
@@ -116,6 +118,42 @@ const CanvasQrField = ({ element, screenPxPerMm, zoom, canvasWidthMm }: CanvasQr
     ? (element.prefix || '') + (element.fieldKey || '')
     : element.fixedValue || ''
 
+  // Инициализация и обновление QR-кода через qr-code-styling
+  useEffect(() => {
+    if (!qrRef.current) return
+
+    // Очищаем предыдущий QR-код
+    qrRef.current.innerHTML = ''
+
+    const qr = new QRCodeStyling({
+      width: Math.round(sizePx),
+      height: Math.round(sizePx),
+      type: 'canvas',
+      data: value || ' ',
+      qrOptions: {
+        errorCorrectionLevel: element.ecLevel as 'L' | 'M' | 'Q' | 'H',
+      },
+      dotsOptions: {
+        color: element.fgColor,
+        type: (element.moduleStyle || 'square') as 'square' | 'dots' | 'rounded' | 'classy' | 'classy-rounded' | 'extra-rounded',
+      },
+      backgroundOptions: {
+        color: element.bgColor,
+      },
+      cornersSquareOptions: {
+        color: element.fgColor,
+        type: (element.eyeBorderStyle === 'round' ? 'extra-rounded' : 'square') as 'square' | 'dot' | 'extra-rounded',
+      },
+      cornersDotOptions: {
+        color: element.fgColor,
+        type: (element.eyeBorderStyle === 'round' ? 'dot' : 'square') as 'dot' | 'square',
+      },
+    })
+
+    qr.append(qrRef.current)
+    qrInstanceRef.current = qr
+  }, [value, sizePx, element.ecLevel, element.fgColor, element.bgColor, element.moduleStyle, element.eyeBorderStyle])
+
   return (
     <div
       ref={elementRef}
@@ -130,15 +168,7 @@ const CanvasQrField = ({ element, screenPxPerMm, zoom, canvasWidthMm }: CanvasQr
       onClick={handleClick}
       onMouseDown={handleMouseDown}
     >
-      <QRCode
-        value={value || ' '}
-        size={sizePx}
-        ecLevel={element.ecLevel as any}
-        fgColor={element.fgColor}
-        bgColor={element.bgColor}
-        qrStyle={element.moduleStyle as any}
-        eyeRadius={element.eyeBorderStyle === 'round' ? 6 : 0}
-      />
+      <div ref={qrRef} className={styles.qrContainer} />
       {/* Resize handle - только если выбран */}
       {isSelected && (
         <div

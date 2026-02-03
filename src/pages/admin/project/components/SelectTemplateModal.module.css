@@ -1,0 +1,117 @@
+.modal {
+    max-width: 800px;
+    width: 90vw;
+    max-height: 80vh;
+}
+
+.content {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    height: 100%;
+    max-height: calc(80vh - 48px);
+}
+
+.searchInput {
+    width: 100%;
+}
+
+.templatesList {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 200px;
+}
+
+.loader,
+.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    padding: 5px;
+}
+
+.card {
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    overflow: hidden;
+    border: 1px solid var(--g-color-line-generic);
+    border-radius: 8px;
+    background: var(--g-color-base-background);
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: var(--g-color-line-generic-hover);
+}
+
+.card:focus {
+    outline: none;
+    border-color: var(--g-color-base-brand);
+}
+
+.card.selected {
+    border-color: var(--g-color-base-brand);
+    box-shadow: 0 0 0 2px var(--g-color-base-brand);
+}
+
+.cardPreview {
+    width: 100%;
+    aspect-ratio: 1 / 1.4;
+    background: var(--g-color-base-generic);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.previewImage {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.noPreview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: var(--g-color-base-generic-hover);
+}
+
+.cardInfo {
+    padding: 12px;
+}
+
+.selectedBadge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--g-color-base-brand);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.loadingOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}

@@ -493,8 +493,8 @@ async function renderTextElement(
   // Ширина элемента
   const elementWidth = element.fullWidth ? pageWidth : element.width
   
-  // Адаптивный размер шрифта
-  if (element.adaptive) {
+  // Адаптивный размер шрифта (только если не многострочный режим)
+  if (element.adaptive && !element.multiline) {
     fontSize = fitTextToWidth(doc, text, fontSize, elementWidth)
   }
   
@@ -542,8 +542,42 @@ async function renderTextElement(
   // В jsPDF y=0 это верх страницы, что совпадает с нашей системой координат
   const y = element.y + (fontSize * 0.35) // Небольшая коррекция для baseline
   
-  // Рисуем текст
-  doc.text(text, x, y, { align })
+  // Многострочный режим - разбить текст на строки и обрезать с троеточием
+  if (element.multiline && element.maxLines) {
+    const maxLines = Math.min(Math.max(element.maxLines, 1), 10)
+    // Межстрочный интервал: fontSize в pt, конвертируем в mm (1pt = 0.3528mm), множитель 1.2
+    const lineHeightMm = fontSize * 0.3528 * 1.2
+    
+    // Разбиваем текст на строки, которые помещаются в ширину
+    const lines = doc.splitTextToSize(text, elementWidth)
+    
+    // Ограничиваем количество строк
+    let displayLines: string[] = lines.slice(0, maxLines)
+    
+    // Если текст был обрезан, добавляем троеточие к последней строке
+    if (lines.length > maxLines) {
+      const lastLine = displayLines[displayLines.length - 1]
+      // Обрезаем последнюю строку и добавляем троеточие
+      let truncatedLine = lastLine
+      const ellipsis = '…'
+      
+      // Проверяем, помещается ли строка с троеточием
+      while (measureTextWidth(doc, truncatedLine + ellipsis, fontSize) > elementWidth && truncatedLine.length > 0) {
+        truncatedLine = truncatedLine.slice(0, -1).trim()
+      }
+      
+      displayLines[displayLines.length - 1] = truncatedLine + ellipsis
+    }
+    
+    // Рисуем каждую строку
+    displayLines.forEach((line, index) => {
+      const lineY = y + (index * lineHeightMm)
+      doc.text(line, x, lineY, { align })
+    })
+  } else {
+    // Обычный режим - одна строка
+    doc.text(text, x, y, { align })
+  }
 }
 
 /**
@@ -704,4 +738,143 @@ export function printPxToMm(px: number): number {
  */
 export function mmToPrintPx(mm: number): number {
   return mm * (300 / 25.4)
+}
+
+/**
+ * Сгенерировать превью (JPG) из шаблона для использования как прелоадера
+ * Создаёт canvas с отрендеренными элементами и возвращает Blob
+ */
+export async function generateTemplatePreview(
+  template: PrintTemplate,
+  sampleData: PrintData = {}
+): Promise<Blob> {
+  // Размеры canvas (используем 96 DPI как для экрана, но масштабируем 2x для качества)
+  const scale = 2
+  const screenDpi = 96
+  const pxPerMm = (screenDpi / 25.4) * scale
+  
+  const width = Math.round(template.widthMm * pxPerMm)
+  const height = Math.round(template.heightMm * pxPerMm)
+  
+  // Создаём canvas
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  
+  const ctx = canvas.getContext('2d')
+  if (!ctx) {
+    throw new Error('Failed to get canvas context')
+  }
+  
+  // Белый фон
+  ctx.fillStyle = '#ffffff'
+  ctx.fillRect(0, 0, width, height)
+  
+  // Рендерим текстовые элементы
+  for (const element of template.elements) {
+    if (element.type === 'text') {
+      const textEl = element as import('@/store/slices/templateEditorSlice').TextFieldElement
+      
+      // Получаем значение поля или используем placeholder
+      const fieldKey = textEl.fieldKey || 'field'
+      const text = (sampleData[fieldKey] as string) || fieldKey
+      
+      // Позиция
+      const x = textEl.fullWidth 
+        ? (textEl.textAlign === 'center' ? width / 2 : textEl.textAlign === 'right' ? width - 10 : 10)
+        : textEl.x * pxPerMm
+      const y = textEl.y * pxPerMm
+      
+      // Ширина элемента в px
+      const elementWidthPx = textEl.fullWidth ? width - 20 : textEl.width * pxPerMm
+      
+      // Стиль шрифта
+      const fontSizePx = textEl.fontSize * pxPerMm / (300 / 25.4) * (screenDpi / 25.4)
+      const fontWeight = textEl.fontWeight === 'bold' ? 'bold' : 'normal'
+      const fontStyle = textEl.fontStyle === 'italic' ? 'italic' : 'normal'
+      ctx.font = `${fontStyle} ${fontWeight} ${fontSizePx}px ${textEl.fontFamily || 'Arial'}`
+      ctx.fillStyle = '#000000'
+      ctx.textAlign = textEl.textAlign as CanvasTextAlign
+      ctx.textBaseline = 'top'
+      
+      // Многострочный режим
+      if (textEl.multiline && textEl.maxLines) {
+        const maxLines = Math.min(Math.max(textEl.maxLines, 1), 10)
+        const lineHeight = fontSizePx * 1.2 // Межстрочный интервал
+        
+        // Разбиваем текст на слова и формируем строки
+        const words = text.split(' ')
+        const lines: string[] = []
+        let currentLine = ''
+        
+        for (const word of words) {
+          const testLine = currentLine ? `${currentLine} ${word}` : word
+          const testWidth = ctx.measureText(testLine).width
+          
+          if (testWidth > elementWidthPx && currentLine) {
+            lines.push(currentLine)
+            currentLine = word
+          } else {
+            currentLine = testLine
+          }
+        }
+        if (currentLine) {
+          lines.push(currentLine)
+        }
+        
+        // Ограничиваем и добавляем троеточие
+        let displayLines = lines.slice(0, maxLines)
+        if (lines.length > maxLines) {
+          let lastLine = displayLines[displayLines.length - 1]
+          const ellipsis = '…'
+          while (ctx.measureText(lastLine + ellipsis).width > elementWidthPx && lastLine.length > 0) {
+            lastLine = lastLine.slice(0, -1).trim()
+          }
+          displayLines[displayLines.length - 1] = lastLine + ellipsis
+        }
+        
+        // Рисуем каждую строку
+        displayLines.forEach((line, index) => {
+          ctx.fillText(line, x, y + index * lineHeight)
+        })
+      } else {
+        ctx.fillText(text, x, y)
+      }
+    } else if (element.type === 'qr') {
+      const qrEl = element as import('@/store/slices/templateEditorSlice').QrElement
+      
+      // Позиция и размер
+      const size = qrEl.width * pxPerMm
+      const x = qrEl.center 
+        ? (width - size) / 2 
+        : qrEl.x * pxPerMm
+      const y = qrEl.y * pxPerMm
+      
+      // Рисуем placeholder для QR
+      ctx.strokeStyle = '#cccccc'
+      ctx.lineWidth = 2
+      ctx.strokeRect(x, y, size, size)
+      
+      ctx.fillStyle = '#cccccc'
+      ctx.font = `${size * 0.15}px Arial`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText('QR', x + size / 2, y + size / 2)
+    }
+  }
+  
+  // Конвертируем в JPG blob
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          resolve(blob)
+        } else {
+          reject(new Error('Failed to convert canvas to blob'))
+        }
+      },
+      'image/jpeg',
+      0.85 // качество 85%
+    )
+  })
 }

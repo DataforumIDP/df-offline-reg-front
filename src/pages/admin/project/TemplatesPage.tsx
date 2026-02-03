@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Text, Button, DropdownMenu, TextInput, RadioGroup, Slider } from '@gravity-ui/uikit'
 import { Plus, Printer, FolderOpen, FloppyDisk } from '@gravity-ui/icons'
 import { useParams } from 'react-router-dom'
+import { useSnackbar } from 'notistack'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import {
     setCanvasWidth,
@@ -14,19 +15,18 @@ import {
     setTemplateName,
     TextFieldElement,
     addQrField,
+    markAsSaved,
 } from '@/store/slices/templateEditorSlice'
 import { useParticipantsQuery } from '@/hooks/queries/useParticipantQueries'
 import { useSchemeQuery } from '@/hooks/queries/useSchemeQueries'
-import { previewBadgePdf, PrintTemplate } from '@/services/printService'
+import { previewBadgePdf, PrintTemplate, generateTemplatePreview } from '@/services/printService'
 import { useProjectPrintTemplate } from '@/hooks/queries/useTemplateQueries'
 import {
     useCreatePrintTemplateMutation,
     useUpdatePrintTemplateMutation,
     useAssignPrintTemplateMutation,
 } from '@/hooks/mutations/useTemplateMutations'
-import { uploadFile } from '@/services/api/files'
-import { Modal } from '@gravity-ui/uikit'
-// Диалог для ввода имени шаблона
+import { uploadFile, getFileUrl } from '@/services/api/files'
 
 import AddTextFieldModal from './components/AddTextFieldModal'
 import AddQrModal from './components/AddQrModal'
@@ -34,46 +34,9 @@ import CanvasTextField from './components/CanvasTextField'
 import CanvasQrField from './components/CanvasQrField'
 import ElementToolbar from './components/ElementToolbar'
 import ElementsList from './components/ElementsList'
+import TemplateNameDialog from './components/TemplateNameDialog'
+import SelectTemplateModal from './components/SelectTemplateModal'
 import styles from './TemplatesPage.module.css'
-
-const NameDialog = ({
-    open,
-    onClose,
-    onSubmit,
-}: {
-    open: boolean
-    onClose: () => void
-    onSubmit: (name: string) => void
-}) => {
-    const [name, setName] = useState('')
-    return (
-        <Modal open={open} onClose={onClose} contentClassName={styles.nameDialogModal}>
-            <div style={{ padding: 24, minWidth: 320 }}>
-                <Text variant="header-2">Введите название шаблона</Text>
-                <TextInput
-                    value={name}
-                    onUpdate={setName}
-                    autoFocus
-                    placeholder="Название шаблона"
-                    style={{ margin: '16px 0' }}
-                />
-                <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-                    <Button view="flat" onClick={onClose}>
-                        Отмена
-                    </Button>
-                    <Button
-                        view="action"
-                        onClick={() => {
-                            if (name.trim()) onSubmit(name.trim())
-                        }}
-                    >
-                        Сохранить
-                    </Button>
-                </div>
-            </div>
-        </Modal>
-    )
-}
 
 // Конвертация мм <-> px при 300 DPI (стандарт для печати)
 const MM_TO_PX_RATIO = 300 / 25.4 // ≈ 11.81 px на 1 мм
@@ -83,13 +46,17 @@ const pxToMm = (px: number) => Math.round((px / MM_TO_PX_RATIO) * 10) / 10
 const ProjectTemplatesPage = () => {
     const { id: projectId } = useParams()
     const dispatch = useAppDispatch()
+    const { enqueueSnackbar } = useSnackbar()
 
     // Данные из стора
-    const { canvas, elements, selectedElementId, isDirty, templateId, templateName } =
+    const { canvas, elements, templateId, templateName, isDirty } =
         useAppSelector((state) => state.templateEditor)
     const { widthMm: canvasWidthMm, heightMm: canvasHeightMm, zoom, sizeUnit } = canvas
     // Состояние для диалога имени шаблона
     const [nameDialogOpen, setNameDialogOpen] = useState(false)
+    const [isCreating, setIsCreating] = useState(false)
+    const [selectTemplateOpen, setSelectTemplateOpen] = useState(false)
+    const [isSelectingTemplate, setIsSelectingTemplate] = useState(false)
     // Получение шаблона через react-query
         const {
             data: projectTemplate,
@@ -106,6 +73,8 @@ const ProjectTemplatesPage = () => {
                 if (tpl.settings.widthMm) dispatch(setCanvasWidth(tpl.settings.widthMm))
                 if (tpl.settings.heightMm) dispatch(setCanvasHeight(tpl.settings.heightMm))
             }
+            // После загрузки шаблона сбрасываем флаг изменений
+            dispatch(markAsSaved())
         }, [projectTemplate, dispatch])
 
     // Мутации
@@ -166,12 +135,12 @@ const ProjectTemplatesPage = () => {
         const participants = participantsData?.records || []
 
         if (participants.length === 0) {
-            alert('В проекте нет участников для пробной печати')
+            enqueueSnackbar('В проекте нет участников для пробной печати', { variant: 'warning' })
             return
         }
 
         if (elements.length === 0) {
-            alert('Добавьте хотя бы один элемент в шаблон')
+            enqueueSnackbar('Добавьте хотя бы один элемент в шаблон', { variant: 'warning' })
             return
         }
 
@@ -190,108 +159,144 @@ const ProjectTemplatesPage = () => {
             await previewBadgePdf(template, participant.data)
         } catch (err) {
             console.error('Preview error:', err)
-            alert(
+            enqueueSnackbar(
                 `Ошибка при генерации PDF: ${err instanceof Error ? err.message : 'Unknown error'}`,
+                { variant: 'error' }
             )
         }
     }
 
-    // Временно для отладки
-    console.log(
-        'Elements:',
-        elements,
-        'Selected:',
-        selectedElementId,
-        'Dirty:',
-        isDirty,
-        'TemplateId:',
-        templateId,
-    )
+    // --- Генерация превью шаблона ---
+    const generatePreloaderUrl = async (): Promise<string | undefined> => {
+        try {
+            if (elements.length === 0) return undefined
+            
+            // Генерируем превью из текущего шаблона
+            const template: PrintTemplate = {
+                widthMm: canvasWidthMm,
+                heightMm: canvasHeightMm,
+                elements,
+            }
+            
+            // Пустые данные для превью (поля будут показаны как placeholders)
+            const previewBlob = await generateTemplatePreview(template, {})
+            
+            // Загружаем на сервер
+            const key = await uploadFile(previewBlob, `preloader_${projectId}_${Date.now()}.jpg`)
+            
+            // Возвращаем полный URL
+            return getFileUrl(key)
+        } catch (e) {
+            console.error('Failed to generate preloader:', e)
+            return undefined
+        }
+    }
 
     // --- Логика сохранения шаблона ---
     const handleSave = async () => {
         if (!projectId) return
-        // 1. Сгенерировать PNG для прелоадера (используем previewBadgePdf и html2canvas или canvas API)
-        // Для примера: пусть у нас есть canvas с id='badge-canvas' (реализация генерации PNG зависит от вашей архитектуры)
-        let preloaderKey: string | undefined = undefined
-        try {
-            const canvasEl = document.getElementById('badge-canvas') as HTMLCanvasElement | null
-            if (canvasEl) {
-                const blob = await new Promise<Blob | null>((resolve) =>
-                    canvasEl.toBlob(resolve, 'image/png'),
-                )
-                if (blob) {
-                    preloaderKey = await uploadFile(blob, `preloader_${projectId}.png`)
-                }
-            }
-        } catch (e) {
-            // Не критично, можно продолжить без прелоадера
-            preloaderKey = undefined
-        }
-        // 2. Если шаблон уже назначен проекту — обновляем
-            if (templateId) {
-                try {
-                    await updateTemplateMutation.mutateAsync({
-                        id: templateId,
-                        data: {
-                            name: templateName || 'Шаблон',
-                            settings: {
-                                widthMm: canvasWidthMm,
-                                heightMm: canvasHeightMm,
-                                elements,
-                            },
-                            preloader: preloaderKey,
+        
+        // Генерируем превью
+        const preloaderUrl = await generatePreloaderUrl()
+        
+        // Если шаблон уже назначен проекту — обновляем
+        if (templateId) {
+            try {
+                await updateTemplateMutation.mutateAsync({
+                    id: templateId,
+                    data: {
+                        name: templateName || 'Шаблон',
+                        settings: {
+                            widthMm: canvasWidthMm,
+                            heightMm: canvasHeightMm,
+                            elements,
                         },
-                    })
-                    alert('Шаблон успешно обновлён')
-                } catch (e) {
-                    alert('Ошибка при обновлении шаблона: ' + (e instanceof Error ? e.message : e))
-                }
-                return
+                        preloader: preloaderUrl,
+                    },
+                })
+                dispatch(markAsSaved())
+                enqueueSnackbar('Шаблон успешно обновлён', { variant: 'success' })
+            } catch (e) {
+                enqueueSnackbar(
+                    'Ошибка при обновлении шаблона: ' + (e instanceof Error ? e.message : e),
+                    { variant: 'error' }
+                )
             }
-        // 3. Если шаблон не назначен — показать диалог
+            return
+        }
+        // Если шаблон не назначен — показать диалог
         setNameDialogOpen(true)
     }
 
     // --- Сохранение нового шаблона после диалога ---
     const handleCreateTemplate = async (name: string) => {
-        setNameDialogOpen(false)
         if (!projectId) return
-        let preloaderKey: string | undefined = undefined
+        setIsCreating(true)
+        
         try {
-            const canvasEl = document.getElementById('badge-canvas') as HTMLCanvasElement | null
-            if (canvasEl) {
-                const blob = await new Promise<Blob | null>((resolve) =>
-                    canvasEl.toBlob(resolve, 'image/png'),
-                )
-                if (blob) {
-                    preloaderKey = await uploadFile(blob, `preloader_${projectId}.png`)
-                }
-            }
+            // Генерируем превью
+            const preloaderUrl = await generatePreloaderUrl()
+            
+            const tpl = await createTemplateMutation.mutateAsync({
+                name,
+                settings: {
+                    widthMm: canvasWidthMm,
+                    heightMm: canvasHeightMm,
+                    elements,
+                },
+                preloader: preloaderUrl,
+            })
+            await assignTemplateMutation.mutateAsync({
+                projectId: Number(projectId),
+                templateId: tpl.id,
+            })
+            dispatch(setTemplateId(tpl.id))
+            dispatch(setTemplateName(name))
+            dispatch(markAsSaved())
+            setNameDialogOpen(false)
+            enqueueSnackbar('Шаблон создан и назначен проекту', { variant: 'success' })
         } catch (e) {
-            preloaderKey = undefined
+            enqueueSnackbar(
+                'Ошибка при создании шаблона: ' + (e instanceof Error ? e.message : e),
+                { variant: 'error' }
+            )
+        } finally {
+            setIsCreating(false)
         }
-            try {
-                const tpl = await createTemplateMutation.mutateAsync({
-                    name,
-                    settings: {
-                        widthMm: canvasWidthMm,
-                        heightMm: canvasHeightMm,
-                        elements,
-                    },
-                    preloader: preloaderKey,
-                })
-                await assignTemplateMutation.mutateAsync({
-                    projectId: Number(projectId),
-                    templateId: tpl.id,
-                })
-                dispatch(setTemplateId(tpl.id))
-                dispatch(setTemplateName(name))
-                alert('Шаблон создан и назначен проекту')
-            } catch (e) {
-                alert('Ошибка при создании шаблона: ' + (e instanceof Error ? e.message : e))
-            }
     }
+
+    // --- Выбор существующего шаблона ---
+    const handleSelectTemplate = async (template: import('@/services/api/templates').PrintTemplate) => {
+        if (!projectId) return
+        setIsSelectingTemplate(true)
+        try {
+            await assignTemplateMutation.mutateAsync({
+                projectId: Number(projectId),
+                templateId: template.id,
+            })
+            dispatch(setTemplateId(template.id))
+            dispatch(setTemplateName(template.name))
+            if (template.settings) {
+                dispatch(setElements(template.settings.elements || []))
+                if (template.settings.widthMm) dispatch(setCanvasWidth(template.settings.widthMm))
+                if (template.settings.heightMm) dispatch(setCanvasHeight(template.settings.heightMm))
+            }
+            dispatch(markAsSaved())
+            setSelectTemplateOpen(false)
+            enqueueSnackbar('Шаблон назначен проекту', { variant: 'success' })
+        } catch (e) {
+            enqueueSnackbar(
+                'Ошибка при выборе шаблона: ' + (e instanceof Error ? e.message : e),
+                { variant: 'error' }
+            )
+        } finally {
+            setIsSelectingTemplate(false)
+        }
+    }
+
+    // Кнопка сохранения активна если нет шаблона или есть несохранённые изменения
+    const isSaveDisabled = templateId !== null && !isDirty
+
     return (
         <div className={styles.page}>
             <div className={styles.header}>
@@ -303,18 +308,13 @@ const ProjectTemplatesPage = () => {
                         </Button.Icon>
                         Пробная печать
                     </Button>
-                    <Button view="outlined" size="l" onClick={() => console.log('Выбрать шаблон')}>
+                    <Button view="outlined" size="l" onClick={() => setSelectTemplateOpen(true)}>
                         <Button.Icon>
                             <FolderOpen />
                         </Button.Icon>
                         Выбрать шаблон
                     </Button>
-                    <Button view="action" size="l" onClick={handleSave}>
-                        <NameDialog
-                            open={nameDialogOpen}
-                            onClose={() => setNameDialogOpen(false)}
-                            onSubmit={handleCreateTemplate}
-                        />
+                    <Button view="action" size="l" onClick={handleSave} disabled={isSaveDisabled}>
                         <Button.Icon>
                             <FloppyDisk />
                         </Button.Icon>
@@ -322,6 +322,21 @@ const ProjectTemplatesPage = () => {
                     </Button>
                 </div>
             </div>
+
+            <TemplateNameDialog
+                open={nameDialogOpen}
+                onClose={() => setNameDialogOpen(false)}
+                onSubmit={handleCreateTemplate}
+                isLoading={isCreating}
+            />
+
+            <SelectTemplateModal
+                open={selectTemplateOpen}
+                onClose={() => setSelectTemplateOpen(false)}
+                onSelect={handleSelectTemplate}
+                isLoading={isSelectingTemplate}
+                currentTemplateId={templateId ?? undefined}
+            />
 
             <div className={styles.editor}>
                 {/* Тулбар */}

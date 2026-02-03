@@ -1,4 +1,4 @@
-import { Select, Button, Checkbox, RadioGroup } from '@gravity-ui/uikit'
+import { Select, Button, Checkbox, RadioGroup, TextInput } from '@gravity-ui/uikit'
 import { TrashBin } from '@gravity-ui/icons'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { updateElement, removeElement, TextFieldElement, TextAlign, FontWeight, FontStyle, QrElement } from '@/store/slices/templateEditorSlice'
@@ -73,6 +73,24 @@ const ElementToolbar = () => {
 
   const handleAdaptiveChange = (checked: boolean) => {
     dispatch(updateElement({ id: selectedElement.id, updates: { adaptive: checked } }))
+  }
+
+  const handleMultilineChange = (checked: boolean) => {
+    // При включении многострочки отключаем адаптивный размер
+    const textElement = selectedElement as TextFieldElement
+    const updates: Partial<TextFieldElement> = { multiline: checked }
+    if (checked) {
+      updates.adaptive = false
+      updates.maxLines = textElement.maxLines || 1
+    }
+    dispatch(updateElement({ id: selectedElement.id, updates }))
+  }
+
+  const handleMaxLinesChange = (value: string) => {
+    const num = parseInt(value, 10)
+    if (!isNaN(num) && num >= 1 && num <= 10) {
+      dispatch(updateElement({ id: selectedElement.id, updates: { maxLines: num } }))
+    }
   }
 
   const handleDelete = () => {
@@ -217,9 +235,31 @@ const ElementToolbar = () => {
           checked={selectedElement.adaptive}
           onUpdate={handleAdaptiveChange}
           size="m"
+          disabled={selectedElement.multiline}
         >
           Авто-размер
         </Checkbox>
+      </div>
+
+      <div className={styles.divider} />
+
+      <div className={styles.group}>
+        <Checkbox
+          checked={selectedElement.multiline || false}
+          onUpdate={handleMultilineChange}
+          size="m"
+        >
+          Многострочный
+        </Checkbox>
+        {selectedElement.multiline && (
+          <TextInput
+            value={String(selectedElement.maxLines || 1)}
+            onUpdate={handleMaxLinesChange}
+            type="number"
+            size="s"
+            className={styles.maxLinesInput}
+          />
+        )}
       </div>
 
       <div className={styles.spacer} />
