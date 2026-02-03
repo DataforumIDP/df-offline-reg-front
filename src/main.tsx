@@ -16,7 +16,24 @@ configure({
     lang: 'ru',
 })
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            retry: (failureCount, error: any) => {
+                // Не ретраить на 401 (unauthorized) и 403 (forbidden)
+                if (error?.response?.status === 401 || error?.response?.status === 403) {
+                    return false
+                }
+                // Стандартный retry до 3 раз для остальных ошибок
+                return failureCount < 3
+            },
+            staleTime: 1000 * 60, // 1 минута
+        },
+        mutations: {
+            retry: false, // Не ретраить мутации
+        },
+    },
+})
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>

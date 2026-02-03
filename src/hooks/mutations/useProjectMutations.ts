@@ -36,8 +36,12 @@ export const useUpdateProjectMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ['projects'],
       })
+      // Инвалидируем по id как числу и строке (projectId из URL — строка)
       queryClient.invalidateQueries({
         queryKey: ['project', data.id],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['project', String(data.id)],
       })
     },
   })

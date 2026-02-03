@@ -1,0 +1,117 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 400px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.switchRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.mainButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.deleteButton {
+  background: none;
+  border: none;
+  color: var(--g-color-text-danger);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 8px 0;
+}
+
+/* Вкладка устройств */
+.devicesTab {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 400px;
+}
+
+.qrSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--g-color-base-simple-hover);
+  border-radius: 8px;
+}
+
+.qrCaption {
+  text-align: center;
+  color: var(--g-color-text-secondary);
+}
+
+.scannersList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.scannersHeader {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--g-color-line-generic);
+}
+
+.scannerItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: var(--g-color-base-simple-hover);
+  border-radius: 6px;
+}
+
+.scannerName {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.scannerName span:first-child {
+  font-weight: 500;
+}
+
+.scannerName span:last-child {
+  font-size: 12px;
+  color: var(--g-color-text-secondary);
+}
+
+.scannerLogs {
+  background: var(--g-color-base-brand);
+  color: var(--g-color-text-brand-contrast);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 24px;
+  color: var(--g-color-text-secondary);
+}
+
+.deleteButton:hover {
+  text-decoration: underline;
+}

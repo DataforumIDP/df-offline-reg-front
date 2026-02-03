@@ -8,6 +8,7 @@ import {
   ChartLine,
   FileText,
   ArrowRightFromSquare,
+  LayoutCells,
 } from '@gravity-ui/icons'
 import logoUrl from '../../assets/logo.svg?react'
 import styles from './AdminLayout.module.css'
@@ -24,6 +25,7 @@ const AdminLayout = () => {
     { id: 'stats', title: 'Статистика', icon: ChartLine, onItemClick: () => navigate(`/admin/projects/${projectId}/stats`) },
     { id: 'templates', title: 'Шаблоны', icon: FileText, onItemClick: () => navigate(`/admin/projects/${projectId}/templates`) },
     { id: 'hooks', title: 'Вебхуки', icon: ArrowRightFromSquare, onItemClick: () => navigate(`/admin/projects/${projectId}/hooks`) },
+    { id: 'zones', title: 'Зоны', icon: LayoutCells, onItemClick: () => navigate(`/admin/projects/${projectId}/zones`) },
     { id: 'settings', title: 'Настройки', icon: Gear, onItemClick: () => navigate(`/admin/projects/${projectId}/settings`) },
   ]
 

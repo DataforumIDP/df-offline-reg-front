@@ -12,6 +12,7 @@ import ProjectStatsPage from '@pages/admin/project/StatsPage'
 import ProjectParticipantsPage from '@pages/admin/project/ParticipantsPage'
 import ProjectTemplatesPage from '@pages/admin/project/TemplatesPage'
 import ProjectHooksPage from '@pages/admin/project/HooksPage'
+import ProjectZonesPage from '@pages/admin/project/ZonesPage'
 
 // Служебные страницы
 import NotFoundPage from '@pages/NotFoundPage'
@@ -38,6 +39,7 @@ const AppRouter = () => {
           <Route path="/admin/projects/:id/participants" element={<ProjectParticipantsPage />} />
           <Route path="/admin/projects/:id/templates" element={<ProjectTemplatesPage />} />
           <Route path="/admin/projects/:id/hooks" element={<ProjectHooksPage />} />
+          <Route path="/admin/projects/:id/zones" element={<ProjectZonesPage />} />
         </Route>
 
         {/* Служебные страницы */}

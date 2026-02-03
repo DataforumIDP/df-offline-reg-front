@@ -21,6 +21,7 @@ export interface Project {
   dateStart: string
   dateEnd: string
   isOperatorEditable?: boolean
+  rulesField?: string | null
   stats?: ProjectStats
   createdAt: string
   updatedAt: string
