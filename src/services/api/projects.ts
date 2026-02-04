@@ -13,6 +13,8 @@ export interface ProjectStats {
   printings: number
 }
 
+export type ScanMode = 'base' | 'direction' | 'view'
+
 export interface Project {
   id: number
   title: string
@@ -22,6 +24,7 @@ export interface Project {
   dateEnd: string
   isOperatorEditable?: boolean
   rulesField?: string | null
+  scanMode?: ScanMode
   stats?: ProjectStats
   createdAt: string
   updatedAt: string

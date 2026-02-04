@@ -88,8 +88,18 @@
   gap: 2px;
 }
 
-.scannerName span:first-child {
+.scannerNameRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-weight: 500;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .scannerName span:last-child {

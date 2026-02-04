@@ -109,6 +109,7 @@ export interface ZoneScanner {
   lastSeenAt: string | null
   createdAt: string
   logsCount: number
+  isCurrentZone: boolean
 }
 
 /**

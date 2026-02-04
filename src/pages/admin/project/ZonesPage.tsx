@@ -62,6 +62,27 @@ const ProjectZonesPage = () => {
     }))
   }, [listFields])
 
+  // Опции для селекта режима сканирования
+  const scanModeOptions = [
+    { value: 'base', content: 'Быстрый' },
+    { value: 'direction', content: 'С указанием направления' },
+    { value: 'view', content: 'Просмотр данных' },
+  ]
+
+  // Обработка изменения режима сканирования
+  const handleScanModeChange = useCallback(async (values: string[]) => {
+    const value = values[0] || 'base'
+    try {
+      await updateProjectMutation.mutateAsync({
+        id: Number(projectId),
+        data: { scanMode: value as 'base' | 'direction' | 'view' },
+      })
+      enqueueSnackbar('Режим сканирования обновлён', { variant: 'success' })
+    } catch (e) {
+      enqueueSnackbar('Ошибка обновления', { variant: 'error' })
+    }
+  }, [projectId, updateProjectMutation, enqueueSnackbar])
+
   // Обработка изменения ключевого поля
   const handleRulesFieldChange = useCallback(async (values: string[]) => {
     const value = values[0] || null
@@ -171,6 +192,15 @@ const ProjectZonesPage = () => {
       <div className={styles.header}>
         <Text variant="display-1">Зоны</Text>
         <div className={styles.headerActions}>
+          <div className={styles.rulesFieldSelect}>
+            <Text variant="body-2" color="secondary">Режим сканирования:</Text>
+            <Select
+              value={[project?.scanMode || 'base']}
+              onUpdate={handleScanModeChange}
+              options={scanModeOptions}
+              width={240}
+            />
+          </div>
           <div className={styles.rulesFieldSelect}>
             <Text variant="body-2" color="secondary">Ключевое поле:</Text>
             <Select

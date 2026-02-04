@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useEffect, useState } from 'react'
+import { useMemo, useCallback, useEffect } from 'react'
 import { Dialog, Text, Loader } from '@gravity-ui/uikit'
 import {
   ReactFlow,
@@ -63,14 +63,6 @@ const AccessRulesModal = ({
   onDeleteRule,
   isLoading,
 }: AccessRulesModalProps) => {
-  // DEBUG
-  console.log('=== AccessRulesModal DEBUG ===')
-  console.log('open:', open)
-  console.log('zones:', zones)
-  console.log('rulesField:', rulesField)
-  console.log('rulesField?.config:', rulesField?.config)
-  console.log('listSettings:', rulesField?.config?.listSettings)
-  console.log('items:', rulesField?.config?.listSettings?.items)
 
   // Получаем элементы списка из rulesField
   const listItems = useMemo(() => {
