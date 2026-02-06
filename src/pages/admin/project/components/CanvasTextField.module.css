@@ -1,56 +1,58 @@
 .element {
-  position: absolute;
-  border: 1px solid transparent;
-  padding: 2px 4px;
-  cursor: move;
-  user-select: none;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  transition: border-color 0.15s, box-shadow 0.15s;
+    position: absolute;
+    border: 1px solid transparent;
+    padding: 2px 4px;
+    cursor: move;
+    user-select: none;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
 }
 
 .element:hover {
-  border-color: var(--g-color-line-info);
+    border-color: var(--g-color-line-info);
 }
 
 .element.selected {
-  border-color: var(--g-color-line-brand);
-  box-shadow: 0 0 0 2px rgba(var(--g-color-private-brand-550-solid-rgb), 0.2);
+    border-color: var(--g-color-line-brand);
+    box-shadow: 0 0 0 2px rgba(var(--g-color-private-brand-550-solid-rgb), 0.2);
 }
 
 .element.dragging {
-  opacity: 0.8;
-  cursor: grabbing;
+    opacity: 0.8;
+    cursor: grabbing;
 }
 
 .content {
-  width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: #000;
-  line-height: 1 !important;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #000;
+    line-height: 1 !important;
 }
 
 .resizeHandle {
-  position: absolute;
-  right: -4px;
-  top: 0;
-  bottom: 0;
-  width: 8px;
-  cursor: ew-resize;
-  background: transparent;
+    position: absolute;
+    right: -4px;
+    top: 0;
+    bottom: 0;
+    width: 8px;
+    cursor: ew-resize;
+    background: transparent;
 }
 
 .resizeHandle::after {
-  content: '';
-  position: absolute;
-  right: 3px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 16px;
-  background-color: var(--g-color-base-brand);
-  border-radius: 2px;
+    content: '';
+    position: absolute;
+    right: 3px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 16px;
+    background-color: var(--g-color-base-brand);
+    border-radius: 2px;
 }

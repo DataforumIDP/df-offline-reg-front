@@ -22,10 +22,21 @@ type QrPreviewProps = {
     cornerDotStyle: 'dot' | 'square' | 'extra-rounded' | 'rounded' | 'classy' | 'classy-rounded'
     logoUrl: string
 }
-const QrPreview = ({ value, ecLevel, fgColor, bgColor, qrStyle, eyeStyle, cornerDotStyle, logoUrl }: QrPreviewProps) => {
+const QrPreview = ({
+    value,
+    ecLevel,
+    fgColor,
+    bgColor,
+    qrStyle,
+    eyeStyle,
+    cornerDotStyle,
+    logoUrl,
+}: QrPreviewProps) => {
     const ref = useRef<HTMLDivElement>(null)
     useEffect(() => {
-        if (!ref.current) return
+        if (!ref.current) {
+            return
+        }
         ref.current.innerHTML = ''
         const qr = new QRCodeStyling({
             width: 200,
@@ -38,18 +49,36 @@ const QrPreview = ({ value, ecLevel, fgColor, bgColor, qrStyle, eyeStyle, corner
             },
             dotsOptions: {
                 color: fgColor,
-                type: qrStyle as 'square' | 'dots' | 'rounded' | 'classy' | 'classy-rounded' | 'extra-rounded',
+                type: qrStyle as
+                    | 'square'
+                    | 'dots'
+                    | 'rounded'
+                    | 'classy'
+                    | 'classy-rounded'
+                    | 'extra-rounded',
             },
             backgroundOptions: {
                 color: bgColor,
             },
             cornersSquareOptions: {
                 color: fgColor,
-                type: eyeStyle as 'square' | 'dot' | 'extra-rounded' | 'rounded' | 'classy' | 'classy-rounded',
+                type: eyeStyle as
+                    | 'square'
+                    | 'dot'
+                    | 'extra-rounded'
+                    | 'rounded'
+                    | 'classy'
+                    | 'classy-rounded',
             },
             cornersDotOptions: {
                 color: fgColor,
-                type: cornerDotStyle as 'dot' | 'square' | 'extra-rounded' | 'rounded' | 'classy' | 'classy-rounded',
+                type: cornerDotStyle as
+                    | 'dot'
+                    | 'square'
+                    | 'extra-rounded'
+                    | 'rounded'
+                    | 'classy'
+                    | 'classy-rounded',
             },
             imageOptions: {
                 crossOrigin: 'anonymous',
@@ -91,7 +120,9 @@ const AddQrModal = ({ open, onClose, onAdd, fields = [] }: AddQrModalProps) => {
     const [isQrCentered, setIsQrCentered] = useState<boolean>(true)
 
     useEffect(() => {
-        if (!open) return
+        if (!open) {
+            return
+        }
         // reset defaults on open
         setResourceType('field')
         setFieldKey(fields.length ? fields[0].key : undefined)
@@ -129,7 +160,9 @@ const AddQrModal = ({ open, onClose, onAdd, fields = [] }: AddQrModalProps) => {
         } else {
             payload.fixedValue = fixedValue
         }
-        if (onAdd) onAdd(payload)
+        if (onAdd) {
+            onAdd(payload)
+        }
         onClose()
     }
 
@@ -310,13 +343,41 @@ const AddQrModal = ({ open, onClose, onAdd, fields = [] }: AddQrModalProps) => {
                         <div className={styles.previewColumn}>
                             <div className={styles.previewBox}>
                                 <QrPreview
-                                    value={resourceType === 'field' ? (prefix || '') + (fieldKey || '') : fixedValue}
+                                    value={
+                                        resourceType === 'field'
+                                            ? (prefix || '') + (fieldKey || '')
+                                            : fixedValue
+                                    }
                                     ecLevel={ecLevel as 'L' | 'M' | 'Q' | 'H'}
                                     fgColor={fgColor}
                                     bgColor={bgColor}
-                                    qrStyle={qrStyle as 'square' | 'dots' | 'rounded' | 'classy' | 'classy-rounded' | 'extra-rounded'}
-                                    eyeStyle={eyeStyle as 'square' | 'dot' | 'extra-rounded' | 'rounded' | 'classy' | 'classy-rounded'}
-                                    cornerDotStyle={cornerDotStyle as 'dot' | 'square' | 'extra-rounded' | 'rounded' | 'classy' | 'classy-rounded'}
+                                    qrStyle={
+                                        qrStyle as
+                                            | 'square'
+                                            | 'dots'
+                                            | 'rounded'
+                                            | 'classy'
+                                            | 'classy-rounded'
+                                            | 'extra-rounded'
+                                    }
+                                    eyeStyle={
+                                        eyeStyle as
+                                            | 'square'
+                                            | 'dot'
+                                            | 'extra-rounded'
+                                            | 'rounded'
+                                            | 'classy'
+                                            | 'classy-rounded'
+                                    }
+                                    cornerDotStyle={
+                                        cornerDotStyle as
+                                            | 'dot'
+                                            | 'square'
+                                            | 'extra-rounded'
+                                            | 'rounded'
+                                            | 'classy'
+                                            | 'classy-rounded'
+                                    }
                                     logoUrl={logoUrl}
                                 />
                             </div>

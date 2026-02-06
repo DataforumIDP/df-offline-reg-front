@@ -1,27 +1,27 @@
 .field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .label {
-  display: block;
-  cursor: pointer;
+    display: block;
+    cursor: pointer;
 }
 
 .required {
-  color: var(--g-color-text-danger);
-  margin-left: 4px;
+    color: var(--g-color-text-danger);
+    margin-left: 4px;
 }
 
 .control {
-  width: 100%;
+    width: 100%;
 }
 
 .error {
-  margin-top: 4px;
+    margin-top: 4px;
 }
 
 .hint {
-  margin-top: 4px;
+    margin-top: 4px;
 }

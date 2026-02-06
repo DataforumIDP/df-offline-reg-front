@@ -195,7 +195,9 @@ const templateEditorSlice = createSlice({
         ) => {
             const { id, updates } = action.payload
             const index = state.elements.findIndex((el) => el.id === id)
-            if (index === -1) return
+            if (index === -1) {
+                return
+            }
 
             const existing = state.elements[index]
             if (existing.type === 'text') {
@@ -255,7 +257,9 @@ const templateEditorSlice = createSlice({
         resizeElement: (state, action: PayloadAction<{ id: string; width: number }>) => {
             const { id, width } = action.payload
             const element = state.elements.find((el) => el.id === id)
-            if (!element) return
+            if (!element) {
+                return
+            }
             if (element.type === 'text' && !element.fullWidth) {
                 element.width = width
                 state.isDirty = true

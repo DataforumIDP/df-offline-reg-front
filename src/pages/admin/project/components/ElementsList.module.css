@@ -1,56 +1,58 @@
 .list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  overflow-y: auto;
-  flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    flex: 1;
 }
 
 .empty {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
 
 .item {
-  padding: 12px;
-  border: 1px solid var(--g-color-line-generic);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: border-color 0.15s, background-color 0.15s;
-  background-color: var(--g-color-base-background);
+    padding: 12px;
+    border: 1px solid var(--g-color-line-generic);
+    border-radius: 6px;
+    cursor: pointer;
+    transition:
+        border-color 0.15s,
+        background-color 0.15s;
+    background-color: var(--g-color-base-background);
 }
 
 .item:hover {
-  border-color: var(--g-color-line-info);
+    border-color: var(--g-color-line-info);
 }
 
 .item.selected {
-  border-color: var(--g-color-line-brand);
-  background-color: var(--g-color-base-selection);
+    border-color: var(--g-color-line-brand);
+    background-color: var(--g-color-base-selection);
 }
 
 .itemHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
 }
 
 .itemTitle {
-  font-weight: 500;
+    font-weight: 500;
 }
 
 .itemContent {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 8px;
 }
 
 .itemMeta {
-  border-top: 1px solid var(--g-color-line-generic);
-  padding-top: 8px;
+    border-top: 1px solid var(--g-color-line-generic);
+    padding-top: 8px;
 }

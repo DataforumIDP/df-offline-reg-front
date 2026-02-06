@@ -1,87 +1,91 @@
 .page {
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
 }
 
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
 }
 
 .headerActions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
 }
 
 .rulesFieldSelect {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .loading {
-  display: flex;
-  justify-content: center;
-  padding: 48px;
+    display: flex;
+    justify-content: center;
+    padding: 48px;
 }
 
 .grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
 }
 
 .addCard {
-  padding: 24px;
-  min-height: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  border: 2px dashed var(--g-color-line-generic);
-  background: transparent;
-  transition: border-color 0.2s, background 0.2s;
+    padding: 24px;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 2px dashed var(--g-color-line-generic);
+    background: transparent;
+    transition:
+        border-color 0.2s,
+        background 0.2s;
 }
 
 .addCard:hover {
-  border-color: var(--g-color-line-brand);
-  background: var(--g-color-base-generic);
+    border-color: var(--g-color-line-brand);
+    background: var(--g-color-base-generic);
 }
 
 .addCardContent {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  color: var(--g-color-text-secondary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--g-color-text-secondary);
 }
 
 .zoneCard {
-  padding: 20px;
-  min-height: 120px;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+    padding: 20px;
+    min-height: 120px;
+    cursor: pointer;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
 }
 
 .zoneCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .zoneCardContent {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
 }
 
 .zoneName {
-  flex: 1;
-  word-break: break-word;
+    flex: 1;
+    word-break: break-word;
 }

@@ -49,8 +49,9 @@ const ProjectTemplatesPage = () => {
     const { enqueueSnackbar } = useSnackbar()
 
     // Данные из стора
-    const { canvas, elements, templateId, templateName, isDirty } =
-        useAppSelector((state) => state.templateEditor)
+    const { canvas, elements, templateId, templateName, isDirty } = useAppSelector(
+        (state) => state.templateEditor,
+    )
     const { widthMm: canvasWidthMm, heightMm: canvasHeightMm, zoom, sizeUnit } = canvas
     // Состояние для диалога имени шаблона
     const [nameDialogOpen, setNameDialogOpen] = useState(false)
@@ -58,24 +59,30 @@ const ProjectTemplatesPage = () => {
     const [selectTemplateOpen, setSelectTemplateOpen] = useState(false)
     const [isSelectingTemplate, setIsSelectingTemplate] = useState(false)
     // Получение шаблона через react-query
-        const {
-            data: projectTemplate,
-        } = useProjectPrintTemplate(projectId ? Number(projectId) : undefined)
+    const { data: projectTemplate } = useProjectPrintTemplate(
+        projectId ? Number(projectId) : undefined,
+    )
 
     // Синхронизация projectTemplate с редактором
     useEffect(() => {
-            if (!projectTemplate?.template) return
-            const tpl = projectTemplate.template
-            dispatch(setTemplateId(tpl.id))
-            dispatch(setTemplateName(tpl.name))
-            if (tpl.settings) {
-                dispatch(setElements(tpl.settings.elements || []))
-                if (tpl.settings.widthMm) dispatch(setCanvasWidth(tpl.settings.widthMm))
-                if (tpl.settings.heightMm) dispatch(setCanvasHeight(tpl.settings.heightMm))
+        if (!projectTemplate?.template) {
+            return
+        }
+        const tpl = projectTemplate.template
+        dispatch(setTemplateId(tpl.id))
+        dispatch(setTemplateName(tpl.name))
+        if (tpl.settings) {
+            dispatch(setElements(tpl.settings.elements || []))
+            if (tpl.settings.widthMm) {
+                dispatch(setCanvasWidth(tpl.settings.widthMm))
             }
-            // После загрузки шаблона сбрасываем флаг изменений
-            dispatch(markAsSaved())
-        }, [projectTemplate, dispatch])
+            if (tpl.settings.heightMm) {
+                dispatch(setCanvasHeight(tpl.settings.heightMm))
+            }
+        }
+        // После загрузки шаблона сбрасываем флаг изменений
+        dispatch(markAsSaved())
+    }, [projectTemplate, dispatch])
 
     // Мутации
     const createTemplateMutation = useCreatePrintTemplateMutation()
@@ -161,7 +168,7 @@ const ProjectTemplatesPage = () => {
             console.error('Preview error:', err)
             enqueueSnackbar(
                 `Ошибка при генерации PDF: ${err instanceof Error ? err.message : 'Unknown error'}`,
-                { variant: 'error' }
+                { variant: 'error' },
             )
         }
     }
@@ -169,21 +176,23 @@ const ProjectTemplatesPage = () => {
     // --- Генерация превью шаблона ---
     const generatePreloaderUrl = async (): Promise<string | undefined> => {
         try {
-            if (elements.length === 0) return undefined
-            
+            if (elements.length === 0) {
+                return undefined
+            }
+
             // Генерируем превью из текущего шаблона
             const template: PrintTemplate = {
                 widthMm: canvasWidthMm,
                 heightMm: canvasHeightMm,
                 elements,
             }
-            
+
             // Пустые данные для превью (поля будут показаны как placeholders)
             const previewBlob = await generateTemplatePreview(template, {})
-            
+
             // Загружаем на сервер
             const key = await uploadFile(previewBlob, `preloader_${projectId}_${Date.now()}.jpg`)
-            
+
             // Возвращаем полный URL
             return getFileUrl(key)
         } catch (e) {
@@ -194,11 +203,13 @@ const ProjectTemplatesPage = () => {
 
     // --- Логика сохранения шаблона ---
     const handleSave = async () => {
-        if (!projectId) return
-        
+        if (!projectId) {
+            return
+        }
+
         // Генерируем превью
         const preloaderUrl = await generatePreloaderUrl()
-        
+
         // Если шаблон уже назначен проекту — обновляем
         if (templateId) {
             try {
@@ -219,7 +230,7 @@ const ProjectTemplatesPage = () => {
             } catch (e) {
                 enqueueSnackbar(
                     'Ошибка при обновлении шаблона: ' + (e instanceof Error ? e.message : e),
-                    { variant: 'error' }
+                    { variant: 'error' },
                 )
             }
             return
@@ -230,13 +241,15 @@ const ProjectTemplatesPage = () => {
 
     // --- Сохранение нового шаблона после диалога ---
     const handleCreateTemplate = async (name: string) => {
-        if (!projectId) return
+        if (!projectId) {
+            return
+        }
         setIsCreating(true)
-        
+
         try {
             // Генерируем превью
             const preloaderUrl = await generatePreloaderUrl()
-            
+
             const tpl = await createTemplateMutation.mutateAsync({
                 name,
                 settings: {
@@ -258,7 +271,7 @@ const ProjectTemplatesPage = () => {
         } catch (e) {
             enqueueSnackbar(
                 'Ошибка при создании шаблона: ' + (e instanceof Error ? e.message : e),
-                { variant: 'error' }
+                { variant: 'error' },
             )
         } finally {
             setIsCreating(false)
@@ -266,8 +279,12 @@ const ProjectTemplatesPage = () => {
     }
 
     // --- Выбор существующего шаблона ---
-    const handleSelectTemplate = async (template: import('@/services/api/templates').PrintTemplate) => {
-        if (!projectId) return
+    const handleSelectTemplate = async (
+        template: import('@/services/api/templates').PrintTemplate,
+    ) => {
+        if (!projectId) {
+            return
+        }
         setIsSelectingTemplate(true)
         try {
             await assignTemplateMutation.mutateAsync({
@@ -278,17 +295,20 @@ const ProjectTemplatesPage = () => {
             dispatch(setTemplateName(template.name))
             if (template.settings) {
                 dispatch(setElements(template.settings.elements || []))
-                if (template.settings.widthMm) dispatch(setCanvasWidth(template.settings.widthMm))
-                if (template.settings.heightMm) dispatch(setCanvasHeight(template.settings.heightMm))
+                if (template.settings.widthMm) {
+                    dispatch(setCanvasWidth(template.settings.widthMm))
+                }
+                if (template.settings.heightMm) {
+                    dispatch(setCanvasHeight(template.settings.heightMm))
+                }
             }
             dispatch(markAsSaved())
             setSelectTemplateOpen(false)
             enqueueSnackbar('Шаблон назначен проекту', { variant: 'success' })
         } catch (e) {
-            enqueueSnackbar(
-                'Ошибка при выборе шаблона: ' + (e instanceof Error ? e.message : e),
-                { variant: 'error' }
-            )
+            enqueueSnackbar('Ошибка при выборе шаблона: ' + (e instanceof Error ? e.message : e), {
+                variant: 'error',
+            })
         } finally {
             setIsSelectingTemplate(false)
         }

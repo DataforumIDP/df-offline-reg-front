@@ -16,7 +16,10 @@ const typeNames: Record<string, string> = {
     code: 'Код',
 }
 
-const typeThemes: Record<string, 'normal' | 'info' | 'success' | 'warning' | 'danger' | 'utility' | 'unknown' | 'clear'> = {
+const typeThemes: Record<
+    string,
+    'normal' | 'info' | 'success' | 'warning' | 'danger' | 'utility' | 'unknown' | 'clear'
+> = {
     text: 'info',
     list: 'success',
     bool: 'warning',
@@ -125,7 +128,6 @@ const ProjectSchemeSection = () => {
                                     </Text>
                                 </div>
 
-                                
                                 <DropdownMenu
                                     items={[
                                         {
@@ -174,7 +176,9 @@ const ProjectSchemeSection = () => {
                 </Dialog.Body>
                 <Dialog.Footer
                     onClickButtonCancel={() => setDeleteConfirmFieldId(null)}
-                    onClickButtonApply={() => deleteConfirmFieldId && handleDeleteField(deleteConfirmFieldId)}
+                    onClickButtonApply={() =>
+                        deleteConfirmFieldId && handleDeleteField(deleteConfirmFieldId)
+                    }
                     textButtonCancel="Отмена"
                     textButtonApply="Удалить"
                     propsButtonApply={{ loading: deleteFieldMutation.isPending }}

@@ -25,20 +25,24 @@ const SelectTemplateModal = ({
 
     // Фильтрация по поиску на клиенте
     const filteredTemplates = useMemo(() => {
-        if (!data?.templates) return []
-        if (!search.trim()) return data.templates
+        if (!data?.templates) {
+            return []
+        }
+        if (!search.trim()) {
+            return data.templates
+        }
         const searchLower = search.toLowerCase()
-        return data.templates.filter((t) =>
-            t.name.toLowerCase().includes(searchLower)
-        )
+        return data.templates.filter((t) => t.name.toLowerCase().includes(searchLower))
     }, [data?.templates, search])
 
     const handleSelect = useCallback(
         (template: PrintTemplate) => {
-            if (isLoading) return
+            if (isLoading) {
+                return
+            }
             onSelect(template)
         },
-        [onSelect, isLoading]
+        [onSelect, isLoading],
     )
 
     return (
@@ -62,9 +66,7 @@ const SelectTemplateModal = ({
                     ) : filteredTemplates.length === 0 ? (
                         <div className={styles.empty}>
                             <Text color="secondary">
-                                {search
-                                    ? 'Шаблоны не найдены'
-                                    : 'Нет доступных шаблонов'}
+                                {search ? 'Шаблоны не найдены' : 'Нет доступных шаблонов'}
                             </Text>
                         </div>
                     ) : (

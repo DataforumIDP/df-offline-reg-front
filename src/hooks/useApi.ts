@@ -7,27 +7,23 @@ interface UseApiQueryOptions<T> extends Omit<UseQueryOptions<T>, 'queryKey' | 'q
 
 interface UseApiMutationOptions<T, E> extends Omit<UseMutationOptions<T, E>, 'mutationFn'> {}
 
-export const useApiQuery = <T,>(
-  key: string[],
-  url: string,
-  options?: UseApiQueryOptions<T>,
-) => {
-  return useQuery<T>({
-    queryKey: key,
-    queryFn: async () => {
-      const response = await apiService.get<T>(url)
-      return response.data
-    },
-    ...options,
-  })
+export const useApiQuery = <T>(key: string[], url: string, options?: UseApiQueryOptions<T>) => {
+    return useQuery<T>({
+        queryKey: key,
+        queryFn: async () => {
+            const response = await apiService.get<T>(url)
+            return response.data
+        },
+        ...options,
+    })
 }
 
 export const useApiMutation = <T, E = unknown>(
-  mutationFn: (data: unknown) => Promise<T>,
-  options?: UseApiMutationOptions<T, E>,
+    mutationFn: (data: unknown) => Promise<T>,
+    options?: UseApiMutationOptions<T, E>,
 ) => {
-  return useMutation<T, E>({
-    mutationFn,
-    ...options,
-  })
+    return useMutation<T, E>({
+        mutationFn,
+        ...options,
+    })
 }

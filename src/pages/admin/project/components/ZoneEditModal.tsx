@@ -24,7 +24,9 @@ const QrPreview = ({ value }: { value: string }) => {
     const ref = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        if (!ref.current) return
+        if (!ref.current) {
+            return
+        }
         ref.current.innerHTML = ''
         const qr = new QRCodeStyling({
             width: 200,
@@ -84,13 +86,13 @@ const ZoneEditModal = ({
     const isDevicesTabActive = open && !!zone && activeTab === 'devices'
     const { data: config, isLoading: configLoading } = useZoneConfigQuery(
         zone?.id,
-        isDevicesTabActive
+        isDevicesTabActive,
     )
 
     // Fetch zone scanners
     const { data: scanners, isLoading: scannersLoading } = useZoneScannersQuery(
         zone?.id,
-        isDevicesTabActive
+        isDevicesTabActive,
     )
 
     useEffect(() => {
@@ -109,7 +111,9 @@ const ZoneEditModal = ({
     // Hotkey handler for tab switching
     const handleTabHotkey = useCallback(
         (e: KeyboardEvent) => {
-            if (!open || isCreate) return
+            if (!open || isCreate) {
+                return
+            }
             if (e.ctrlKey && (e.code === 'KeyE' || (e as any).keyCode === 69)) {
                 e.preventDefault()
                 setActiveTab('edit')
@@ -122,7 +126,7 @@ const ZoneEditModal = ({
                 }
             }
         },
-        [open, isCreate, zone?.id, queryClient]
+        [open, isCreate, zone?.id, queryClient],
     )
 
     useEffect(() => {
@@ -131,14 +135,18 @@ const ZoneEditModal = ({
     }, [handleTabHotkey])
 
     const handleSave = () => {
-        if (!name.trim()) return
+        if (!name.trim()) {
+            return
+        }
         onSave({ name: name.trim(), free })
     }
 
     const qrValue = config ? `config_${JSON.stringify(config)}` : ''
 
     const formatDate = (dateStr: string | null) => {
-        if (!dateStr) return 'Нет данных'
+        if (!dateStr) {
+            return 'Нет данных'
+        }
         return new Date(dateStr).toLocaleString('ru-RU')
     }
 
@@ -175,10 +183,16 @@ const ZoneEditModal = ({
                     // Edit mode - with tabs
                     <TabProvider value={activeTab} onUpdate={setActiveTab}>
                         <TabList>
-                            <Tooltip content={<Hotkey view="dark" value="ctrl+e" />} placement="top">
+                            <Tooltip
+                                content={<Hotkey view="dark" value="ctrl+e" />}
+                                placement="top"
+                            >
                                 <Tab value="edit">Редактирование</Tab>
                             </Tooltip>
-                            <Tooltip content={<Hotkey view="dark" value="ctrl+d" />} placement="top">
+                            <Tooltip
+                                content={<Hotkey view="dark" value="ctrl+d" />}
+                                placement="top"
+                            >
                                 <Tab value="devices">Устройства</Tab>
                             </Tooltip>
                         </TabList>
@@ -199,7 +213,10 @@ const ZoneEditModal = ({
                                 <div className={styles.field}>
                                     <div className={styles.switchRow}>
                                         <div>
-                                            <Popover placement="bottom-start" content="Если включено, доступ в зону имеют все участники">
+                                            <Popover
+                                                placement="bottom-start"
+                                                content="Если включено, доступ в зону имеют все участники"
+                                            >
                                                 <Text variant="body-2">Свободный вход</Text>
                                             </Popover>
                                         </div>
@@ -250,14 +267,19 @@ const ZoneEditModal = ({
                                             <div key={scanner.id} className={styles.scannerItem}>
                                                 <div className={styles.scannerName}>
                                                     <span className={styles.scannerNameRow}>
-                                                        <span 
-                                                            className={styles.statusDot} 
-                                                            style={{ 
-                                                                backgroundColor: scanner.isCurrentZone 
-                                                                    ? 'var(--g-color-text-positive)' 
-                                                                    : 'var(--g-color-text-secondary)' 
+                                                        <span
+                                                            className={styles.statusDot}
+                                                            style={{
+                                                                backgroundColor:
+                                                                    scanner.isCurrentZone
+                                                                        ? 'var(--g-color-text-positive)'
+                                                                        : 'var(--g-color-text-secondary)',
                                                             }}
-                                                            title={scanner.isCurrentZone ? 'Прикреплен к этой зоне' : 'Работал в этой зоне'}
+                                                            title={
+                                                                scanner.isCurrentZone
+                                                                    ? 'Прикреплен к этой зоне'
+                                                                    : 'Работал в этой зоне'
+                                                            }
                                                         />
                                                         {scanner.name || scanner.scannerId}
                                                     </span>
