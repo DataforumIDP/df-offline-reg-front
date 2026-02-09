@@ -1,13 +1,19 @@
 import apiClient from '@/services/api'
-import type { LoginRequest, LoginResponse } from '@/types/auth'
+import type { LoginRequest, LoginResponse, RegisterOperatorRequest } from '@/types/auth'
+
+// Хелпер для маппинга account -> user
+const mapAccountToUser = (data: any): LoginResponse => {
+    const { account, ...rest } = data
+    return { ...rest, user: account }
+}
 
 /**
  * Авторизация администратора
  */
 export const fetchLoginAdmin = (credentials: LoginRequest): Promise<LoginResponse> => {
     return apiClient
-        .post<LoginResponse>('/accounts/auth/admin', credentials)
-        .then((res) => res.data)
+        .post('/accounts/auth/admin', credentials)
+        .then((res) => mapAccountToUser(res.data))
 }
 
 /**
@@ -15,8 +21,17 @@ export const fetchLoginAdmin = (credentials: LoginRequest): Promise<LoginRespons
  */
 export const fetchLoginOperator = (credentials: LoginRequest): Promise<LoginResponse> => {
     return apiClient
-        .post<LoginResponse>('/accounts/auth/operator', credentials)
-        .then((res) => res.data)
+        .post('/accounts/auth/operator', credentials)
+        .then((res) => mapAccountToUser(res.data))
+}
+
+/**
+ * Регистрация оператора (вход по коду мероприятия и ФИО)
+ */
+export const fetchRegisterOperator = (data: RegisterOperatorRequest): Promise<LoginResponse> => {
+    return apiClient
+        .post('/accounts/reg', data)
+        .then((res) => mapAccountToUser(res.data))
 }
 
 /**
@@ -24,8 +39,8 @@ export const fetchLoginOperator = (credentials: LoginRequest): Promise<LoginResp
  */
 export const fetchRefreshToken = (refreshToken: string): Promise<LoginResponse> => {
     return apiClient
-        .post<LoginResponse>('/accounts/auth/refresh', { refreshToken })
-        .then((res) => res.data)
+        .post('/accounts/auth/refresh', { refreshToken })
+        .then((res) => mapAccountToUser(res.data))
 }
 
 /**

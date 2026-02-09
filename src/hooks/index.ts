@@ -8,6 +8,7 @@ export { useDebounce } from './useDebounce'
 export {
     useLoginAdminMutation,
     useLoginOperatorMutation,
+    useRegisterOperatorMutation,
     useLogoutMutation,
 } from './mutations/useAuthMutations'
 

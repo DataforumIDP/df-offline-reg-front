@@ -8,10 +8,13 @@ import {
     fetchExcelTemplate,
     fetchImportExcel,
     fetchClearParticipants,
+    fetchClearPrintMarks,
+    fetchClearScannerLogs,
     ImportExcelResult,
 } from '@/services/api/participants'
 import { useProjectQuery } from '@/hooks/queries/useProjectQueries'
 import ExportModal from '@/components/organisms/ExportModal'
+import ExportScansModal from '@/components/organisms/ExportScansModal'
 import ClearConfirmModal from '@/components/organisms/ClearConfirmModal'
 import styles from './ExportImportSection.module.css'
 
@@ -29,11 +32,16 @@ const ExportImportSection = () => {
     const [isDownloadingTemplate, setIsDownloadingTemplate] = useState(false)
     const [isUploading, setIsUploading] = useState(false)
     const [isClearing, setIsClearing] = useState(false)
+    const [isClearingPrints, setIsClearingPrints] = useState(false)
+    const [isClearingScannerLogs, setIsClearingScannerLogs] = useState(false)
     const [isDragging, setIsDragging] = useState(false)
 
     // Состояния модалок
     const [isExportModalOpen, setIsExportModalOpen] = useState(false)
+    const [isExportScansModalOpen, setIsExportScansModalOpen] = useState(false)
     const [isClearModalOpen, setIsClearModalOpen] = useState(false)
+    const [isClearPrintsModalOpen, setIsClearPrintsModalOpen] = useState(false)
+    const [isClearScannerLogsModalOpen, setIsClearScannerLogsModalOpen] = useState(false)
 
     // Скачать шаблон
     const handleDownloadTemplate = async () => {
@@ -156,6 +164,41 @@ const ExportImportSection = () => {
         }
     }
 
+    // Очистка отметок печати
+    const handleClearPrints = async () => {
+        setIsClearingPrints(true)
+        try {
+            const result = await fetchClearPrintMarks(projectIdNum)
+            enqueueSnackbar(result.message, { variant: 'success' })
+            queryClient.invalidateQueries({ queryKey: ['participants', projectIdNum] })
+            queryClient.invalidateQueries({ queryKey: ['participantLogs', projectIdNum] })
+            setIsClearPrintsModalOpen(false)
+        } catch (error) {
+            console.error('Clear prints error:', error)
+            enqueueSnackbar('Ошибка очистки отметок печати', { variant: 'error' })
+            throw error
+        } finally {
+            setIsClearingPrints(false)
+        }
+    }
+
+    // Очистка логов сканеров
+    const handleClearScannerLogs = async () => {
+        setIsClearingScannerLogs(true)
+        try {
+            const result = await fetchClearScannerLogs(projectIdNum)
+            enqueueSnackbar(result.message, { variant: 'success' })
+            queryClient.invalidateQueries({ queryKey: ['scannerLogs', projectIdNum] })
+            setIsClearScannerLogsModalOpen(false)
+        } catch (error) {
+            console.error('Clear scanner logs error:', error)
+            enqueueSnackbar('Ошибка очистки логов сканеров', { variant: 'error' })
+            throw error
+        } finally {
+            setIsClearingScannerLogs(false)
+        }
+    }
+
     return (
         <>
             <Card style={{ padding: '24px' }}>
@@ -205,7 +248,7 @@ const ExportImportSection = () => {
                         Выгрузка участников
                     </Button>
 
-                    <Button disabled view="outlined" size="l">
+                    <Button view="outlined" size="l" onClick={() => setIsExportScansModalOpen(true)}>
                         Выгрузка сканов
                     </Button>
 
@@ -215,6 +258,22 @@ const ExportImportSection = () => {
                         onClick={() => setIsClearModalOpen(true)}
                     >
                         Очистить список пользователей
+                    </Button>
+
+                    <Button
+                        view="outlined-danger"
+                        size="l"
+                        onClick={() => setIsClearPrintsModalOpen(true)}
+                    >
+                        Очистить отметки печати
+                    </Button>
+
+                    <Button
+                        view="outlined-danger"
+                        size="l"
+                        onClick={() => setIsClearScannerLogsModalOpen(true)}
+                    >
+                        Очистить логи сканеров
                     </Button>
                 </div>
             </Card>
@@ -227,6 +286,14 @@ const ExportImportSection = () => {
                 projectTitle={project?.title || ''}
             />
 
+            {/* Модалка экспорта сканов */}
+            <ExportScansModal
+                open={isExportScansModalOpen}
+                onClose={() => setIsExportScansModalOpen(false)}
+                projectId={projectIdNum}
+                projectTitle={project?.title || ''}
+            />
+
             {/* Модалка подтверждения очистки */}
             <ClearConfirmModal
                 open={isClearModalOpen}
@@ -234,6 +301,28 @@ const ExportImportSection = () => {
                 onConfirm={handleClear}
                 projectTitle={project?.title || ''}
                 isLoading={isClearing}
+            />
+
+            {/* Модалка подтверждения очистки отметок печати */}
+            <ClearConfirmModal
+                open={isClearPrintsModalOpen}
+                onClose={() => setIsClearPrintsModalOpen(false)}
+                onConfirm={handleClearPrints}
+                projectTitle={project?.title || ''}
+                isLoading={isClearingPrints}
+                title="Очистка отметок печати"
+                warningMessage="Это действие необратимо! Все отметки печати будут удалены без возможности восстановления. Участники смогут печатать бейджи повторно."
+            />
+
+            {/* Модалка подтверждения очистки логов сканеров */}
+            <ClearConfirmModal
+                open={isClearScannerLogsModalOpen}
+                onClose={() => setIsClearScannerLogsModalOpen(false)}
+                onConfirm={handleClearScannerLogs}
+                projectTitle={project?.title || ''}
+                isLoading={isClearingScannerLogs}
+                title="Очистка логов сканеров"
+                warningMessage="Это действие необратимо! Все логи сканеров будут удалены без возможности восстановления."
             />
         </>
     )

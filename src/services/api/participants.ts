@@ -190,6 +190,60 @@ export const fetchClearParticipants = (projectId: number): Promise<ClearParticip
 }
 
 /**
+ * Очистить отметки печати
+ */
+export interface ClearPrintMarksResult {
+    success: boolean
+    deleted: number
+    message: string
+}
+
+export const fetchClearPrintMarks = (projectId: number): Promise<ClearPrintMarksResult> => {
+    return apiClient
+        .delete<ClearPrintMarksResult>(`/projects/${projectId}/prints`)
+        .then((res) => res.data)
+}
+
+/**
+ * Очистить логи сканеров
+ */
+export interface ClearScannerLogsResult {
+    success: boolean
+    deleted: number
+    message: string
+}
+
+export const fetchClearScannerLogs = (projectId: number): Promise<ClearScannerLogsResult> => {
+    return apiClient
+        .delete<ClearScannerLogsResult>(`/projects/${projectId}/scanners/logs`)
+        .then((res) => res.data)
+}
+
+/**
+ * Параметры экспорта статистики сканирований
+ */
+export interface ExportScansParams {
+    keys?: string[] // Ключи схемы для выборки
+    zones?: number[] // ID зон для фильтрации
+    filter?: Record<string, any>[] // Фильтры по полям
+    timeRange?: string[] // [startISO, endISO]
+    addPrints?: boolean // Включать количество печатей
+}
+
+/**
+ * Экспорт статистики сканирований в Excel
+ */
+export const fetchExportScans = async (
+    projectId: number,
+    params: ExportScansParams
+): Promise<Blob> => {
+    const response = await apiClient.post(`/projects/${projectId}/scans/excel`, params, {
+        responseType: 'blob',
+    })
+    return response.data
+}
+
+/**
  * Поиск участника по коду
  */
 export const fetchParticipantByCode = (projectId: number, code: string): Promise<Participant> => {

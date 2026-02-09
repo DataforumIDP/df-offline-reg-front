@@ -32,6 +32,12 @@ export interface LoginRequest {
     password: string
 }
 
+// Запрос на регистрацию оператора
+export interface RegisterOperatorRequest {
+    project: string
+    name: string
+}
+
 // Ответ от сервера при авторизации
 export interface LoginResponse {
     message: string

@@ -13,7 +13,7 @@ export interface PrintSettingsData {
 const LOCAL_STORAGE_KEY = 'rega_print_settings'
 
 const DEFAULT_SETTINGS: PrintSettingsData = {
-    mode: 'web',
+    mode: 'server',
     server: {
         address: 'localhost',
         port: 4400,

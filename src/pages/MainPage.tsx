@@ -39,8 +39,30 @@ const MainPage = () => {
             <Text variant="body-2" color="secondary">
                 Система регистрации участников мероприятий
             </Text>
-            <Button view="action" size="xl" onClick={() => navigate('/admin')}>
-                Войти в панель управления
+            <Button
+                style={{ minWidth: 240 }}
+                view="action"
+                size="xl"
+                onClick={() => navigate('/admin')}
+            >
+                Войти как админ
+            </Button>
+            <Button
+                style={{ minWidth: 240 }}
+                view="action"
+                disabled
+                size="xl"
+                onClick={() => navigate('/partner')}
+            >
+                Войти как партнер
+            </Button>
+            <Button
+                style={{ minWidth: 240 }}
+                view="action"
+                size="xl"
+                onClick={() => navigate('/operator')}
+            >
+                Войти как оператор
             </Button>
         </div>
     )

@@ -2,8 +2,8 @@ import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useAppDispatch } from '@/store/hooks'
 import { setUser, clearUser } from '@/store/slices/authSlice'
-import { fetchLoginAdmin, fetchLoginOperator, fetchLogout } from '@/services/api/auth'
-import type { LoginRequest, LoginResponse, FormErrors } from '@/types/auth'
+import { fetchLoginAdmin, fetchLoginOperator, fetchLogout, fetchRegisterOperator } from '@/services/api/auth'
+import type { LoginRequest, LoginResponse, FormErrors, RegisterOperatorRequest } from '@/types/auth'
 import { AxiosError } from 'axios'
 
 const saveTokens = (accessToken: string, refreshToken: string) => {
@@ -125,6 +125,31 @@ export const useLoginOperatorMutation = () => {
 }
 
 /**
+ * Мутация для регистрации оператора (вход по коду мероприятия и ФИО)
+ */
+export const useRegisterOperatorMutation = () => {
+    const dispatch = useAppDispatch()
+    const navigate = useNavigate()
+
+    return useMutation<LoginResponse, AuthError, RegisterOperatorRequest>({
+        mutationFn: async (data) => {
+            try {
+                return await fetchRegisterOperator(data)
+            } catch (error) {
+                const errors = parseErrorResponse(error)
+                throw new AuthError(errors)
+            }
+        },
+        onSuccess: (data) => {
+            const { accessToken, refreshToken, user } = data
+            saveTokens(accessToken, refreshToken)
+            dispatch(setUser(user))
+            navigate('/operator/participants')
+        },
+    })
+}
+
+/**
  * Мутация для выхода из системы
  */
 export const useLogoutMutation = () => {
@@ -136,7 +161,7 @@ export const useLogoutMutation = () => {
         onSettled: () => {
             clearTokens()
             dispatch(clearUser())
-            navigate('/admin')
+            navigate('/')
         },
     })
 }

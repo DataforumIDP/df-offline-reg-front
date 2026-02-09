@@ -1,0 +1,73 @@
+.modal {
+    padding: 24px;
+    min-width: 500px;
+    max-width: 700px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.title {
+    display: block;
+    margin-bottom: 20px;
+}
+
+.loader {
+    display: flex;
+    justify-content: center;
+    padding: 40px;
+}
+
+.section {
+    margin-bottom: 20px;
+}
+
+.section > span:first-child {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.checkboxGrid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+}
+
+.dateRange {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.filtersList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.filterField {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.checkboxGroup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+}
+
+.error {
+    padding: 12px;
+    background: var(--g-color-base-danger-light);
+    border-radius: 8px;
+    margin-top: 12px;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--g-color-line-generic);
+}

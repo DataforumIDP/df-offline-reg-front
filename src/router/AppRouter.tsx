@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
 // Лейауты
 import AdminLayout from '@components/organisms/AdminLayout'
+import OperatorLayout from '@components/organisms/OperatorLayout'
 
 // Страницы
 import MainPage from '@pages/MainPage'
@@ -14,6 +15,11 @@ import ProjectTemplatesPage from '@pages/admin/project/TemplatesPage'
 import ProjectHooksPage from '@pages/admin/project/HooksPage'
 import ProjectZonesPage from '@pages/admin/project/ZonesPage'
 import AccountSettingsPage from '@pages/admin/AccountSettingsPage'
+
+// Страницы оператора
+import OperatorLoginPage from '@pages/operator/LoginPage'
+import OperatorParticipantsPage from '@pages/operator/ParticipantsPage'
+import OperatorSettingsPage from '@pages/operator/SettingsPage'
 
 // Служебные страницы
 import NotFoundPage from '@pages/NotFoundPage'
@@ -50,6 +56,15 @@ const AppRouter = () => {
                     />
                     <Route path="/admin/projects/:id/hooks" element={<ProjectHooksPage />} />
                     <Route path="/admin/projects/:id/zones" element={<ProjectZonesPage />} />
+                </Route>
+
+                {/* Вход оператора */}
+                <Route path="/operator" element={<OperatorLoginPage />} />
+
+                {/* Роуты оператора с лейаутом */}
+                <Route element={<OperatorLayout />}>
+                    <Route path="/operator/participants" element={<OperatorParticipantsPage />} />
+                    <Route path="/operator/settings" element={<OperatorSettingsPage />} />
                 </Route>
 
                 {/* Служебные страницы */}

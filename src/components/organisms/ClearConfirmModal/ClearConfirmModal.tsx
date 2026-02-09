@@ -8,6 +8,8 @@ interface ClearConfirmModalProps {
     onConfirm: () => Promise<void>
     projectTitle: string
     isLoading: boolean
+    title?: string
+    warningMessage?: string
 }
 
 const ClearConfirmModal = ({
@@ -16,6 +18,8 @@ const ClearConfirmModal = ({
     onConfirm,
     projectTitle,
     isLoading,
+    title = 'Очистка списка участников',
+    warningMessage = 'Это действие необратимо! Все участники и логи действий будут удалены без возможности восстановления.',
 }: ClearConfirmModalProps) => {
     const [inputValue, setInputValue] = useState('')
 
@@ -38,12 +42,12 @@ const ClearConfirmModal = ({
         <Modal open={open} onClose={handleClose}>
             <div className={styles.modal}>
                 <Text variant="header-1" className={styles.title}>
-                    Очистка списка участников
+                    {title}
                 </Text>
 
                 <Alert
                     theme="danger"
-                    message="Это действие необратимо! Все участники и логи действий будут удалены без возможности восстановления."
+                    message={warningMessage}
                     className={styles.alert}
                 />
 
