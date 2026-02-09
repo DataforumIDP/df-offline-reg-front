@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Outlet, useNavigate, useParams, useLocation } from 'react-router-dom'
-import { Button } from '@gravity-ui/uikit'
 import { AsideHeader, FooterItem, type MenuItem as AsideMenuItem } from '@gravity-ui/navigation'
 import {
     Persons,
@@ -11,6 +10,7 @@ import {
     LayoutCells,
     Link as LinkIcon,
 } from '@gravity-ui/icons'
+import { useLogoutMutation } from '@/hooks'
 import logoUrl from '../../assets/logo.svg?react'
 import styles from './AdminLayout.module.css'
 
@@ -19,6 +19,10 @@ const AdminLayout = () => {
     const navigate = useNavigate()
     const { id: projectId } = useParams()
     const location = useLocation()
+    const logoutMutation = useLogoutMutation()
+
+    // Определяем, находимся ли мы на странице проекта
+    const isProjectPage = location.pathname.includes('/admin/projects/') && projectId
 
     // Меню для страницы проекта
     const projectMenuItems: AsideMenuItem[] = [
@@ -60,11 +64,30 @@ const AdminLayout = () => {
         },
     ]
 
-    // Определяем, находимся ли мы на странице проекта
-    const isProjectPage = location.pathname.includes('/admin/projects/') && projectId
+    // Меню для главных страниц (проекты, настройки аккаунта)
+    const mainMenuItems: AsideMenuItem[] = [
+        {
+            id: 'projects',
+            title: 'Проекты',
+            icon: Persons,
+            current: location.pathname === '/admin/projects',
+            onItemClick: () => navigate('/admin/projects'),
+        },
+        {
+            id: 'account-settings',
+            title: 'Настройки',
+            icon: Gear,
+            current: location.pathname === '/admin/settings',
+            onItemClick: () => navigate('/admin/settings'),
+        },
+    ]
 
     const handleLogoClick = () => {
         navigate('/admin/projects')
+    }
+
+    const handleLogout = () => {
+        logoutMutation.mutate()
     }
 
     const currentMenuItems = isProjectPage
@@ -72,72 +95,59 @@ const AdminLayout = () => {
               ...item,
               current: item.id === location.pathname.split('/').pop(),
           }))
-        : []
+        : mainMenuItems
 
-    const footerMenuItems: AsideMenuItem[] = isProjectPage
-        ? [
-              {
-                  id: 'back',
-                  title: 'На главную',
-                  icon: ArrowRightFromSquare,
-                  onItemClick: () => navigate('/admin/projects'),
-              },
-          ]
-        : []
+    const projectFooterItems: AsideMenuItem[] = [
+        {
+            id: 'back',
+            title: 'На главную',
+            icon: ArrowRightFromSquare,
+            onItemClick: () => navigate('/admin/projects'),
+        },
+    ]
 
     const handleRenderFooter = () => (
         <div>
-            {footerMenuItems.map((item) => (
+            {isProjectPage ? (
+                projectFooterItems.map((item) => (
+                    <FooterItem
+                        id={item.id}
+                        key={item.id}
+                        icon={item.icon}
+                        title={item.title}
+                        onItemClick={handleLogoClick}
+                    />
+                ))
+            ) : (
                 <FooterItem
-                    id={item.id}
-                    key={item.id}
-                    icon={item.icon}
-                    title={item.title}
-                    onItemClick={handleLogoClick}
+                    id="logout"
+                    icon={ArrowRightFromSquare}
+                    title="Выйти"
+                    onItemClick={handleLogout}
                 />
-            ))}
+            )}
         </div>
     )
 
     return (
         <div className={styles.layout}>
-            {isProjectPage ? (
-                <AsideHeader
-                    compact={sidebarCompact}
-                    onChangeCompact={setSidebarCompact}
-                    logo={{
-                        icon: logoUrl,
-                        text: 'REGA',
-                        onClick: () => setSidebarCompact(!sidebarCompact),
-                    }}
-                    hideCollapseButton={true}
-                    menuItems={currentMenuItems}
-                    renderFooter={handleRenderFooter}
-                    renderContent={() => (
-                        <div className={styles.mainContent}>
-                            <Outlet />
-                        </div>
-                    )}
-                />
-            ) : (
-                <>
-                    <header className={styles.header}>
-                        <div className={styles.headerLeft}>
-                            <div className={styles.logo} onClick={handleLogoClick}>
-                                REGA
-                            </div>
-                        </div>
-                        <div className={styles.headerRight}>
-                            <Button view="flat" size="m" icon={<ArrowRightFromSquare />}>
-                                Выйти
-                            </Button>
-                        </div>
-                    </header>
-                    <main className={styles.mainContent}>
+            <AsideHeader
+                compact={sidebarCompact}
+                onChangeCompact={setSidebarCompact}
+                logo={{
+                    icon: logoUrl,
+                    text: 'REGA',
+                    onClick: () => setSidebarCompact(!sidebarCompact),
+                }}
+                hideCollapseButton={true}
+                menuItems={currentMenuItems}
+                renderFooter={handleRenderFooter}
+                renderContent={() => (
+                    <div className={styles.mainContent}>
                         <Outlet />
-                    </main>
-                </>
-            )}
+                    </div>
+                )}
+            />
         </div>
     )
 }

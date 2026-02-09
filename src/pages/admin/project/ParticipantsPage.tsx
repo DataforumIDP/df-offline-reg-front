@@ -11,7 +11,7 @@ import SearchByCodeModal from '@/components/organisms/SearchByCodeModal'
 import { useParticipantsQuery } from '@/hooks/queries/useParticipantQueries'
 import { useSchemeQuery } from '@/hooks/queries/useSchemeQueries'
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
-import { generateMultipleBadgesPdf, PrintTemplate, PrintData } from '@/services/printService'
+import { generateMultipleBadgesPdf, printOrSend, PrintTemplate, PrintData } from '@/services/printService'
 import {
     setCanvasSize,
     setElements,
@@ -247,10 +247,8 @@ const ProjectParticipantsPage = () => {
             // Генерируем PDF с несколькими страницами
             const blob = await generateMultipleBadgesPdf(template, dataList)
 
-            // Открываем PDF в новой вкладке
-            const url = URL.createObjectURL(blob)
-            window.open(url, '_blank')
-            setTimeout(() => URL.revokeObjectURL(url), 60000)
+            // Печатаем или открываем в зависимости от настроек
+            const result = await printOrSend(blob)
 
             // Отправляем запросы о печати для каждого участника
             await Promise.all(
@@ -261,9 +259,12 @@ const ProjectParticipantsPage = () => {
                 ),
             )
 
-            enqueueSnackbar(`PDF создан для ${selectedParticipants.length} участников`, {
-                variant: 'success',
-            })
+            enqueueSnackbar(
+                result.mode === 'server'
+                    ? `Отправлено на печать (${selectedParticipants.length} бейджей)`
+                    : `PDF создан для ${selectedParticipants.length} участников`,
+                { variant: 'success' },
+            )
 
             // Сбрасываем выделение
             setSelectedIds([])

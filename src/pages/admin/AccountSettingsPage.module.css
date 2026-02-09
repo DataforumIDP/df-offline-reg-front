@@ -1,0 +1,24 @@
+.page {
+    padding: 24px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.title {
+    margin-bottom: 8px;
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sectionTitle {
+    font-weight: 600;
+}
+
+.sectionDescription {
+    max-width: 560px;
+}

@@ -1,4 +1,33 @@
 import { fetchPrintTemplateById } from '@/services/api/templates'
+import { loadPrintSettings, sendPdfToPrintServer } from '@/components/organisms/PrintSettings'
+
+/**
+ * Отправить Blob на печать: либо открыть в браузере, либо отправить на сервер REGA Print
+ * Возвращает сообщение об успехе / ошибке
+ */
+export async function printOrSend(
+    blob: Blob,
+    copies: number = 1,
+): Promise<{ mode: 'web' | 'server'; message: string }> {
+    const settings = loadPrintSettings()
+
+    if (settings.mode === 'server') {
+        const result = await sendPdfToPrintServer(
+            blob,
+            settings.server.address,
+            settings.server.port,
+            copies,
+        )
+        return { mode: 'server', message: result.message }
+    }
+
+    // WEB mode — открыть PDF в новой вкладке
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank')
+    setTimeout(() => URL.revokeObjectURL(url), 60000)
+    return { mode: 'web', message: 'PDF открыт в новой вкладке' }
+}
+
 /**
  * Сгенерировать и скачать PDF бейджа по id шаблона
  */
@@ -37,13 +66,14 @@ export async function printMultipleBadgesByTemplateId(
 }
 
 /**
- * Открыть PDF в новой вкладке для предпросмотра по id шаблона
+ * Открыть PDF / отправить на сервер печати по id шаблона
  */
-export async function previewBadgeByTemplateId(templateId: number, data: PrintData): Promise<void> {
+export async function previewBadgeByTemplateId(
+    templateId: number,
+    data: PrintData,
+): Promise<{ mode: 'web' | 'server'; message: string }> {
     const blob = await printBadgeByTemplateId(templateId, data)
-    const url = URL.createObjectURL(blob)
-    window.open(url, '_blank')
-    setTimeout(() => URL.revokeObjectURL(url), 60000)
+    return printOrSend(blob)
 }
 
 /**
@@ -678,15 +708,14 @@ export async function generateMultipleBadgesPdf(
 }
 
 /**
- * Открыть PDF в новой вкладке для предпросмотра
+ * Открыть PDF / отправить на сервер печати
  */
-export async function previewBadgePdf(template: PrintTemplate, data: PrintData): Promise<void> {
+export async function previewBadgePdf(
+    template: PrintTemplate,
+    data: PrintData,
+): Promise<{ mode: 'web' | 'server'; message: string }> {
     const blob = await generateBadgePdf(template, data)
-    const url = URL.createObjectURL(blob)
-    window.open(url, '_blank')
-
-    // Освобождаем URL через некоторое время
-    setTimeout(() => URL.revokeObjectURL(url), 60000)
+    return printOrSend(blob)
 }
 
 /**
