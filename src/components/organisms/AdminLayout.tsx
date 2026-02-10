@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Outlet, useNavigate, useParams, useLocation } from 'react-router-dom'
 import { AsideHeader, FooterItem, type MenuItem as AsideMenuItem } from '@gravity-ui/navigation'
 import {
@@ -9,13 +8,19 @@ import {
     ArrowRightFromSquare,
     LayoutCells,
     Link as LinkIcon,
+    Bars,
 } from '@gravity-ui/icons'
+import { Button, Icon } from '@gravity-ui/uikit'
 import { useLogoutMutation } from '@/hooks'
+import { useAppSelector, useAppDispatch } from '@/store/hooks'
+import { setSidebarCompact, toggleSidebarCompact, setSidebarMobileOpen } from '@/store/slices/uiSlice'
 import logoUrl from '../../assets/logo.svg?react'
 import styles from './AdminLayout.module.css'
 
 const AdminLayout = () => {
-    const [sidebarCompact, setSidebarCompact] = useState(false)
+    const dispatch = useAppDispatch()
+    const sidebarCompact = useAppSelector((state) => state.ui.sidebarCompact)
+    const sidebarMobileOpen = useAppSelector((state) => state.ui.sidebarMobileOpen)
     const navigate = useNavigate()
     const { id: projectId } = useParams()
     const location = useLocation()
@@ -129,25 +134,62 @@ const AdminLayout = () => {
         </div>
     )
 
+    // Закрытие мобильного меню при клике на пункт
+    const handleMenuItemClick = (callback: () => void) => {
+        callback()
+        dispatch(setSidebarMobileOpen(false))
+    }
+
+    // Меню с обработкой мобильного закрытия
+    const mobileMenuItems = currentMenuItems.map((item) => ({
+        ...item,
+        onItemClick: item.onItemClick 
+            ? () => handleMenuItemClick(item.onItemClick as () => void) 
+            : undefined,
+    }))
+
     return (
         <div className={styles.layout}>
-            <AsideHeader
-                compact={sidebarCompact}
-                onChangeCompact={setSidebarCompact}
-                logo={{
-                    icon: logoUrl,
-                    text: 'REGA',
-                    onClick: () => setSidebarCompact(!sidebarCompact),
-                }}
-                hideCollapseButton={true}
-                menuItems={currentMenuItems}
-                renderFooter={handleRenderFooter}
-                renderContent={() => (
-                    <div className={styles.mainContent}>
-                        <Outlet />
-                    </div>
-                )}
-            />
+            {/* Оверлей для мобильного меню */}
+            {sidebarMobileOpen && (
+                <div
+                    className={styles.mobileOverlay}
+                    onClick={() => dispatch(setSidebarMobileOpen(false))}
+                />
+            )}
+
+            {/* Сайдбар */}
+            <div className={`${styles.sidebar} ${sidebarMobileOpen ? styles.sidebarMobileOpen : ''}`}>
+                <AsideHeader
+                    compact={sidebarCompact}
+                    onChangeCompact={(compact) => dispatch(setSidebarCompact(compact))}
+                    logo={{
+                        icon: logoUrl,
+                        text: 'REGA',
+                        onClick: () => dispatch(toggleSidebarCompact()),
+                    }}
+                    hideCollapseButton={true}
+                    menuItems={mobileMenuItems}
+                    renderFooter={handleRenderFooter}
+                />
+            </div>
+
+            {/* Основной контент */}
+            <div className={styles.content}>
+                {/* Мобильная кнопка открытия меню */}
+                <div className={styles.mobileMenuButton}>
+                    <Button
+                        view="flat"
+                        size="l"
+                        onClick={() => dispatch(setSidebarMobileOpen(true))}
+                    >
+                        <Icon data={Bars} size={20} />
+                    </Button>
+                </div>
+                <div className={styles.mainContent}>
+                    <Outlet />
+                </div>
+            </div>
         </div>
     )
 }

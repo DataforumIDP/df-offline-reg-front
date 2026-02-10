@@ -40,13 +40,14 @@ const ProjectStatsPage = () => {
             return null
         }
 
-        // Группируем логи по датам (начало дня) и типам действий
+        // Группируем логи по датам (начало дня UTC) и типам действий
         const dataByTimestamp: Record<number, Record<string, number>> = {}
 
         logsResponse.records.forEach((log) => {
-            // Получаем начало дня в миллисекундах
+            // Получаем начало дня в UTC миллисекундах
             const date = new Date(log.createdAt)
-            const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+            // Используем UTC чтобы избежать проблем с часовыми поясами
+            const dayStart = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
 
             if (!dataByTimestamp[dayStart]) {
                 dataByTimestamp[dayStart] = { CREATE: 0, UPDATE: 0, DELETE: 0, PRINT: 0 }
@@ -209,13 +210,13 @@ const ProjectStatsPage = () => {
             )}
 
             {/* Карточки со статистикой */}
-            <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
                 <Card
                     style={{
-                        flex: 1,
+                        flex: '1 1 140px',
+                        minWidth: '140px',
                         padding: '20px',
                         textAlign: 'center',
-                        aspectRatio: '2 / 1',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
@@ -241,10 +242,10 @@ const ProjectStatsPage = () => {
 
                 <Card
                     style={{
-                        flex: 1,
+                        flex: '1 1 140px',
+                        minWidth: '140px',
                         padding: '20px',
                         textAlign: 'center',
-                        aspectRatio: '2 / 1',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
@@ -270,10 +271,10 @@ const ProjectStatsPage = () => {
 
                 <Card
                     style={{
-                        flex: 1,
+                        flex: '1 1 140px',
+                        minWidth: '140px',
                         padding: '20px',
                         textAlign: 'center',
-                        aspectRatio: '2 / 1',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
@@ -300,10 +301,10 @@ const ProjectStatsPage = () => {
                 <Tooltip content={`Уникальных: ${statsMap.uniqPrints}`} placement="bottom">
                     <Card
                         style={{
-                            flex: 1,
+                            flex: '1 1 140px',
+                            minWidth: '140px',
                             padding: '20px',
                             textAlign: 'center',
-                            aspectRatio: '2 / 1',
                             display: 'flex',
                             flexDirection: 'column',
                             justifyContent: 'center',

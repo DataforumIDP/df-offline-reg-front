@@ -7,6 +7,7 @@ import { useDeleteProjectMutation } from '@/hooks/mutations/useProjectMutations'
 import BasicParametersSection from './sections/BasicParametersSection'
 import ExportImportSection from './sections/ExportImportSection'
 import ProjectSchemeSection from './sections/ProjectSchemeSection'
+import styles from './SettingsPage.module.css'
 
 const ProjectSettingsPage = () => {
     const { id: projectId } = useParams<{ id: string }>()
@@ -82,16 +83,16 @@ const ProjectSettingsPage = () => {
                 </Button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                {/* Левая колонка */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    {project && <BasicParametersSection project={project} />}
-                    <ExportImportSection />
+            <div className={styles.grid}>
+                {/* Схема проекта - первая на мобилке */}
+                <div className={styles.schemeColumn}>
+                    <ProjectSchemeSection />
                 </div>
 
-                {/* Правая колонка */}
-                <div>
-                    <ProjectSchemeSection />
+                {/* Основные настройки */}
+                <div className={styles.settingsColumn}>
+                    {project && <BasicParametersSection project={project} />}
+                    <ExportImportSection />
                 </div>
             </div>
 

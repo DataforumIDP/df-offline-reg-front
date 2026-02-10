@@ -493,7 +493,7 @@ export const ParticipantModal = ({
                                 display: 'flex',
                                 justifyContent: 'center',
                                 padding: '48px',
-                                width: '400px',
+                                width: 'min(400px, calc(100vw - 64px))',
                             }}
                         >
                             <Loader size="l" />
@@ -504,7 +504,7 @@ export const ParticipantModal = ({
                                 display: 'flex',
                                 flexDirection: 'column',
                                 gap: '16px',
-                                width: '400px',
+                                width: 'min(400px, calc(100vw - 64px))',
                             }}
                         >
                             {scheme.map(renderField)}

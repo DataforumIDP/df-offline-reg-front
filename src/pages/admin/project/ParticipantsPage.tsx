@@ -282,12 +282,14 @@ const ProjectParticipantsPage = () => {
                 style={{
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'center',
+                    alignItems: 'flex-start',
                     marginBottom: '24px',
+                    flexWrap: 'wrap',
+                    gap: '16px',
                 }}
             >
                 <Text variant="display-1">Участники</Text>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                     {isRefetching && <Loader size="s" />}
                     {selectedIds.length > 0 && (
                         <Button

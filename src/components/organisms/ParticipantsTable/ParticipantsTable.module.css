@@ -5,6 +5,7 @@
 .tableContainer {
     width: 100%;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .table {
@@ -12,8 +13,17 @@
 }
 
 .table table {
-    width: 100% !important;
-    table-layout: fixed;
+    width: max-content !important;
+    min-width: 100%;
+    table-layout: auto;
+}
+
+.table th,
+.table td {
+    min-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Первая колонка - чекбокс выделения */

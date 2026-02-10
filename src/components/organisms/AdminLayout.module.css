@@ -1,8 +1,25 @@
 .layout {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     min-height: 100vh;
     background-color: var(--g-color-base-background);
+}
+
+/* Sidebar wrapper */
+.sidebar {
+    flex-shrink: 0;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+}
+
+/* Content area */
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    position: relative;
 }
 
 /* Header */
@@ -59,4 +76,64 @@
 .mainContent {
     flex: 1;
     overflow-y: auto;
+}
+
+/* Мобильная кнопка меню - по умолчанию скрыта */
+.mobileMenuButton {
+    display: none;
+    padding: 12px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+}
+
+/* Оверлей для мобильного меню */
+.mobileOverlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+/* Мобильные стили */
+@media (max-width: 768px) {
+    .layout {
+        flex-direction: column;
+    }
+
+    .mobileMenuButton {
+        display: block;
+    }
+
+    .mobileOverlay {
+        display: block;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        height: 100vh;
+        z-index: 1001;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+
+    .sidebarMobileOpen {
+        transform: translateX(0);
+    }
+
+    .content {
+        width: 100%;
+    }
+
+    .mainContent {
+        padding-top: 36px;
+    }
 }

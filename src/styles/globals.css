@@ -28,3 +28,16 @@ a {
         text-decoration: underline;
     }
 }
+
+/* Глобальные стили для модалок на мобильных устройствах */
+@media (max-width: 768px) {
+    .g-dialog__modal {
+        max-width: calc(100vw - 32px) !important;
+        margin: 16px !important;
+    }
+    
+    .g-dialog__body {
+        max-width: 100% !important;
+        overflow-x: auto;
+    }
+}
