@@ -1,13 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchStatsLogs, fetchLogs, type LogsQuery } from '@/services/api/statsService'
+import { fetchStatsLogs, fetchLogs, type LogsQuery, type StatsQuery } from '@/services/api/statsService'
 
 /**
  * Запрос статистики по типам действий
  */
-export const useStatsLogsQuery = (projectId: number | undefined) => {
+export const useStatsLogsQuery = (projectId: number | undefined, params?: StatsQuery) => {
     return useQuery({
-        queryKey: ['stats-logs', projectId],
-        queryFn: () => fetchStatsLogs(projectId!),
+        queryKey: ['stats-logs', projectId, params],
+        queryFn: () => fetchStatsLogs(projectId!, params),
         enabled: !!projectId,
         staleTime: 10 * 60 * 1000, // 10 минут
     })

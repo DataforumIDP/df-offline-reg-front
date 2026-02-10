@@ -67,7 +67,7 @@ export type TemplateElement = TextFieldElement | QrElement
 export interface CanvasSettings {
     widthMm: number
     heightMm: number
-    zoom: number // в процентах, 50-150
+    zoom: number // в процентах, 10-300
     sizeUnit: 'mm' | 'px'
 }
 

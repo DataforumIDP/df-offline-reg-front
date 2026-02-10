@@ -46,11 +46,16 @@ export interface LogsQuery {
     dateEnd?: string
 }
 
+export interface StatsQuery {
+    dateStart?: string
+    dateEnd?: string
+}
+
 /**
  * Получить статистику по типам действий
  */
-export const fetchStatsLogs = (projectId: number): Promise<StatsResponse> => {
-    return apiClient.get(`/projects/${projectId}/participants/log/stats`).then((res) => res.data)
+export const fetchStatsLogs = (projectId: number, params?: StatsQuery): Promise<StatsResponse> => {
+    return apiClient.get(`/projects/${projectId}/participants/log/stats`, { params }).then((res) => res.data)
 }
 
 /**

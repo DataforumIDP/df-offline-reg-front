@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from 'react'
 import { Modal, Text, Loader } from '@gravity-ui/uikit'
+import { Plus } from '@gravity-ui/icons'
 import { SearchInput } from '@/components/atoms'
 import { usePrintTemplates } from '@/hooks/queries/useTemplateQueries'
 import { PrintTemplate } from '@/services/api/templates'
@@ -9,6 +10,7 @@ interface SelectTemplateModalProps {
     open: boolean
     onClose: () => void
     onSelect: (template: PrintTemplate) => void
+    onCreateNew?: () => void
     isLoading?: boolean
     currentTemplateId?: number
 }
@@ -17,6 +19,7 @@ const SelectTemplateModal = ({
     open,
     onClose,
     onSelect,
+    onCreateNew,
     isLoading,
     currentTemplateId,
 }: SelectTemplateModalProps) => {
@@ -63,7 +66,7 @@ const SelectTemplateModal = ({
                         <div className={styles.loader}>
                             <Loader size="m" />
                         </div>
-                    ) : filteredTemplates.length === 0 ? (
+                    ) : filteredTemplates.length === 0 && !onCreateNew ? (
                         <div className={styles.empty}>
                             <Text color="secondary">
                                 {search ? 'Шаблоны не найдены' : 'Нет доступных шаблонов'}
@@ -71,6 +74,30 @@ const SelectTemplateModal = ({
                         </div>
                     ) : (
                         <div className={styles.grid}>
+                            {/* Карточка создания нового шаблона */}
+                            {onCreateNew && !search && (
+                                <div
+                                    className={styles.card}
+                                    onClick={onCreateNew}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            onCreateNew()
+                                        }
+                                    }}
+                                >
+                                    <div className={styles.cardPreview}>
+                                        <div className={styles.newTemplateIcon}>
+                                            <Plus width={48} height={48} />
+                                        </div>
+                                    </div>
+                                    <div className={styles.cardInfo}>
+                                        <Text variant="subheader-1">Новый шаблон</Text>
+                                    </div>
+                                </div>
+                            )}
+
                             {filteredTemplates.map((template) => {
                                 const isSelected = template.id === currentTemplateId
 

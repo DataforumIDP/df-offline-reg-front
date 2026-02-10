@@ -1,32 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Text, Button, DropdownMenu, TextInput, RadioGroup, Slider } from '@gravity-ui/uikit'
 import { Plus, Printer, FolderOpen, FloppyDisk } from '@gravity-ui/icons'
-import { useParams } from 'react-router-dom'
-import { useSnackbar } from 'notistack'
-import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import {
-    setCanvasWidth,
-    setCanvasHeight,
-    setZoom,
-    setSizeUnit,
-    selectElement,
-    setElements,
-    setTemplateId,
-    setTemplateName,
-    TextFieldElement,
-    addQrField,
-    markAsSaved,
-} from '@/store/slices/templateEditorSlice'
-import { useParticipantsQuery } from '@/hooks/queries/useParticipantQueries'
+import { useAppDispatch } from '@/store/hooks'
+import { selectElement, addQrField, TextFieldElement } from '@/store/slices/templateEditorSlice'
 import { useSchemeQuery } from '@/hooks/queries/useSchemeQueries'
-import { previewBadgePdf, PrintTemplate, generateTemplatePreview } from '@/services/printService'
-import { useProjectPrintTemplate } from '@/hooks/queries/useTemplateQueries'
-import {
-    useCreatePrintTemplateMutation,
-    useUpdatePrintTemplateMutation,
-    useAssignPrintTemplateMutation,
-} from '@/hooks/mutations/useTemplateMutations'
-import { uploadFile, getFileUrl } from '@/services/api/files'
+
+import { useTemplateEditor, useTestPrint, useCanvasControls } from './hooks'
+import { ZOOM_MIN, ZOOM_MAX, ZOOM_STEP, SCREEN_PX_PER_MM } from './constants/templateEditor'
 
 import AddTextFieldModal from './components/AddTextFieldModal'
 import AddQrModal from './components/AddQrModal'
@@ -38,95 +18,50 @@ import TemplateNameDialog from './components/TemplateNameDialog'
 import SelectTemplateModal from './components/SelectTemplateModal'
 import styles from './TemplatesPage.module.css'
 
-// Конвертация мм <-> px при 300 DPI (стандарт для печати)
-const MM_TO_PX_RATIO = 300 / 25.4 // ≈ 11.81 px на 1 мм
-const mmToPx = (mm: number) => Math.round(mm * MM_TO_PX_RATIO)
-const pxToMm = (px: number) => Math.round((px / MM_TO_PX_RATIO) * 10) / 10
-
 const ProjectTemplatesPage = () => {
-    const { id: projectId } = useParams()
     const dispatch = useAppDispatch()
-    const { enqueueSnackbar } = useSnackbar()
 
-    // Данные из стора
-    const { canvas, elements, templateId, templateName, isDirty } = useAppSelector(
-        (state) => state.templateEditor,
-    )
-    const { widthMm: canvasWidthMm, heightMm: canvasHeightMm, zoom, sizeUnit } = canvas
-    // Состояние для диалога имени шаблона
-    const [nameDialogOpen, setNameDialogOpen] = useState(false)
-    const [isCreating, setIsCreating] = useState(false)
-    const [selectTemplateOpen, setSelectTemplateOpen] = useState(false)
-    const [isSelectingTemplate, setIsSelectingTemplate] = useState(false)
-    // Получение шаблона через react-query
-    const { data: projectTemplate } = useProjectPrintTemplate(
-        projectId ? Number(projectId) : undefined,
-    )
+    // Хуки для работы с шаблоном
+    const {
+        projectId,
+        elements,
+        templateId,
+        nameDialogOpen,
+        setNameDialogOpen,
+        isCreating,
+        selectTemplateOpen,
+        setSelectTemplateOpen,
+        isSelectingTemplate,
+        isSaveDisabled,
+        handleSave,
+        handleCreateTemplate,
+        handleSelectTemplate,
+        handleCreateNewTemplate,
+    } = useTemplateEditor()
 
-    // Синхронизация projectTemplate с редактором
-    useEffect(() => {
-        if (!projectTemplate?.template) {
-            return
-        }
-        const tpl = projectTemplate.template
-        dispatch(setTemplateId(tpl.id))
-        dispatch(setTemplateName(tpl.name))
-        if (tpl.settings) {
-            dispatch(setElements(tpl.settings.elements || []))
-            if (tpl.settings.widthMm) {
-                dispatch(setCanvasWidth(tpl.settings.widthMm))
-            }
-            if (tpl.settings.heightMm) {
-                dispatch(setCanvasHeight(tpl.settings.heightMm))
-            }
-        }
-        // После загрузки шаблона сбрасываем флаг изменений
-        dispatch(markAsSaved())
-    }, [projectTemplate, dispatch])
+    // Хук для пробной печати
+    const { handleTestPrint } = useTestPrint(projectId ? Number(projectId) : undefined)
 
-    // Мутации
-    const createTemplateMutation = useCreatePrintTemplateMutation()
-    const updateTemplateMutation = useUpdatePrintTemplateMutation()
-    const assignTemplateMutation = useAssignPrintTemplateMutation()
-
-    // Запрос участников для пробной печати
-    const { data: participantsData } = useParticipantsQuery(Number(projectId), {
-        page: 1,
-        limit: 50,
-    })
+    // Хук для управления холстом
+    const {
+        canvasWidthMm,
+        canvasHeightMm,
+        zoom,
+        sizeUnit,
+        displayWidth,
+        displayHeight,
+        canvasDisplayWidth,
+        canvasDisplayHeight,
+        handleWidthChange,
+        handleHeightChange,
+        handleZoomChange,
+        handleSizeUnitChange,
+    } = useCanvasControls()
 
     // Состояния модалок
     const [fieldModalOpen, setFieldModalOpen] = useState(false)
     const [qrModalOpen, setQrModalOpen] = useState(false)
     const { data: schemeData } = useSchemeQuery(projectId || '')
-
-    // Значения для отображения в зависимости от единиц
-    const displayWidth = sizeUnit === 'mm' ? canvasWidthMm : mmToPx(canvasWidthMm)
-    const displayHeight = sizeUnit === 'mm' ? canvasHeightMm : mmToPx(canvasHeightMm)
-
-    const handleWidthChange = (value: string) => {
-        const numValue = parseFloat(value) || 0
-        if (sizeUnit === 'mm') {
-            dispatch(setCanvasWidth(numValue))
-        } else {
-            dispatch(setCanvasWidth(pxToMm(numValue)))
-        }
-    }
-
-    const handleHeightChange = (value: string) => {
-        const numValue = parseFloat(value) || 0
-        if (sizeUnit === 'mm') {
-            dispatch(setCanvasHeight(numValue))
-        } else {
-            dispatch(setCanvasHeight(pxToMm(numValue)))
-        }
-    }
-
-    // Размер холста на экране (с учётом масштаба)
-    // Используем 96 DPI для отображения на экране
-    const screenPxPerMm = 96 / 25.4 // ≈ 3.78
-    const canvasDisplayWidth = canvasWidthMm * screenPxPerMm * (zoom / 100)
-    const canvasDisplayHeight = canvasHeightMm * screenPxPerMm * (zoom / 100)
 
     // Фильтруем элементы по типу
     const textElements = elements.filter((el): el is TextFieldElement => el.type === 'text')
@@ -136,186 +71,6 @@ const ProjectTemplatesPage = () => {
     const handleCanvasClick = () => {
         dispatch(selectElement(null))
     }
-
-    // Пробная печать - выбираем случайного участника и открываем PDF
-    const handleTestPrint = async () => {
-        const participants = participantsData?.records || []
-
-        if (participants.length === 0) {
-            enqueueSnackbar('В проекте нет участников для пробной печати', { variant: 'warning' })
-            return
-        }
-
-        if (elements.length === 0) {
-            enqueueSnackbar('Добавьте хотя бы один элемент в шаблон', { variant: 'warning' })
-            return
-        }
-
-        // Выбираем случайного участника
-        const randomIndex = Math.floor(Math.random() * participants.length)
-        const participant = participants[randomIndex]
-
-        // Формируем шаблон и данные
-        const template: PrintTemplate = {
-            widthMm: canvasWidthMm,
-            heightMm: canvasHeightMm,
-            elements: elements,
-        }
-
-        try {
-            await previewBadgePdf(template, participant.data)
-        } catch (err) {
-            console.error('Preview error:', err)
-            enqueueSnackbar(
-                `Ошибка при генерации PDF: ${err instanceof Error ? err.message : 'Unknown error'}`,
-                { variant: 'error' },
-            )
-        }
-    }
-
-    // --- Генерация превью шаблона ---
-    const generatePreloaderUrl = async (): Promise<string | undefined> => {
-        try {
-            if (elements.length === 0) {
-                return undefined
-            }
-
-            // Генерируем превью из текущего шаблона
-            const template: PrintTemplate = {
-                widthMm: canvasWidthMm,
-                heightMm: canvasHeightMm,
-                elements,
-            }
-
-            // Пустые данные для превью (поля будут показаны как placeholders)
-            const previewBlob = await generateTemplatePreview(template, {})
-
-            // Загружаем на сервер
-            const key = await uploadFile(previewBlob, `preloader_${projectId}_${Date.now()}.jpg`)
-
-            // Возвращаем полный URL
-            return getFileUrl(key)
-        } catch (e) {
-            console.error('Failed to generate preloader:', e)
-            return undefined
-        }
-    }
-
-    // --- Логика сохранения шаблона ---
-    const handleSave = async () => {
-        if (!projectId) {
-            return
-        }
-
-        // Генерируем превью
-        const preloaderUrl = await generatePreloaderUrl()
-
-        // Если шаблон уже назначен проекту — обновляем
-        if (templateId) {
-            try {
-                await updateTemplateMutation.mutateAsync({
-                    id: templateId,
-                    data: {
-                        name: templateName || 'Шаблон',
-                        settings: {
-                            widthMm: canvasWidthMm,
-                            heightMm: canvasHeightMm,
-                            elements,
-                        },
-                        preloader: preloaderUrl,
-                    },
-                })
-                dispatch(markAsSaved())
-                enqueueSnackbar('Шаблон успешно обновлён', { variant: 'success' })
-            } catch (e) {
-                enqueueSnackbar(
-                    'Ошибка при обновлении шаблона: ' + (e instanceof Error ? e.message : e),
-                    { variant: 'error' },
-                )
-            }
-            return
-        }
-        // Если шаблон не назначен — показать диалог
-        setNameDialogOpen(true)
-    }
-
-    // --- Сохранение нового шаблона после диалога ---
-    const handleCreateTemplate = async (name: string) => {
-        if (!projectId) {
-            return
-        }
-        setIsCreating(true)
-
-        try {
-            // Генерируем превью
-            const preloaderUrl = await generatePreloaderUrl()
-
-            const tpl = await createTemplateMutation.mutateAsync({
-                name,
-                settings: {
-                    widthMm: canvasWidthMm,
-                    heightMm: canvasHeightMm,
-                    elements,
-                },
-                preloader: preloaderUrl,
-            })
-            await assignTemplateMutation.mutateAsync({
-                projectId: Number(projectId),
-                templateId: tpl.id,
-            })
-            dispatch(setTemplateId(tpl.id))
-            dispatch(setTemplateName(name))
-            dispatch(markAsSaved())
-            setNameDialogOpen(false)
-            enqueueSnackbar('Шаблон создан и назначен проекту', { variant: 'success' })
-        } catch (e) {
-            enqueueSnackbar(
-                'Ошибка при создании шаблона: ' + (e instanceof Error ? e.message : e),
-                { variant: 'error' },
-            )
-        } finally {
-            setIsCreating(false)
-        }
-    }
-
-    // --- Выбор существующего шаблона ---
-    const handleSelectTemplate = async (
-        template: import('@/services/api/templates').PrintTemplate,
-    ) => {
-        if (!projectId) {
-            return
-        }
-        setIsSelectingTemplate(true)
-        try {
-            await assignTemplateMutation.mutateAsync({
-                projectId: Number(projectId),
-                templateId: template.id,
-            })
-            dispatch(setTemplateId(template.id))
-            dispatch(setTemplateName(template.name))
-            if (template.settings) {
-                dispatch(setElements(template.settings.elements || []))
-                if (template.settings.widthMm) {
-                    dispatch(setCanvasWidth(template.settings.widthMm))
-                }
-                if (template.settings.heightMm) {
-                    dispatch(setCanvasHeight(template.settings.heightMm))
-                }
-            }
-            dispatch(markAsSaved())
-            setSelectTemplateOpen(false)
-            enqueueSnackbar('Шаблон назначен проекту', { variant: 'success' })
-        } catch (e) {
-            enqueueSnackbar('Ошибка при выборе шаблона: ' + (e instanceof Error ? e.message : e), {
-                variant: 'error',
-            })
-        } finally {
-            setIsSelectingTemplate(false)
-        }
-    }
-
-    // Кнопка сохранения активна если нет шаблона или есть несохранённые изменения
-    const isSaveDisabled = templateId !== null && !isDirty
 
     return (
         <div className={styles.page}>
@@ -354,6 +109,7 @@ const ProjectTemplatesPage = () => {
                 open={selectTemplateOpen}
                 onClose={() => setSelectTemplateOpen(false)}
                 onSelect={handleSelectTemplate}
+                onCreateNew={handleCreateNewTemplate}
                 isLoading={isSelectingTemplate}
                 currentTemplateId={templateId ?? undefined}
             />
@@ -387,7 +143,7 @@ const ProjectTemplatesPage = () => {
                                             <CanvasTextField
                                                 key={element.id}
                                                 element={element}
-                                                screenPxPerMm={screenPxPerMm}
+                                                screenPxPerMm={SCREEN_PX_PER_MM}
                                                 zoom={zoom}
                                                 canvasWidthMm={canvasWidthMm}
                                             />
@@ -396,7 +152,7 @@ const ProjectTemplatesPage = () => {
                                             <CanvasQrField
                                                 key={element.id}
                                                 element={element as any}
-                                                screenPxPerMm={screenPxPerMm}
+                                                screenPxPerMm={SCREEN_PX_PER_MM}
                                                 zoom={zoom}
                                                 canvasWidthMm={canvasWidthMm}
                                             />
@@ -425,9 +181,7 @@ const ProjectTemplatesPage = () => {
                                 />
                                 <RadioGroup
                                     value={sizeUnit}
-                                    onUpdate={(value) =>
-                                        dispatch(setSizeUnit(value as 'mm' | 'px'))
-                                    }
+                                    onUpdate={(value) => handleSizeUnitChange(value as 'mm' | 'px')}
                                     size="m"
                                     options={[
                                         { value: 'mm', content: 'мм' },
@@ -440,10 +194,10 @@ const ProjectTemplatesPage = () => {
                                 <Text variant="body-2">Масштаб:</Text>
                                 <Slider
                                     value={zoom}
-                                    onUpdate={(value) => dispatch(setZoom(value))}
-                                    min={50}
-                                    max={150}
-                                    step={10}
+                                    onUpdate={handleZoomChange}
+                                    min={ZOOM_MIN}
+                                    max={ZOOM_MAX}
+                                    step={ZOOM_STEP}
                                     className={styles.zoomSlider}
                                 />
                                 <Text variant="body-2" className={styles.zoomValue}>

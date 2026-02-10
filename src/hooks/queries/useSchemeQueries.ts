@@ -21,6 +21,9 @@ export interface SchemeResponse {
     fields: SchemeField[]
 }
 
+// Время жизни кеша - 1 день
+const ONE_DAY_MS = 24 * 60 * 60 * 1000
+
 export const useSchemeQuery = (projectId: string) => {
     return useQuery({
         queryKey: ['scheme', projectId],
@@ -29,5 +32,6 @@ export const useSchemeQuery = (projectId: string) => {
             return response.data
         },
         enabled: !!projectId,
+        staleTime: ONE_DAY_MS,
     })
 }

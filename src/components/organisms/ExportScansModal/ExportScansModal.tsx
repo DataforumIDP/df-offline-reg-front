@@ -1,15 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
     Modal,
     Button,
     Text,
     Loader,
     Checkbox,
-    TextInput,
+    Select,
+    type SelectOption,
 } from '@gravity-ui/uikit'
+import { Xmark } from '@gravity-ui/icons'
+import { Dayjs } from 'dayjs'
 import { useSchemeQuery, SchemeField } from '@/hooks/queries/useSchemeQueries'
 import { useZonesQuery } from '@/hooks/queries/useZoneQueries'
 import { fetchExportScans, ExportScansParams } from '@/services/api/participants'
+import { DateTimePicker } from '@/components/atoms'
 import { saveAs } from 'file-saver'
 import styles from './ExportScansModal.module.css'
 
@@ -24,10 +28,10 @@ const ExportScansModal = ({ open, onClose, projectId, projectTitle }: ExportScan
     // Выбранные ключи схемы
     const [selectedKeys, setSelectedKeys] = useState<string[]>([])
     // Выбранные зоны
-    const [selectedZones, setSelectedZones] = useState<number[]>([])
-    // Временной диапазон (строки в формате YYYY-MM-DD)
-    const [dateStart, setDateStart] = useState('')
-    const [dateEnd, setDateEnd] = useState('')
+    const [selectedZones, setSelectedZones] = useState<string[]>([])
+    // Временной диапазон
+    const [dateStart, setDateStart] = useState<Dayjs | null>(null)
+    const [dateEnd, setDateEnd] = useState<Dayjs | null>(null)
     // Фильтры по полям
     const [filters, setFilters] = useState<Record<string, string[]>>({})
     // Включать печати
@@ -47,25 +51,26 @@ const ExportScansModal = ({ open, onClose, projectId, projectTitle }: ExportScan
         }
     }, [schemeData?.fields])
 
+    // Опции для селекта полей
+    const fieldOptions: SelectOption[] = useMemo(() => {
+        return schemeData?.fields?.map((f) => ({
+            value: f.key,
+            content: f.label,
+        })) || []
+    }, [schemeData?.fields])
+
+    // Опции для селекта зон
+    const zoneOptions: SelectOption[] = useMemo(() => {
+        return zones?.map((z) => ({
+            value: String(z.id),
+            content: z.name,
+        })) || []
+    }, [zones])
+
     // Фильтруемые поля - только list
-    const filterableFields =
-        schemeData?.fields?.filter((field) => field.config.type === 'list') || []
-
-    const handleKeyToggle = (key: string, checked: boolean) => {
-        if (checked) {
-            setSelectedKeys((prev) => [...prev, key])
-        } else {
-            setSelectedKeys((prev) => prev.filter((k) => k !== key))
-        }
-    }
-
-    const handleZoneToggle = (zoneId: number, checked: boolean) => {
-        if (checked) {
-            setSelectedZones((prev) => [...prev, zoneId])
-        } else {
-            setSelectedZones((prev) => prev.filter((id) => id !== zoneId))
-        }
-    }
+    const filterableFields = useMemo(() => {
+        return schemeData?.fields?.filter((field) => field.config.type === 'list') || []
+    }, [schemeData?.fields])
 
     const handleFilterChange = (key: string, values: string[]) => {
         setFilters((prev) => {
@@ -96,14 +101,14 @@ const ExportScansModal = ({ open, onClose, projectId, projectTitle }: ExportScan
 
             // Зоны (если выбраны конкретные)
             if (selectedZones.length > 0) {
-                params.zones = selectedZones
+                params.zones = selectedZones.map(Number)
             }
 
             // Временной диапазон
             if (dateStart || dateEnd) {
                 params.timeRange = [
-                    dateStart ? new Date(dateStart).toISOString() : new Date(0).toISOString(),
-                    dateEnd ? new Date(dateEnd + 'T23:59:59').toISOString() : new Date().toISOString(),
+                    dateStart ? dateStart.toISOString() : new Date(0).toISOString(),
+                    dateEnd ? dateEnd.toISOString() : new Date().toISOString(),
                 ]
             }
 
@@ -133,8 +138,8 @@ const ExportScansModal = ({ open, onClose, projectId, projectTitle }: ExportScan
     const handleReset = () => {
         setSelectedKeys(schemeData?.fields?.map((f) => f.key) || [])
         setSelectedZones([])
-        setDateStart('')
-        setDateEnd('')
+        setDateStart(null)
+        setDateEnd(null)
         setFilters({})
         setAddPrints(true)
         setError(null)
@@ -145,9 +150,15 @@ const ExportScansModal = ({ open, onClose, projectId, projectTitle }: ExportScan
     return (
         <Modal open={open} onClose={onClose}>
             <div className={styles.modal}>
-                <Text variant="header-1" className={styles.title}>
-                    Выгрузка статистики сканирований
-                </Text>
+                {/* Шапка */}
+                <div className={styles.header}>
+                    <Text variant="header-1">Выгрузка статистики</Text>
+                    <Button view="flat" size="m" onClick={onClose}>
+                        <Button.Icon>
+                            <Xmark />
+                        </Button.Icon>
+                    </Button>
+                </div>
 
                 {isLoading ? (
                     <div className={styles.loader}>
@@ -155,110 +166,97 @@ const ExportScansModal = ({ open, onClose, projectId, projectTitle }: ExportScan
                     </div>
                 ) : (
                     <>
-                        {/* Выбор полей схемы */}
-                        <div className={styles.section}>
-                            <Text variant="subheader-1">Поля для выгрузки</Text>
-                            <div className={styles.checkboxGrid}>
-                                {schemeData?.fields?.map((field) => (
-                                    <Checkbox
-                                        key={field.key}
-                                        checked={selectedKeys.includes(field.key)}
-                                        onUpdate={(checked) =>
-                                            handleKeyToggle(field.key, checked)
-                                        }
-                                    >
-                                        {field.label}
-                                    </Checkbox>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Выбор зон */}
-                        {zones && zones.length > 1 && (
+                        <div className={styles.content}>
+                            {/* Выбор полей схемы */}
                             <div className={styles.section}>
-                                <Text variant="subheader-1">
-                                    Зоны (пусто = все)
-                                </Text>
-                                <div className={styles.checkboxGrid}>
-                                    {zones.map((zone) => (
-                                        <Checkbox
-                                            key={zone.id}
-                                            checked={selectedZones.includes(zone.id)}
-                                            onUpdate={(checked) =>
-                                                handleZoneToggle(zone.id, checked)
-                                            }
-                                        >
-                                            {zone.name}
-                                        </Checkbox>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Временной диапазон */}
-                        <div className={styles.section}>
-                            <Text variant="subheader-1">Период (пусто = всё время)</Text>
-                            <div className={styles.dateRange}>
-                                <TextInput
-                                    value={dateStart}
-                                    onUpdate={setDateStart}
-                                    placeholder="ГГГГ-ММ-ДД"
-                                    size="m"
-                                />
-                                <Text variant="body-1">—</Text>
-                                <TextInput
-                                    value={dateEnd}
-                                    onUpdate={setDateEnd}
-                                    placeholder="ГГГГ-ММ-ДД"
-                                    size="m"
+                                <Text variant="subheader-1">Поля для выгрузки</Text>
+                                <Select
+                                    multiple
+                                    filterable
+                                    value={selectedKeys}
+                                    onUpdate={setSelectedKeys}
+                                    options={fieldOptions}
+                                    placeholder="Выберите поля"
+                                    width="max"
                                 />
                             </div>
-                        </div>
 
-                        {/* Фильтры по полям */}
-                        {filterableFields.length > 0 && (
+                            {/* Выбор зон */}
+                            {zones && zones.length > 1 && (
+                                <div className={styles.section}>
+                                    <Text variant="subheader-1">Зоны</Text>
+                                    <Select
+                                        multiple
+                                        value={selectedZones}
+                                        onUpdate={setSelectedZones}
+                                        options={zoneOptions}
+                                        placeholder="Все зоны"
+                                        width="max"
+                                    />
+                                </div>
+                            )}
+
+                            {/* Временной диапазон */}
                             <div className={styles.section}>
-                                <Text variant="subheader-1">Фильтры по полям</Text>
-                                <div className={styles.filtersList}>
-                                    {filterableFields.map((field) => (
-                                        <FilterField
-                                            key={field.id}
-                                            field={field}
-                                            value={filters[field.key] || []}
-                                            onChange={(vals) =>
-                                                handleFilterChange(field.key, vals)
-                                            }
-                                        />
-                                    ))}
+                                <Text variant="subheader-1">Период</Text>
+                                <div className={styles.dateRange}>
+                                    <DateTimePicker
+                                        value={dateStart}
+                                        onChange={setDateStart}
+                                        placeholder="Начало периода"
+                                        maxDateTime={dateEnd || undefined}
+                                    />
+                                    <DateTimePicker
+                                        value={dateEnd}
+                                        onChange={setDateEnd}
+                                        placeholder="Конец периода"
+                                        minDateTime={dateStart || undefined}
+                                    />
                                 </div>
                             </div>
-                        )}
 
-                        {/* Опция печатей */}
-                        <div className={styles.section}>
-                            <Checkbox
-                                checked={addPrints}
-                                onUpdate={setAddPrints}
-                                size="l"
-                            >
-                                Включить количество печатей бейджей
-                            </Checkbox>
-                        </div>
+                            {/* Фильтры по полям */}
+                            {filterableFields.length > 0 && (
+                                <div className={styles.section}>
+                                    <Text variant="subheader-1">Фильтры</Text>
+                                    <div className={styles.filtersList}>
+                                        {filterableFields.map((field) => (
+                                            <FilterField
+                                                key={field.id}
+                                                field={field}
+                                                value={filters[field.key] || []}
+                                                onChange={(vals) =>
+                                                    handleFilterChange(field.key, vals)
+                                                }
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
-                        {error && (
-                            <div className={styles.error}>
-                                <Text variant="body-1" color="danger">
-                                    {error}
-                                </Text>
+                            {/* Опция печатей */}
+                            <div className={styles.section}>
+                                <Checkbox
+                                    checked={addPrints}
+                                    onUpdate={setAddPrints}
+                                    size="l"
+                                >
+                                    Включить количество печатей
+                                </Checkbox>
                             </div>
-                        )}
+
+                            {error && (
+                                <div className={styles.error}>
+                                    <Text variant="body-1" color="danger">
+                                        {error}
+                                    </Text>
+                                </div>
+                            )}
+                        </div>
 
                         <div className={styles.actions}>
                             <Button view="flat" size="l" onClick={handleReset}>
                                 Сбросить
-                            </Button>
-                            <Button view="flat" size="l" onClick={onClose}>
-                                Отмена
                             </Button>
                             <Button
                                 view="action"
@@ -289,29 +287,22 @@ const FilterField = ({ field, value, onChange }: FilterFieldProps) => {
         return null
     }
 
-    const items = config.listSettings.items
+    const options: SelectOption[] = config.listSettings.items.map((item) => ({
+        value: item.value,
+        content: item.value,
+    }))
 
     return (
         <div className={styles.filterField}>
-            <Text variant="body-2">{field.label}</Text>
-            <div className={styles.checkboxGroup}>
-                {items.map((item) => (
-                    <Checkbox
-                        key={item.value}
-                        checked={value.includes(item.value)}
-                        onUpdate={(checked) => {
-                            if (checked) {
-                                onChange([...value, item.value])
-                            } else {
-                                onChange(value.filter((v) => v !== item.value))
-                            }
-                        }}
-                        size="m"
-                    >
-                        {item.value}
-                    </Checkbox>
-                ))}
-            </div>
+            <Text variant="body-2" color="secondary">{field.label}</Text>
+            <Select
+                multiple
+                value={value}
+                onUpdate={onChange}
+                options={options}
+                placeholder="Все значения"
+                width="max"
+            />
         </div>
     )
 }

@@ -1,12 +1,13 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Text, Card, Skeleton, Alert, Table, Tooltip } from '@gravity-ui/uikit'
 import { useParams } from 'react-router-dom'
 import ChartKit, { settings } from '@gravity-ui/chartkit'
 import { YagrPlugin } from '@gravity-ui/chartkit/yagr'
 import type { YagrWidgetData } from '@gravity-ui/chartkit/yagr'
-import { PageWrapper, PageHeader } from '@/components/atoms'
+import { Dayjs } from 'dayjs'
+import { PageWrapper, PageHeader, PageHeaderActions, DateTimePicker } from '@/components/atoms'
 import { useStatsLogsQuery, useLogsQuery } from '../../../hooks/queries/useStatsQueries'
 import type { LogRecord } from '../../../services/api/statsService'
 
@@ -16,23 +17,32 @@ settings.set({ plugins: [YagrPlugin] })
 
 const ProjectStatsPage = () => {
     const { id: projectId } = useParams<{ id: string }>()
+    const [dateStart, setDateStart] = useState<Dayjs | null>(null)
+    const [dateEnd, setDateEnd] = useState<Dayjs | null>(null)
 
     const projectIdNum = projectId ? parseInt(projectId, 10) : undefined
+
+    // Преобразуем даты в ISO строки для запросов
+    const dateParams = useMemo(() => ({
+        dateStart: dateStart?.toISOString(),
+        dateEnd: dateEnd?.toISOString(),
+    }), [dateStart, dateEnd])
 
     // Загружаем статистику по типам действий
     const {
         data: stats,
         isLoading: statsLoading,
         error: statsError,
-    } = useStatsLogsQuery(projectIdNum)
+    } = useStatsLogsQuery(projectIdNum, dateParams)
 
-    // Загружаем логи за последние 30 дней для графика
+    // Загружаем логи для графика
     const {
         data: logsResponse,
         isLoading: logsLoading,
         error: logsError,
     } = useLogsQuery(projectIdNum, {
         limit: 100,
+        ...dateParams,
     })
 
     // Подготовка данных для графика
@@ -195,6 +205,20 @@ const ProjectStatsPage = () => {
         <PageWrapper>
             <PageHeader>
                 <Text variant="display-1">Статистика</Text>
+                <PageHeaderActions>
+                    <DateTimePicker
+                        value={dateStart}
+                        onChange={setDateStart}
+                        placeholder="Дата начала"
+                        maxDateTime={dateEnd || undefined}
+                    />
+                    <DateTimePicker
+                        value={dateEnd}
+                        onChange={setDateEnd}
+                        placeholder="Дата конца"
+                        minDateTime={dateStart || undefined}
+                    />
+                </PageHeaderActions>
             </PageHeader>
 
             {statsError && (
