@@ -6,6 +6,7 @@ import { useParams } from 'react-router-dom'
 import ChartKit, { settings } from '@gravity-ui/chartkit'
 import { YagrPlugin } from '@gravity-ui/chartkit/yagr'
 import type { YagrWidgetData } from '@gravity-ui/chartkit/yagr'
+import { PageWrapper, PageHeader } from '@/components/atoms'
 import { useStatsLogsQuery, useLogsQuery } from '../../../hooks/queries/useStatsQueries'
 import type { LogRecord } from '../../../services/api/statsService'
 
@@ -40,19 +41,19 @@ const ProjectStatsPage = () => {
             return null
         }
 
-        // Группируем логи по датам (начало дня UTC) и типам действий
+        // Группируем логи по 15-минутным интервалам
         const dataByTimestamp: Record<number, Record<string, number>> = {}
+        const INTERVAL_MS = 15 * 60 * 1000 // 15 минут
 
         logsResponse.records.forEach((log) => {
-            // Получаем начало дня в UTC миллисекундах
             const date = new Date(log.createdAt)
-            // Используем UTC чтобы избежать проблем с часовыми поясами
-            const dayStart = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+            // Округляем до 15-минутного интервала
+            const intervalStart = Math.floor(date.getTime() / INTERVAL_MS) * INTERVAL_MS
 
-            if (!dataByTimestamp[dayStart]) {
-                dataByTimestamp[dayStart] = { CREATE: 0, UPDATE: 0, DELETE: 0, PRINT: 0 }
+            if (!dataByTimestamp[intervalStart]) {
+                dataByTimestamp[intervalStart] = { CREATE: 0, UPDATE: 0, DELETE: 0, PRINT: 0 }
             }
-            dataByTimestamp[dayStart][log.action]++
+            dataByTimestamp[intervalStart][log.action]++
         })
 
         // Сортируем по timestamp
@@ -103,6 +104,9 @@ const ProjectStatsPage = () => {
                     select: {
                         zoom: false,
                     },
+                    size: {
+                        adaptive: true,
+                    }
                 },
                 title: {
                     text: 'События',
@@ -188,16 +192,15 @@ const ProjectStatsPage = () => {
     const statsMap = stats || { CREATE: 0, UPDATE: 0, DELETE: 0, PRINT: 0, uniqPrints: 0 }
 
     return (
-        <div style={{ padding: '24px' }}>
-            <Text variant="display-1" style={{ marginBottom: '24px', display: 'block' }}>
-                Статистика
-            </Text>
+        <PageWrapper>
+            <PageHeader>
+                <Text variant="display-1">Статистика</Text>
+            </PageHeader>
 
             {statsError && (
                 <Alert
                     theme="danger"
                     title={`Ошибка: ${(statsError as Error).message}`}
-                    style={{ marginBottom: '24px' }}
                 />
             )}
 
@@ -205,12 +208,11 @@ const ProjectStatsPage = () => {
                 <Alert
                     theme="warning"
                     title={`Ошибка: ${(logsError as Error).message}`}
-                    style={{ marginBottom: '24px' }}
                 />
             )}
 
             {/* Карточки со статистикой */}
-            <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                 <Card
                     style={{
                         flex: '1 1 140px',
@@ -344,7 +346,7 @@ const ProjectStatsPage = () => {
             </Card>
 
             {/* Статистика по пользователям */}
-            <Card style={{ padding: '20px', marginTop: '24px' }}>
+            <Card style={{ padding: '20px' }}>
                 <Text variant="header-1" style={{ marginBottom: '16px', display: 'block' }}>
                     Статистика по пользователям
                 </Text>
@@ -356,7 +358,7 @@ const ProjectStatsPage = () => {
                     <Text color="secondary">Нет данных о действиях пользователей</Text>
                 )}
             </Card>
-        </div>
+        </PageWrapper>
     )
 }
 

@@ -2,7 +2,7 @@ import { Text, Button, Card, Skeleton, Label } from '@gravity-ui/uikit'
 import { Plus, ChevronLeft, ChevronRight } from '@gravity-ui/icons'
 import { useState } from 'react'
 import { useProjectsQuery } from '@/hooks'
-import { SearchInput } from '@/components/atoms'
+import { PageWrapper, PageHeader, PageHeaderActions, SearchInput } from '@/components/atoms'
 import CreateProjectModal from '@/components/organisms/CreateProjectModal'
 
 // Определяем статус проекта (прошедший, идущий, будущий)
@@ -40,11 +40,11 @@ const ProjectsPage = () => {
 
     if (error) {
         return (
-            <div style={{ padding: '24px' }}>
+            <PageWrapper>
                 <Text variant="body-1" color="danger">
                     Ошибка загрузки проектов: {error.message}
                 </Text>
-            </div>
+            </PageWrapper>
         )
     }
 
@@ -61,36 +61,29 @@ const ProjectsPage = () => {
     }
 
     return (
-        <div style={{ padding: '24px' }}>
-            <div
-                style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '24px',
-                }}
-            >
+        <PageWrapper>
+            <PageHeader>
                 <Text variant="display-1">Проекты</Text>
-                <Button view="action" size="l" onClick={() => setIsCreateModalOpen(true)}>
-                    <Button.Icon>
-                        <Plus />
-                    </Button.Icon>
-                    Создать проект
-                </Button>
-            </div>
+                <PageHeaderActions>
+                    <Button view="action" size="l" onClick={() => setIsCreateModalOpen(true)}>
+                        <Button.Icon>
+                            <Plus />
+                        </Button.Icon>
+                        Создать проект
+                    </Button>
+                </PageHeaderActions>
+            </PageHeader>
 
-            <div style={{ marginBottom: '24px' }}>
-                <SearchInput
-                    placeholder="Поиск проектов..."
-                    value={search}
-                    onUpdate={(newValue) => {
-                        setSearch(newValue)
-                        setCurrentPage(1) // Сброс на первую страницу при поиске
-                    }}
-                    size="l"
-                    fullWidth
-                />
-            </div>
+            <SearchInput
+                placeholder="Поиск проектов..."
+                value={search}
+                onUpdate={(newValue) => {
+                    setSearch(newValue)
+                    setCurrentPage(1) // Сброс на первую страницу при поиске
+                }}
+                size="l"
+                fullWidth
+            />
 
             {isLoading ? (
                 <div
@@ -239,7 +232,7 @@ const ProjectsPage = () => {
                 open={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
             />
-        </div>
+        </PageWrapper>
     )
 }
 

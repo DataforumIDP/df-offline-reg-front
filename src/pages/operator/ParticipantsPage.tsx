@@ -2,7 +2,7 @@ import { Text, Button, Loader, Tooltip, Hotkey } from '@gravity-ui/uikit'
 import { Plus, Printer, Magnifier } from '@gravity-ui/icons'
 import { useState, useCallback, useEffect, useMemo } from 'react'
 import { useSnackbar } from 'notistack'
-import { SearchInput } from '@/components/atoms'
+import { PageWrapper, PageHeader, PageHeaderActions, SearchInput } from '@/components/atoms'
 import { ParticipantsTable, type FiltersState } from '@/components/organisms/ParticipantsTable'
 import { ParticipantModal } from '@/components/organisms/ParticipantModal'
 import { CreateParticipantModal } from '@/components/organisms/CreateParticipantModal'
@@ -270,34 +270,29 @@ const OperatorParticipantsPage = () => {
     // Показываем загрузку пока данные пользователя не готовы
     if (authLoading) {
         return (
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '48px' }}>
-                <Loader size="l" />
-            </div>
+            <PageWrapper>
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '48px' }}>
+                    <Loader size="l" />
+                </div>
+            </PageWrapper>
         )
     }
 
     if (!projectId) {
         return (
-            <div style={{ padding: '24px', textAlign: 'center' }}>
+            <PageWrapper>
                 <Text variant="body-1" color="danger">
                     Ошибка: оператор не привязан к проекту
                 </Text>
-            </div>
+            </PageWrapper>
         )
     }
 
     return (
-        <div style={{ padding: '24px' }}>
-            <div
-                style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '24px',
-                }}
-            >
+        <PageWrapper>
+            <PageHeader>
                 <Text variant="display-1">Участники</Text>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <PageHeaderActions>
                     {isRefetching && <Loader size="s" />}
                     {selectedIds.length > 0 && (
                         <Button
@@ -328,18 +323,16 @@ const OperatorParticipantsPage = () => {
                             Добавить участника
                         </Button>
                     </Tooltip>
-                </div>
-            </div>
+                </PageHeaderActions>
+            </PageHeader>
 
-            <div style={{ marginBottom: '24px' }}>
-                <SearchInput
-                    value={search}
-                    onUpdate={handleSearchChange}
-                    placeholder="Поиск участников..."
-                    fullWidth
-                    debounceMs={400}
-                />
-            </div>
+            <SearchInput
+                value={search}
+                onUpdate={handleSearchChange}
+                placeholder="Поиск участников..."
+                fullWidth
+                debounceMs={400}
+            />
 
             {isLoading ? (
                 <div style={{ display: 'flex', justifyContent: 'center', padding: '48px' }}>
@@ -388,7 +381,7 @@ const OperatorParticipantsPage = () => {
                 projectId={projectId}
                 onParticipantFound={handleParticipantFoundByCode}
             />
-        </div>
+        </PageWrapper>
     )
 }
 

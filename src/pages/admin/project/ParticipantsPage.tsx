@@ -1,9 +1,9 @@
 import { Text, Button, Loader, Tooltip, Hotkey } from '@gravity-ui/uikit'
 import { Plus, Printer, Magnifier } from '@gravity-ui/icons'
-import { useParams } from 'react-router-dom'
 import { useState, useCallback, useEffect, useMemo } from 'react'
+import { useParams } from 'react-router-dom'
 import { useSnackbar } from 'notistack'
-import { SearchInput } from '@/components/atoms'
+import { PageWrapper, PageHeader, PageHeaderActions, SearchInput } from '@/components/atoms'
 import { ParticipantsTable, type FiltersState } from '@/components/organisms/ParticipantsTable'
 import { ParticipantModal } from '@/components/organisms/ParticipantModal'
 import { CreateParticipantModal } from '@/components/organisms/CreateParticipantModal'
@@ -11,7 +11,12 @@ import SearchByCodeModal from '@/components/organisms/SearchByCodeModal'
 import { useParticipantsQuery } from '@/hooks/queries/useParticipantQueries'
 import { useSchemeQuery } from '@/hooks/queries/useSchemeQueries'
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
-import { generateMultipleBadgesPdf, printOrSend, PrintTemplate, PrintData } from '@/services/printService'
+import {
+    generateMultipleBadgesPdf,
+    printOrSend,
+    PrintTemplate,
+    PrintData,
+} from '@/services/printService'
 import {
     setCanvasSize,
     setElements,
@@ -277,19 +282,10 @@ const ProjectParticipantsPage = () => {
     }, [selectedIds, participants, templateEditor, enqueueSnackbar])
 
     return (
-        <div style={{ padding: '24px' }}>
-            <div
-                style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    marginBottom: '24px',
-                    flexWrap: 'wrap',
-                    gap: '16px',
-                }}
-            >
+        <PageWrapper>
+            <PageHeader>
                 <Text variant="display-1">Участники</Text>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <PageHeaderActions>
                     {isRefetching && <Loader size="s" />}
                     {selectedIds.length > 0 && (
                         <Button
@@ -320,10 +316,10 @@ const ProjectParticipantsPage = () => {
                             Добавить участника
                         </Button>
                     </Tooltip>
-                </div>
-            </div>
+                </PageHeaderActions>
+            </PageHeader>
 
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: 24 }}>
                 <SearchInput
                     value={search}
                     onUpdate={handleSearchChange}
@@ -380,7 +376,7 @@ const ProjectParticipantsPage = () => {
                 projectId={projectId || ''}
                 onParticipantFound={handleParticipantFoundByCode}
             />
-        </div>
+        </PageWrapper>
     )
 }
 

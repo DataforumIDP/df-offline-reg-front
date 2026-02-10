@@ -2,6 +2,7 @@ import { Text, Button, Dialog } from '@gravity-ui/uikit'
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useSnackbar } from 'notistack'
+import { PageWrapper, PageHeader, PageHeaderActions } from '@/components/atoms'
 import { useProjectQuery } from '@/hooks/queries/useProjectQueries'
 import { useDeleteProjectMutation } from '@/hooks/mutations/useProjectMutations'
 import BasicParametersSection from './sections/BasicParametersSection'
@@ -42,46 +43,41 @@ const ProjectSettingsPage = () => {
 
     if (isLoading) {
         return (
-            <div style={{ padding: '24px' }}>
+            <PageWrapper>
                 <Text variant="display-1">Настройки проекта</Text>
-                <Text variant="body-1" color="secondary" style={{ marginTop: '12px' }}>
+                <Text variant="body-1" color="secondary">
                     Загрузка...
                 </Text>
-            </div>
+            </PageWrapper>
         )
     }
 
     if (!project) {
         return (
-            <div style={{ padding: '24px' }}>
+            <PageWrapper>
                 <Text variant="display-1">Настройки проекта</Text>
-                <Text variant="body-1" color="danger" style={{ marginTop: '12px' }}>
+                <Text variant="body-1" color="danger">
                     Проект не найден
                 </Text>
-            </div>
+            </PageWrapper>
         )
     }
 
     return (
-        <div style={{ padding: '24px' }}>
-            <div
-                style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '24px',
-                }}
-            >
+        <PageWrapper>
+            <PageHeader>
                 <Text variant="display-1">Настройки проекта</Text>
-                <Button
-                    view="outlined-danger"
-                    size="l"
-                    onClick={handleDeleteClick}
-                    disabled={deleteProjectMutation.isPending}
-                >
-                    Удалить проект
-                </Button>
-            </div>
+                <PageHeaderActions>
+                    <Button
+                        view="outlined-danger"
+                        size="l"
+                        onClick={handleDeleteClick}
+                        disabled={deleteProjectMutation.isPending}
+                    >
+                        Удалить проект
+                    </Button>
+                </PageHeaderActions>
+            </PageHeader>
 
             <div className={styles.grid}>
                 {/* Схема проекта - первая на мобилке */}
@@ -110,7 +106,7 @@ const ProjectSettingsPage = () => {
                     propsButtonApply={{ loading: deleteProjectMutation.isPending }}
                 />
             </Dialog>
-        </div>
+        </PageWrapper>
     )
 }
 

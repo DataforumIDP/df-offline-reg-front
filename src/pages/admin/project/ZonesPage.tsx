@@ -3,6 +3,7 @@ import { Text, Button, Loader, Card, Label, Select } from '@gravity-ui/uikit'
 import { Plus, Gear } from '@gravity-ui/icons'
 import { useParams } from 'react-router-dom'
 import { useSnackbar } from 'notistack'
+import { PageWrapper, PageHeader, PageHeaderActions } from '@/components/atoms'
 import { useZonesQuery } from '@/hooks/queries/useZoneQueries'
 import { useSchemeQuery, SchemeField } from '@/hooks/queries/useSchemeQueries'
 import { useProjectQuery } from '@/hooks/queries/useProjectQueries'
@@ -216,11 +217,11 @@ const ProjectZonesPage = () => {
     const isLoading = zonesLoading
 
     return (
-        <div className={styles.page}>
+        <PageWrapper>
             {/* Шапка */}
-            <div className={styles.header}>
+            <PageHeader>
                 <Text variant="display-1">Зоны</Text>
-                <div className={styles.headerActions}>
+                <PageHeaderActions>
                     <div className={styles.rulesFieldSelect}>
                         <Text variant="body-2" color="secondary">
                             Режим сканирования:
@@ -253,8 +254,8 @@ const ProjectZonesPage = () => {
                             Настройки доступа
                         </Button>
                     )}
-                </div>
-            </div>
+                </PageHeaderActions>
+            </PageHeader>
 
             {/* Контент */}
             {isLoading ? (
@@ -313,7 +314,7 @@ const ProjectZonesPage = () => {
                 onDeleteRule={handleDeleteRule}
                 isLoading={createRuleMutation.isPending || deleteRuleMutation.isPending}
             />
-        </div>
+        </PageWrapper>
     )
 }
 

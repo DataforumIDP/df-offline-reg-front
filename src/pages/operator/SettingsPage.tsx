@@ -1,20 +1,15 @@
 import { Text } from '@gravity-ui/uikit'
+import { PageWrapper, PageHeader } from '@/components/atoms'
 import { PrintSettings } from '@/components/organisms/PrintSettings'
 
 const OperatorSettingsPage = () => {
     return (
-        <div style={{ padding: '24px', maxWidth: '800px' }}>
-            <Text 
-                variant="display-1" 
-                style={{ 
-                    display: 'block',
-                    marginBottom: '32px',
-                }}
-            >
-                Настройки
-            </Text>
+        <PageWrapper>
+            <PageHeader>
+                <Text variant="display-1">Настройки</Text>
+            </PageHeader>
 
-            <section style={{ marginBottom: '40px' }}>
+            <section>
                 <Text 
                     variant="header-1" 
                     style={{ 
@@ -39,7 +34,7 @@ const OperatorSettingsPage = () => {
                 </Text>
                 <PrintSettings />
             </section>
-        </div>
+        </PageWrapper>
     )
 }
 

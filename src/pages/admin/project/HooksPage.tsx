@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { Text, Button, Loader, Card, Label } from '@gravity-ui/uikit'
 import { Plus } from '@gravity-ui/icons'
 import { useParams } from 'react-router-dom'
+import { PageWrapper, PageHeader, PageHeaderActions } from '@/components/atoms'
 import { useWebhooksQuery } from '@/hooks/queries/useWebhookQueries'
 import { WebhookModal } from '@/components/organisms/WebhookModal'
 import type { Webhook } from '@/services/api/webhooks'
@@ -35,17 +36,19 @@ const ProjectHooksPage = () => {
     }, [])
 
     return (
-        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <PageWrapper>
             {/* Шапка */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <PageHeader>
                 <Text variant="display-1">Вебхуки</Text>
-                <Button view="action" size="l" onClick={handleCreateClick}>
-                    <Button.Icon>
-                        <Plus />
-                    </Button.Icon>
-                    Добавить вебхук
-                </Button>
-            </div>
+                <PageHeaderActions>
+                    <Button view="action" size="l" onClick={handleCreateClick}>
+                        <Button.Icon>
+                            <Plus />
+                        </Button.Icon>
+                        Добавить вебхук
+                    </Button>
+                </PageHeaderActions>
+            </PageHeader>
 
             {/* Контент */}
             {isLoading ? (
@@ -134,7 +137,7 @@ const ProjectHooksPage = () => {
                 projectId={Number(projectId)}
                 webhook={selectedWebhook}
             />
-        </div>
+        </PageWrapper>
     )
 }
 

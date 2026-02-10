@@ -1,13 +1,14 @@
 import { Text } from '@gravity-ui/uikit'
+import { PageWrapper, PageHeader } from '@/components/atoms'
 import { PrintSettings } from '@/components/organisms/PrintSettings'
 import styles from './AccountSettingsPage.module.css'
 
 const AccountSettingsPage = () => {
     return (
-        <div className={styles.page}>
-            <Text variant="display-1" className={styles.title}>
-                Настройки
-            </Text>
+        <PageWrapper>
+            <PageHeader>
+                <Text variant="display-1">Настройки</Text>
+            </PageHeader>
 
             <div className={styles.section}>
                 <Text variant="header-1" className={styles.sectionTitle}>
@@ -20,7 +21,7 @@ const AccountSettingsPage = () => {
                 </Text>
                 <PrintSettings />
             </div>
-        </div>
+        </PageWrapper>
     )
 }
 

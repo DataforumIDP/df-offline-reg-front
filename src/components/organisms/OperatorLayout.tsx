@@ -1,7 +1,8 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { AsideHeader, FooterItem, type MenuItem as AsideMenuItem } from '@gravity-ui/navigation'
 import { Persons, Gear, ArrowRightFromSquare, Bars } from '@gravity-ui/icons'
-import { Button, Icon } from '@gravity-ui/uikit'
+import { Button, Icon, Dialog } from '@gravity-ui/uikit'
+import { useState } from 'react'
 import { useLogoutMutation } from '@/hooks'
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
 import { setSidebarCompact, toggleSidebarCompact, setSidebarMobileOpen } from '@/store/slices/uiSlice'
@@ -15,9 +16,15 @@ const OperatorLayout = () => {
     const navigate = useNavigate()
     const location = useLocation()
     const logoutMutation = useLogoutMutation()
+    const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
 
-    const handleLogout = () => {
+    const handleLogoutClick = () => {
+        setLogoutDialogOpen(true)
+    }
+
+    const handleLogoutConfirm = () => {
         logoutMutation.mutate()
+        setLogoutDialogOpen(false)
     }
 
     const handleRenderFooter = () => (
@@ -26,7 +33,7 @@ const OperatorLayout = () => {
                 id="logout"
                 icon={ArrowRightFromSquare}
                 title="Выйти"
-                onItemClick={handleLogout}
+                onItemClick={handleLogoutClick}
             />
         </div>
     )
@@ -97,6 +104,23 @@ const OperatorLayout = () => {
                     <Outlet />
                 </div>
             </div>
+
+            <Dialog
+                open={logoutDialogOpen}
+                onClose={() => setLogoutDialogOpen(false)}
+                size="s"
+            >
+                <Dialog.Header caption="Выход из аккаунта" />
+                <Dialog.Body>
+                    Вы уверены, что хотите выйти?
+                </Dialog.Body>
+                <Dialog.Footer
+                    textButtonCancel="Отмена"
+                    textButtonApply="Выйти"
+                    onClickButtonCancel={() => setLogoutDialogOpen(false)}
+                    onClickButtonApply={handleLogoutConfirm}
+                />
+            </Dialog>
         </div>
     )
 }
