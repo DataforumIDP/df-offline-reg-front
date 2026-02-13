@@ -19,6 +19,7 @@ export interface ParticipantsQuery {
     order?: string
     direction?: 'ASC' | 'DESC'
     filters?: Record<string, string | string[]>
+    includePrints?: boolean
 }
 
 /**

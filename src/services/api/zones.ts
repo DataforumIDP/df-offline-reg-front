@@ -118,3 +118,15 @@ export interface ZoneScanner {
 export const fetchZoneScanners = (zoneId: number): Promise<ZoneScanner[]> => {
     return apiClient.get<ZoneScanner[]>(`/zones/${zoneId}/scanners`).then((res) => res.data)
 }
+
+/**
+ * Получить количество уникальных участников зоны
+ */
+export const fetchZoneParticipantsCount = (
+    zoneId: number,
+    params?: { dateStart?: string; dateEnd?: string }
+): Promise<{ count: number }> => {
+    return apiClient
+        .get<{ count: number }>(`/zones/${zoneId}/participants-count`, { params })
+        .then((res) => res.data)
+}

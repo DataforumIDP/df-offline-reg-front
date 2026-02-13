@@ -13,6 +13,7 @@ import type { LogRecord } from '../../../services/api/statsService'
 import OperatorStatsModal from './components/OperatorStatsModal'
 
 import '@gravity-ui/yagr/dist/index.css'
+import './StatsPage.css'
 
 settings.set({ plugins: [YagrPlugin] })
 
@@ -199,12 +200,10 @@ const ProjectStatsPage = () => {
 
     const userStatsColumns = [
         { id: 'userName', name: 'Пользователь' },
-        { id: 'userLogin', name: 'Логин' },
         { id: 'CREATE', name: 'Создано' },
         { id: 'UPDATE', name: 'Обновлено' },
         { id: 'DELETE', name: 'Удалено' },
         { id: 'PRINT', name: 'Напечатано' },
-        { id: 'total', name: 'Всего' },
     ]
 
     const statsMap = stats || { CREATE: 0, UPDATE: 0, DELETE: 0, PRINT: 0, uniqPrints: 0 }
@@ -332,7 +331,7 @@ const ProjectStatsPage = () => {
                     )}
                 </Card>
 
-                <Tooltip content={`Уникальных: ${statsMap.uniqPrints}`} placement="bottom">
+                <Tooltip content={`Всего печатей: ${statsMap.PRINT}`} placement="bottom">
                     <Card
                         style={{
                             flex: '1 1 140px',
@@ -349,7 +348,7 @@ const ProjectStatsPage = () => {
                         ) : (
                             <>
                                 <Text variant="display-2" color="warning">
-                                    {statsMap.PRINT}
+                                    {statsMap.uniqPrints}
                                 </Text>
                                 <Text
                                     variant="body-2"
@@ -388,13 +387,14 @@ const ProjectStatsPage = () => {
                     <Table
                         data={userStats}
                         columns={userStatsColumns}
+                        className="stats-table-large"
                         onRowClick={(row) => {
-                            setSelectedOperator({
-                                userId: row.userId,
-                                userName: row.userName,
-                                userLogin: row.userLogin,
-                            })
-                        }}
+                                setSelectedOperator({
+                                    userId: row.userId,
+                                    userName: row.userName,
+                                    userLogin: row.userLogin,
+                                })
+                            }}
                         getRowDescriptor={() => ({ interactive: true })}
                     />
                 ) : (

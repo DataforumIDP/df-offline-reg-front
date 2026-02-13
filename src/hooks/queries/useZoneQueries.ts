@@ -1,5 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchZones, fetchZoneById, fetchZoneConfig, fetchZoneScanners } from '@/services/api/zones'
+import {
+    fetchZones,
+    fetchZoneById,
+    fetchZoneConfig,
+    fetchZoneScanners,
+    fetchZoneParticipantsCount,
+} from '@/services/api/zones'
 
 /**
  * Запрос списка зон проекта
@@ -46,5 +52,21 @@ export const useZoneScannersQuery = (zoneId: number | undefined, enabled = true)
         queryFn: () => fetchZoneScanners(zoneId!),
         enabled: !!zoneId && enabled,
         staleTime: 30 * 1000, // 30 секунд - обновляется чаще
+    })
+}
+
+/**
+ * Запрос количества уникальных участников зоны
+ */
+export const useZoneParticipantsCountQuery = (
+    zoneId: number | undefined,
+    params?: { dateStart?: string; dateEnd?: string },
+    enabled = true,
+) => {
+    return useQuery({
+        queryKey: ['zoneParticipantsCount', zoneId, params],
+        queryFn: () => fetchZoneParticipantsCount(zoneId!, params),
+        enabled: !!zoneId && enabled,
+        staleTime: 30 * 1000, // 30 секунд
     })
 }

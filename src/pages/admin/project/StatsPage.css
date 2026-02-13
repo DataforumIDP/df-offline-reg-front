@@ -1,0 +1,13 @@
+.stats-table-large {
+    width: 100%;
+    font-size: 15px;
+}
+
+.stats-table-large table {
+    width: 100%;
+}
+
+.stats-table-large td,
+.stats-table-large th {
+    font-size: 15px;
+}

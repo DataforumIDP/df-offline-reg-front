@@ -15,6 +15,7 @@ interface ExportModalProps {
 const ExportModal = ({ open, onClose, projectId, projectTitle }: ExportModalProps) => {
     const [search, setSearch] = useState('')
     const [filters, setFilters] = useState<Record<string, string | string[]>>({})
+    const [includePrints, setIncludePrints] = useState(false)
     const [isExporting, setIsExporting] = useState(false)
 
     // Используем существующий хук для схемы
@@ -46,6 +47,9 @@ const ExportModal = ({ open, onClose, projectId, projectTitle }: ExportModalProp
             if (Object.keys(filters).length > 0) {
                 params.filters = filters
             }
+            if (includePrints) {
+                params.includePrints = true
+            }
 
             const blob = await fetchExportExcel(projectId, params)
             const filename = `participants_${projectTitle}_${new Date().toISOString().split('T')[0]}.xlsx`
@@ -61,6 +65,7 @@ const ExportModal = ({ open, onClose, projectId, projectTitle }: ExportModalProp
     const handleReset = () => {
         setSearch('')
         setFilters({})
+        setIncludePrints(false)
     }
 
     return (
@@ -103,6 +108,15 @@ const ExportModal = ({ open, onClose, projectId, projectTitle }: ExportModalProp
                                 </div>
                             </div>
                         )}
+
+                        <div className={styles.printCheckbox}>
+                            <Checkbox
+                                checked={includePrints}
+                                onUpdate={setIncludePrints}
+                            >
+                                Добавить количество печатей
+                            </Checkbox>
+                        </div>
 
                         <div className={styles.actions}>
                             <Button view="flat" size="l" onClick={handleReset}>

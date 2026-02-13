@@ -16,7 +16,11 @@ import {
 } from '@gravity-ui/uikit'
 import QRCodeStyling from 'qr-code-styling'
 import type { Zone } from '@/services/api/zones'
-import { useZoneConfigQuery, useZoneScannersQuery } from '@/hooks/queries/useZoneQueries'
+import {
+    useZoneConfigQuery,
+    useZoneScannersQuery,
+    useZoneParticipantsCountQuery,
+} from '@/hooks/queries/useZoneQueries'
 import styles from './ZoneEditModal.module.css'
 
 // QR Preview component
@@ -92,6 +96,13 @@ const ZoneEditModal = ({
     // Fetch zone scanners
     const { data: scanners, isLoading: scannersLoading } = useZoneScannersQuery(
         zone?.id,
+        isDevicesTabActive,
+    )
+
+    // Fetch participants count
+    const { data: participantsCountData } = useZoneParticipantsCountQuery(
+        zone?.id,
+        undefined,
         isDevicesTabActive,
     )
 
@@ -250,6 +261,13 @@ const ZoneEditModal = ({
                                 <div className={styles.scannersList}>
                                     <Text variant="subheader-2" className={styles.scannersHeader}>
                                         Подключенные устройства
+                                    </Text>
+                                    <Text
+                                        variant="caption-2"
+                                        color="secondary"
+                                        style={{ marginTop: 4, display: 'block' }}
+                                    >
+                                        Суммарно участников: {participantsCountData?.count ?? 0}
                                     </Text>
 
                                     {scannersLoading ? (

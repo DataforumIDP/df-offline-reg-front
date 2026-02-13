@@ -1,7 +1,9 @@
-import { Dialog, Text, Table, Skeleton, Icon } from '@gravity-ui/uikit'
-import { CircleCheck, CircleXmark } from '@gravity-ui/icons'
+import { useState, useMemo } from 'react'
+import { Dialog, Text, Table, Skeleton, Icon, Button, TextInput } from '@gravity-ui/uikit'
+import { CircleCheck, CircleXmark, ArrowRight } from '@gravity-ui/icons'
 import { useOperatorStatsQuery } from '@/hooks/queries/useStatsQueries'
 import { useSchemeQuery, type SchemeField } from '@/hooks/queries/useSchemeQueries'
+import { useDebounce } from '@/hooks'
 
 interface OperatorStatsModalProps {
     open: boolean
@@ -25,6 +27,9 @@ const OperatorStatsModal = ({
     operator,
     dateParams,
 }: OperatorStatsModalProps) => {
+    const [searchValue, setSearchValue] = useState('')
+    const debouncedSearch = useDebounce(searchValue, 300)
+
     const { data, isLoading } = useOperatorStatsQuery(
         projectId ? parseInt(projectId, 10) : undefined,
         operator?.userId,
@@ -55,6 +60,24 @@ const OperatorStatsModal = ({
         const value = participant[field.key]
         const item = field.config.listSettings.items.find((i) => i.value === value)
         return item?.color || null
+    }
+
+    // Фильтрация участников по поисковому запросу
+    const filteredParticipants = useMemo(() => {
+        if (!data?.participants) return []
+        if (!debouncedSearch.trim()) return data.participants
+
+        const searchLower = debouncedSearch.toLowerCase().trim()
+        return data.participants.filter((p: any) => {
+            // Поиск по всем полям currentData
+            const values = Object.values(p.currentData || {})
+            return values.some((v) => String(v).toLowerCase().includes(searchLower))
+        })
+    }, [data?.participants, debouncedSearch])
+
+    const handleGoToParticipant = (participantId: number) => {
+        // Переход к профилю участника
+        window.open(`/admin/project/${projectId}/participants/${participantId}`, '_blank')
     }
 
     const columns = [
@@ -89,7 +112,7 @@ const OperatorStatsModal = ({
         {
             id: 'created',
             name: 'Добавил',
-            width: 100,
+            width: 80,
             template: (row: any) => (
                 <Icon
                     data={row.created ? CircleCheck : CircleXmark}
@@ -101,7 +124,7 @@ const OperatorStatsModal = ({
         {
             id: 'updated',
             name: 'Изменил',
-            width: 100,
+            width: 80,
             template: (row: any) => (
                 <Icon
                     data={row.updated ? CircleCheck : CircleXmark}
@@ -112,40 +135,67 @@ const OperatorStatsModal = ({
         },
         {
             id: 'printCount',
-            name: 'Распечатал',
-            width: 110,
+            name: 'Печать',
+            width: 70,
             template: (row: any) => (
                 <Text color={row.printCount > 0 ? 'primary' : 'secondary'}>
                     {row.printCount}
                 </Text>
             ),
         },
+        {
+            id: 'actions',
+            name: '',
+            width: 40,
+            template: (row: any) => (
+                <Button
+                    view="flat"
+                    size="s"
+                    onClick={() => handleGoToParticipant(row.participantId)}
+                >
+                    <Icon data={ArrowRight} size={16} />
+                </Button>
+            ),
+        },
     ]
 
     return (
-        <Dialog open={open} onClose={onClose} size="l">
+        <Dialog open={open} onClose={onClose} size="m">
             <Dialog.Header
                 caption={operator ? `Статистика: ${operator.userName || operator.userLogin}` : 'Статистика оператора'}
             />
             <Dialog.Body>
+                <div style={{ minHeight: '500px' }}>
                 {isLoading ? (
                     <Skeleton style={{ height: 200 }} />
                 ) : data?.participants && data.participants.length > 0 ? (
                     <>
-                        <div style={{ maxHeight: '400px', overflow: 'auto' }}>
-                            <Table data={data.participants} columns={columns} />
+                        <TextInput
+                            placeholder="Поиск по участникам..."
+                            value={searchValue}
+                            onUpdate={setSearchValue}
+                            hasClear
+                            style={{ marginBottom: '12px' }}
+                        />
+                        <div style={{ maxHeight: '400px', overflowY: 'auto', overflowX: 'hidden' }}>
+                            <Table data={filteredParticipants} columns={columns} />
                         </div>
                         <Text
                             variant="body-2"
                             color="secondary"
                             style={{ marginTop: '16px', display: 'block' }}
                         >
-                            Всего участников: <strong>{data.totalParticipants}</strong>
+                            {debouncedSearch.trim() ? (
+                                <>Найдено: <strong>{filteredParticipants.length}</strong> из {data.totalParticipants}</>
+                            ) : (
+                                <>Всего участников: <strong>{data.totalParticipants}</strong></>
+                            )}
                         </Text>
                     </>
                 ) : (
                     <Text color="secondary">Нет данных о действиях оператора</Text>
                 )}
+                </div>
             </Dialog.Body>
             <Dialog.Footer
                 onClickButtonCancel={onClose}
