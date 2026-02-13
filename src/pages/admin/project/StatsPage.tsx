@@ -253,6 +253,7 @@ const ProjectStatsPage = () => {
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
+                        aspectRatio: '16/8'
                     }}
                 >
                     {statsLoading ? (

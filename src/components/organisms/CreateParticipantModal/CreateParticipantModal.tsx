@@ -474,16 +474,19 @@ export const CreateParticipantModal = ({
         }
     }
 
+    const hasMultipleColumns = scheme.length > 8
+
     return (
-        <Dialog open={open} onClose={handleClose} aria-labelledby="create-participant-modal-title">
+        <Dialog open={open} onClose={handleClose} aria-labelledby="create-participant-modal-title" size={hasMultipleColumns ? 'l' : undefined}>
             <Dialog.Header caption="Добавить участника" id="create-participant-modal-title" />
             <Dialog.Body>
                 <div
                     style={{
-                        display: 'flex',
-                        flexDirection: 'column',
+                        display: hasMultipleColumns ? 'grid' : 'flex',
+                        gridTemplateColumns: hasMultipleColumns ? 'repeat(2, 1fr)' : undefined,
+                        flexDirection: hasMultipleColumns ? undefined : 'column',
                         gap: '16px',
-                        width: 'min(400px, calc(100vw - 64px))',
+                        width: hasMultipleColumns ? '100% !important' : 'min(400px, calc(100vw - 64px))',
                     }}
                 >
                     {scheme.map(renderField)}

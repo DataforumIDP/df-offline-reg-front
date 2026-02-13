@@ -485,10 +485,11 @@ export const ParticipantModal = ({
     }
 
     const isLoading = participantLoading
+    const hasMultipleColumns = scheme.length > 8
 
     return (
         <>
-            <Dialog open={open} onClose={handleClose} aria-labelledby="participant-modal-title">
+            <Dialog open={open} onClose={handleClose} aria-labelledby="participant-modal-title" size={hasMultipleColumns ? 'l' : undefined}>
                 <Dialog.Header caption="Участник" id="participant-modal-title" />
                 <Dialog.Body>
                     {isLoading ? (
@@ -497,7 +498,7 @@ export const ParticipantModal = ({
                                 display: 'flex',
                                 justifyContent: 'center',
                                 padding: '48px',
-                                width: 'min(400px, calc(100vw - 64px))',
+                                width: hasMultipleColumns ? 'min(700px, calc(100vw - 64px))' : 'min(400px, calc(100vw - 64px))',
                             }}
                         >
                             <Loader size="l" />
@@ -505,10 +506,11 @@ export const ParticipantModal = ({
                     ) : (
                         <div
                             style={{
-                                display: 'flex',
-                                flexDirection: 'column',
+                                display: hasMultipleColumns ? 'grid' : 'flex',
+                                gridTemplateColumns: hasMultipleColumns ? 'repeat(2, 1fr)' : undefined,
+                                flexDirection: hasMultipleColumns ? undefined : 'column',
                                 gap: '16px',
-                                width: 'min(400px, calc(100vw - 64px))',
+                                width: hasMultipleColumns ? '100%' : 'min(400px, calc(100vw - 64px))',
                             }}
                         >
                             {/* Количество печатей - read only */}

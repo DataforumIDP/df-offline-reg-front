@@ -1,7 +1,7 @@
 import { Text, Button, Loader, Tooltip, Hotkey } from '@gravity-ui/uikit'
 import { Plus, Printer, Magnifier } from '@gravity-ui/icons'
 import { useState, useCallback, useEffect, useMemo } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { useSnackbar } from 'notistack'
 import { PageWrapper, PageHeader, PageHeaderActions, SearchInput } from '@/components/atoms'
 import { ParticipantsTable, type FiltersState } from '@/components/organisms/ParticipantsTable'
@@ -28,6 +28,7 @@ import { fetchPrintParticipant, type Participant } from '@/services/api/particip
 
 const ProjectParticipantsPage = () => {
     const { id: projectId } = useParams<{ id: string }>()
+    const [searchParams, setSearchParams] = useSearchParams()
     const { enqueueSnackbar } = useSnackbar()
     const templateEditor = useAppSelector((state) => state.templateEditor)
     const dispatch = useAppDispatch()
@@ -36,6 +37,22 @@ const ProjectParticipantsPage = () => {
     const { data: projectTemplateData } = useProjectPrintTemplate(
         projectId ? Number(projectId) : undefined,
     )
+
+    // Открытие модалки участника по id из query параметра
+    useEffect(() => {
+        const participantIdFromUrl = searchParams.get('id')
+        if (participantIdFromUrl) {
+            const id = parseInt(participantIdFromUrl, 10)
+            if (!isNaN(id)) {
+                setSelectedParticipant(id)
+                setModalOpen(true)
+                // Убираем id из URL после открытия
+                searchParams.delete('id')
+                setSearchParams(searchParams, { replace: true })
+            }
+        }
+    }, [searchParams, setSearchParams])
+
     // Если elements пустой, пробуем загрузить шаблон проекта и инициализировать редактор
     useEffect(() => {
         if (
@@ -69,7 +86,7 @@ const ProjectParticipantsPage = () => {
 
     // Состояние пагинации
     const [page, setPage] = useState(1)
-    const [recordsPerPage, setRecordsPerPage] = useState(20)
+    const [recordsPerPage, setRecordsPerPage] = useState(100)
 
     // Состояние модалки редактирования
     const [modalOpen, setModalOpen] = useState(false)
@@ -178,35 +195,12 @@ const ProjectParticipantsPage = () => {
         setModalOpen(true)
     }, [])
 
-    // Горячая клавиша Alt+C для открытия модалки создания участника
-    const handleHotkey = useCallback((e: KeyboardEvent) => {
-        try {
-            // игнорируем если ввод в поле (input/textarea/contentEditable)
-            const active = document.activeElement as HTMLElement | null
-            if (active) {
-                const tag = active.tagName.toLowerCase()
-                const isEditable = active.isContentEditable
-                if (tag === 'input' || tag === 'textarea' || isEditable) {
-                    return
-                }
-            }
-
-            // Используем физическую клавишу: e.code (KeyC) — устойчиво для любых раскладок.
-            // В качестве запасного варианта проверяем numeric keyCode (67).
-            if (e.altKey && (e.code === 'KeyC' || (e as any).keyCode === 67)) {
-                e.preventDefault()
-                setCreateModalOpen(true)
-            }
-        } catch (err) {
-            // ignore
-        }
+    // Сброс всех фильтров и поиска
+    const handleResetFilters = useCallback(() => {
+        setSearch('')
+        setFilters({})
+        setPage(1)
     }, [])
-
-    // Регистрируем слушатель горячей клавиши
-    useEffect(() => {
-        window.addEventListener('keydown', handleHotkey)
-        return () => window.removeEventListener('keydown', handleHotkey)
-    }, [handleHotkey])
 
     const handleCreateModalClose = useCallback(() => {
         setCreateModalOpen(false)
@@ -281,6 +275,65 @@ const ProjectParticipantsPage = () => {
         }
     }, [selectedIds, participants, templateEditor, enqueueSnackbar])
 
+    // Горячие клавиши: Alt+C (создать), Alt+F (поиск по коду), Alt+P (печать), Esc (сброс)
+    const handleHotkey = useCallback((e: KeyboardEvent) => {
+        try {
+            // игнорируем если ввод в поле (input/textarea/contentEditable)
+            const active = document.activeElement as HTMLElement | null
+            const isInInput = active && (
+                active.tagName.toLowerCase() === 'input' ||
+                active.tagName.toLowerCase() === 'textarea' ||
+                active.isContentEditable
+            )
+
+            // Esc - сброс фильтров (работает везде)
+            if (e.key === 'Escape') {
+                e.preventDefault()
+                handleResetFilters()
+                if (isInInput && active) {
+                    active.blur()
+                }
+                return
+            }
+
+            // Остальные хоткеи только вне инпутов
+            if (isInInput) return
+
+            // Alt+C - создать участника
+            if (e.altKey && (e.code === 'KeyC' || (e as any).keyCode === 67)) {
+                e.preventDefault()
+                setCreateModalOpen(true)
+                return
+            }
+
+            // Alt+F - поиск по коду
+            if (e.altKey && (e.code === 'KeyF' || (e as any).keyCode === 70)) {
+                e.preventDefault()
+                if (hasCodeField) {
+                    setSearchByCodeModalOpen(true)
+                }
+                return
+            }
+
+            // Alt+P - массовая печать
+            if (e.altKey && (e.code === 'KeyP' || (e as any).keyCode === 80)) {
+                e.preventDefault()
+                if (selectedIds.length > 0) {
+                    handleMassPrint()
+                }
+                return
+            }
+        } catch (err) {
+            // ignore
+        }
+    }, [hasCodeField, selectedIds.length, handleMassPrint, handleResetFilters])
+
+    // Регистрируем слушатель горячей клавиши
+    useEffect(() => {
+        window.addEventListener('keydown', handleHotkey)
+        return () => window.removeEventListener('keydown', handleHotkey)
+    }, [handleHotkey])
+
     return (
         <PageWrapper>
             <PageHeader>
@@ -288,25 +341,29 @@ const ProjectParticipantsPage = () => {
                 <PageHeaderActions>
                     {isRefetching && <Loader size="s" />}
                     {selectedIds.length > 0 && (
-                        <Button
-                            view="outlined"
-                            size="l"
-                            onClick={handleMassPrint}
-                            loading={isPrinting}
-                        >
-                            <Button.Icon>
-                                <Printer />
-                            </Button.Icon>
-                            Печать ({selectedIds.length})
-                        </Button>
+                        <Tooltip content={<Hotkey view="dark" value="alt+p" />} placement="top">
+                            <Button
+                                view="outlined"
+                                size="l"
+                                onClick={handleMassPrint}
+                                loading={isPrinting}
+                            >
+                                <Button.Icon>
+                                    <Printer />
+                                </Button.Icon>
+                                Печать ({selectedIds.length})
+                            </Button>
+                        </Tooltip>
                     )}
                     {hasCodeField && (
-                        <Button view="outlined" size="l" onClick={handleSearchByCodeModalOpen}>
-                            <Button.Icon>
-                                <Magnifier />
-                            </Button.Icon>
-                            Поиск по коду
-                        </Button>
+                        <Tooltip content={<Hotkey view="dark" value="alt+f" />} placement="top">
+                            <Button view="outlined" size="l" onClick={handleSearchByCodeModalOpen}>
+                                <Button.Icon>
+                                    <Magnifier />
+                                </Button.Icon>
+                                Поиск по коду
+                            </Button>
+                        </Tooltip>
                     )}
                     <Tooltip content={<Hotkey view="dark" value="alt+c" />} placement="top">
                         <Button view="action" size="l" onClick={handleCreateModalOpen}>

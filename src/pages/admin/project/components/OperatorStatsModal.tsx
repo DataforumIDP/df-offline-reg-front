@@ -1,9 +1,11 @@
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Dialog, Text, Table, Skeleton, Icon, Button, TextInput } from '@gravity-ui/uikit'
 import { CircleCheck, CircleXmark, ArrowRight } from '@gravity-ui/icons'
 import { useOperatorStatsQuery } from '@/hooks/queries/useStatsQueries'
 import { useSchemeQuery, type SchemeField } from '@/hooks/queries/useSchemeQueries'
 import { useDebounce } from '@/hooks'
+import './OperatorStatsModal.css'
 
 interface OperatorStatsModalProps {
     open: boolean
@@ -75,9 +77,12 @@ const OperatorStatsModal = ({
         })
     }, [data?.participants, debouncedSearch])
 
+    const navigate = useNavigate()
+
     const handleGoToParticipant = (participantId: number) => {
         // Переход к профилю участника
-        window.open(`/admin/project/${projectId}/participants/${participantId}`, '_blank')
+        onClose()
+        navigate(`/admin/projects/${projectId}/participants?id=${participantId}`)
     }
 
     const columns = [
@@ -178,7 +183,7 @@ const OperatorStatsModal = ({
                             style={{ marginBottom: '12px' }}
                         />
                         <div style={{ maxHeight: '400px', overflowY: 'auto', overflowX: 'hidden' }}>
-                            <Table data={filteredParticipants} columns={columns} />
+                            <Table data={filteredParticipants} columns={columns} className="operator-stats-table" />
                         </div>
                         <Text
                             variant="body-2"
