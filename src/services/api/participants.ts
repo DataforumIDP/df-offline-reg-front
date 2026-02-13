@@ -101,6 +101,18 @@ export const fetchParticipantLogs = (projectId: number, participantId: number): 
 }
 
 /**
+ * Получить количество печатей участника
+ */
+export const fetchParticipantPrintCount = (
+    projectId: number,
+    participantId: number,
+): Promise<{ printCount: number }> => {
+    return apiClient
+        .get<{ printCount: number }>(`/projects/${projectId}/participants/${participantId}/printCount`)
+        .then((res) => res.data)
+}
+
+/**
  * Получить статистику логов
  */
 export const fetchParticipantLogsStats = (projectId: number): Promise<any> => {

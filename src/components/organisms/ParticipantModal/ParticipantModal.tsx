@@ -5,7 +5,7 @@ import { useSnackbar } from 'notistack'
 import Lightbox from 'yet-another-react-lightbox'
 import 'yet-another-react-lightbox/styles.css'
 import type { SchemeField } from '@/hooks/queries/useSchemeQueries'
-import { useParticipantQuery } from '@/hooks/queries/useParticipantQueries'
+import { useParticipantQuery, useParticipantPrintCountQuery } from '@/hooks/queries/useParticipantQueries'
 import { useProjectQuery } from '@/hooks/queries/useProjectQueries'
 import {
     useUpdateParticipantMutation,
@@ -156,6 +156,10 @@ export const ParticipantModal = ({
 
     // Запросы
     const { data: participant, isLoading: participantLoading } = useParticipantQuery(
+        participantId ? Number(projectId) : undefined,
+        participantId || undefined,
+    )
+    const { data: printCountData } = useParticipantPrintCountQuery(
         participantId ? Number(projectId) : undefined,
         participantId || undefined,
     )
@@ -507,6 +511,24 @@ export const ParticipantModal = ({
                                 width: 'min(400px, calc(100vw - 64px))',
                             }}
                         >
+                            {/* Количество печатей - read only */}
+                            <div>
+                                <label
+                                    style={{
+                                        display: 'block',
+                                        marginBottom: '4px',
+                                        fontSize: '12px',
+                                        color: 'var(--g-color-text-secondary)',
+                                    }}
+                                >
+                                    Количество печатей
+                                </label>
+                                <TextInput
+                                    value={printCountData?.printCount?.toString() || '0'}
+                                    disabled
+                                    size="l"
+                                />
+                            </div>
                             {scheme.map(renderField)}
                         </div>
                     )}

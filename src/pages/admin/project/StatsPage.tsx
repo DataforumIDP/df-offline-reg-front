@@ -10,15 +10,23 @@ import { Dayjs } from 'dayjs'
 import { PageWrapper, PageHeader, PageHeaderActions, DateTimePicker } from '@/components/atoms'
 import { useStatsLogsQuery, useLogsQuery } from '../../../hooks/queries/useStatsQueries'
 import type { LogRecord } from '../../../services/api/statsService'
+import OperatorStatsModal from './components/OperatorStatsModal'
 
 import '@gravity-ui/yagr/dist/index.css'
 
 settings.set({ plugins: [YagrPlugin] })
 
+interface SelectedOperator {
+    userId: number
+    userName: string
+    userLogin: string
+}
+
 const ProjectStatsPage = () => {
     const { id: projectId } = useParams<{ id: string }>()
     const [dateStart, setDateStart] = useState<Dayjs | null>(null)
     const [dateEnd, setDateEnd] = useState<Dayjs | null>(null)
+    const [selectedOperator, setSelectedOperator] = useState<SelectedOperator | null>(null)
 
     const projectIdNum = projectId ? parseInt(projectId, 10) : undefined
 
@@ -377,11 +385,31 @@ const ProjectStatsPage = () => {
                 {logsLoading ? (
                     <Skeleton />
                 ) : userStats.length > 0 ? (
-                    <Table data={userStats} columns={userStatsColumns} />
+                    <Table
+                        data={userStats}
+                        columns={userStatsColumns}
+                        onRowClick={(row) => {
+                            setSelectedOperator({
+                                userId: row.userId,
+                                userName: row.userName,
+                                userLogin: row.userLogin,
+                            })
+                        }}
+                        getRowDescriptor={() => ({ interactive: true })}
+                    />
                 ) : (
                     <Text color="secondary">Нет данных о действиях пользователей</Text>
                 )}
             </Card>
+
+            {/* Модалка статистики оператора */}
+            <OperatorStatsModal
+                open={!!selectedOperator}
+                onClose={() => setSelectedOperator(null)}
+                projectId={projectId || ''}
+                operator={selectedOperator}
+                dateParams={dateParams}
+            />
         </PageWrapper>
     )
 }

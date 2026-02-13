@@ -4,6 +4,7 @@ import {
     fetchParticipantById,
     fetchParticipantLogs,
     fetchParticipantLogsStats,
+    fetchParticipantPrintCount,
     type ParticipantsQuery,
 } from '@/services/api/participants'
 
@@ -59,5 +60,20 @@ export const useParticipantLogsStatsQuery = (projectId: number | undefined) => {
         queryFn: () => fetchParticipantLogsStats(projectId!),
         enabled: !!projectId,
         staleTime: 10 * 60 * 1000, // 10 минут
+    })
+}
+
+/**
+ * Запрос количества печатей участника
+ */
+export const useParticipantPrintCountQuery = (
+    projectId: number | undefined,
+    participantId: number | undefined,
+) => {
+    return useQuery({
+        queryKey: ['participant-print-count', projectId, participantId],
+        queryFn: () => fetchParticipantPrintCount(projectId!, participantId!),
+        enabled: !!projectId && !!participantId,
+        staleTime: 1 * 60 * 1000, // 1 минута
     })
 }

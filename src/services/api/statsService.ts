@@ -66,3 +66,30 @@ export const fetchLogs = (projectId: number, params?: LogsQuery): Promise<LogRes
         .get(`/projects/${projectId}/participants/log`, { params })
         .then((res) => res.data)
 }
+
+// Типы для статистики оператора
+export interface OperatorParticipantStats {
+    participantId: number
+    currentData: Record<string, unknown>
+    created: boolean
+    updated: boolean
+    printCount: number
+}
+
+export interface OperatorStatsResponse {
+    participants: OperatorParticipantStats[]
+    totalParticipants: number
+}
+
+/**
+ * Получить статистику оператора по участникам
+ */
+export const fetchOperatorStats = (
+    projectId: number,
+    userId: number,
+    params?: StatsQuery
+): Promise<OperatorStatsResponse> => {
+    return apiClient
+        .get(`/projects/${projectId}/operator/${userId}`, { params })
+        .then((res) => res.data)
+}
