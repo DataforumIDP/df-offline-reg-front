@@ -1,4 +1,5 @@
-import { Dialog, TextInput, Checkbox, Select } from '@gravity-ui/uikit'
+import { Dialog, TextInput, Checkbox, Select, Button, Icon } from '@gravity-ui/uikit'
+import { ArrowsRotateRight } from '@gravity-ui/icons'
 import { useSnackbar } from 'notistack'
 import { useUpdateSchemaMutation } from '@/hooks/mutations/useSchemeMutations'
 import ListItemsInput from './ListItemsInput'
@@ -36,6 +37,49 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
     const [defaultValue, setDefaultValue] = useState<string>('')
     const [boolDefault, setBoolDefault] = useState<'none' | 'true' | 'false'>('none')
     const [random, setRandom] = useState(false)
+    const [isRestarting, setIsRestarting] = useState(false)
+
+    // Функция для перезапуска генерации (отключает random, затем включает обратно)
+    const handleRestartGeneration = async () => {
+        if (!field || isRestarting) return
+        
+        setIsRestarting(true)
+        
+        try {
+            // Формируем конфиг с random: false
+            const configOff: any = { ...field.config, random: false }
+            
+            await new Promise<void>((resolve, reject) => {
+                updateMutation.mutate(
+                    { label: field.label, key: field.key, config: configOff },
+                    {
+                        onSuccess: () => resolve(),
+                        onError: () => reject(),
+                    },
+                )
+            })
+            
+            // Затем включаем обратно
+            const configOn: any = { ...field.config, random: true }
+            
+            await new Promise<void>((resolve, reject) => {
+                updateMutation.mutate(
+                    { label: field.label, key: field.key, config: configOn },
+                    {
+                        onSuccess: () => {
+                            enqueueSnackbar('Генерация перезапущена', { variant: 'success' })
+                            resolve()
+                        },
+                        onError: () => reject(),
+                    },
+                )
+            })
+        } catch {
+            enqueueSnackbar('Ошибка при перезапуске генерации', { variant: 'error' })
+        } finally {
+            setIsRestarting(false)
+        }
+    }
 
     useEffect(() => {
         if (!field) {
@@ -374,9 +418,22 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
 
                     {/* Флаг random для типа code */}
                     {typeValue === 'code' && (
-                        <Checkbox checked={random} onUpdate={(checked) => setRandom(checked)}>
-                            Генерировать случайное значение
-                        </Checkbox>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <Checkbox checked={random} onUpdate={(checked) => setRandom(checked)}>
+                                Генерировать случайное значение
+                            </Checkbox>
+                            {random && field?.config?.random && (
+                                <Button
+                                    view="flat"
+                                    size="s"
+                                    loading={isRestarting}
+                                    onClick={handleRestartGeneration}
+                                    title="Перезапустить генерацию"
+                                >
+                                    <Icon data={ArrowsRotateRight} size={16} />
+                                </Button>
+                            )}
+                        </div>
                     )}
                 </div>
             </Dialog.Body>
