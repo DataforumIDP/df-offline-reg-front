@@ -79,6 +79,10 @@ const ElementToolbar = () => {
         dispatch(updateElement({ id: selectedElement.id, updates: { fontStyle } }))
     }
 
+    const handleUppercaseChange = (checked: boolean) => {
+        dispatch(updateElement({ id: selectedElement.id, updates: { uppercase: checked } }))
+    }
+
     const handleAlignChange = (value: string) => {
         dispatch(
             updateElement({ id: selectedElement.id, updates: { textAlign: value as TextAlign } }),
@@ -243,6 +247,13 @@ const ElementToolbar = () => {
                     size="m"
                 >
                     <span className={styles.italic}>К</span>
+                </Checkbox>
+                <Checkbox
+                    checked={selectedElement.uppercase || false}
+                    onUpdate={handleUppercaseChange}
+                    size="m"
+                >
+                    <span className={styles.uppercase}>АА</span>
                 </Checkbox>
             </div>
 

@@ -516,10 +516,15 @@ async function renderTextElement(
     pageWidth: number,
 ): Promise<void> {
     // Получаем текст из данных
-    const text = element.fieldKey ? String(data[element.fieldKey] ?? '') : '[Поле не выбрано]'
+    let text = element.fieldKey ? String(data[element.fieldKey] ?? '') : '[Поле не выбрано]'
 
     if (!text) {
         return
+    }
+
+    // Применяем верхний регистр если включён
+    if (element.uppercase) {
+        text = text.toUpperCase()
     }
 
     // Встраиваем и устанавливаем шрифт

@@ -30,6 +30,8 @@ export interface TextFieldElement {
     multiline?: boolean
     // Максимальное количество строк (1-10), используется при multiline: true
     maxLines?: number
+    // Верхний регистр - все буквы в CAPS
+    uppercase?: boolean
 }
 
 export type ResourceType = 'field' | 'fixed'
@@ -121,6 +123,7 @@ const defaultTextFieldProps: Omit<TextFieldElement, 'id'> = {
     adaptive: false,
     multiline: false,
     maxLines: 1,
+    uppercase: false,
 }
 
 const defaultQrProps: Omit<QrElement, 'id'> = {

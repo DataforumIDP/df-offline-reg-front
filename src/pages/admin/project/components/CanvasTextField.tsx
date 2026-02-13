@@ -54,6 +54,7 @@ const CanvasTextField = ({ element, screenPxPerMm, zoom, canvasWidthMm }: Canvas
         fontWeight: element.fontWeight,
         fontStyle: element.fontStyle,
         textAlign: element.textAlign,
+        textTransform: element.uppercase ? 'uppercase' : 'none',
     }
 
     // Обработчик клика - выбор элемента

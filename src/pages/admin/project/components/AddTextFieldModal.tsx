@@ -56,6 +56,7 @@ const AddTextFieldModal = ({ open, onClose }: AddTextFieldModalProps) => {
     const [fontSize, setFontSize] = useState('18')
     const [fontWeight, setFontWeight] = useState<FontWeight>('normal')
     const [fontStyle, setFontStyle] = useState<FontStyle>('normal')
+    const [uppercase, setUppercase] = useState(false)
     const [textAlign, setTextAlign] = useState<TextAlign>('center')
     const [fullWidth, setFullWidth] = useState(true)
     const [adaptive, setAdaptive] = useState(false)
@@ -74,6 +75,7 @@ const AddTextFieldModal = ({ open, onClose }: AddTextFieldModalProps) => {
             setFontSize('18')
             setFontWeight('normal')
             setFontStyle('normal')
+            setUppercase(false)
             setTextAlign('center')
             setFullWidth(true)
             setAdaptive(false)
@@ -91,6 +93,7 @@ const AddTextFieldModal = ({ open, onClose }: AddTextFieldModalProps) => {
                 fontSize: parseInt(fontSize, 10),
                 fontWeight,
                 fontStyle,
+                uppercase,
                 textAlign,
                 fullWidth,
                 adaptive: multiline ? false : adaptive, // При многострочном режиме адаптив отключается
@@ -165,6 +168,11 @@ const AddTextFieldModal = ({ open, onClose }: AddTextFieldModalProps) => {
                                 onUpdate={(checked) => setFontStyle(checked ? 'italic' : 'normal')}
                             >
                                 Курсив
+                            </Checkbox>
+                        </div>
+                        <div className={styles.field}>
+                            <Checkbox checked={uppercase} onUpdate={setUppercase}>
+                                КАПС
                             </Checkbox>
                         </div>
                     </div>
