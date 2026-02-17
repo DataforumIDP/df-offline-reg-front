@@ -16,6 +16,10 @@ import ProjectHooksPage from '@pages/admin/project/HooksPage'
 import ProjectZonesPage from '@pages/admin/project/ZonesPage'
 import AccountSettingsPage from '@pages/admin/AccountSettingsPage'
 
+// Страница с маской телефона
+import PhonePage from '@/pages/admin/project/PhonePage'
+
+
 // Страницы оператора
 import OperatorLoginPage from '@pages/operator/LoginPage'
 import OperatorParticipantsPage from '@pages/operator/ParticipantsPage'
@@ -70,6 +74,9 @@ const AppRouter = () => {
                 {/* Служебные страницы */}
                 <Route path="/forbidden" element={<ForbiddenPage />} />
                 <Route path="*" element={<NotFoundPage />} />
+
+                {/* Маска телефона */}
+                <Route path="/phone" element={<PhonePage />} />
             </Routes>
         </Router>
     )
