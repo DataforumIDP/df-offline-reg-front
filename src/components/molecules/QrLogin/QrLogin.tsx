@@ -39,6 +39,7 @@ export const QrLogin = () => {
             width: 200,
             height: 200,
             type: 'svg',
+            margin: 2,
             dotsOptions: {
                 color: '#000',
                 type: 'rounded',
@@ -100,7 +101,7 @@ export const QrLogin = () => {
             dispatch(setUser(user))
             
             // Редирект на главную
-            navigate('/admin')
+            navigate('/admin/participants')
         })
 
         socket.on('code-expired', () => {
