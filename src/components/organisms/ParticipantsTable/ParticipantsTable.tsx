@@ -42,6 +42,7 @@ export interface ParticipantsTableProps {
     onRecordsPerPageChange: (n: number) => void
     filters: FiltersState
     onFiltersChange: (filters: FiltersState) => void
+    colorRow?: boolean // Красить всю строку по цвету типа
 }
 
 // Ключ для localStorage
@@ -154,6 +155,7 @@ export const ParticipantsTable = ({
     onRecordsPerPageChange,
     filters,
     onFiltersChange,
+    colorRow = false,
 }: ParticipantsTableProps) => {
     // Обработчик изменения фильтра
     const handleFilterChange = useCallback(
@@ -191,11 +193,45 @@ export const ParticipantsTable = ({
         setTableSettings(newSettings)
     }, [])
 
+    // Находим первое поле типа list (без multiple) для покраски строк
+    const colorField = useMemo(() => {
+        if (!colorRow) return null
+        return scheme.find(
+            (f) => f.config.type === 'list' && !f.config.listSettings?.multiple
+        ) || null
+    }, [colorRow, scheme])
+
+    // Карта: participantId -> цвет строки
+    const rowColorMap = useMemo(() => {
+        const map = new Map<string, string | undefined>()
+        if (!colorRow || !colorField) return map
+
+        const items = colorField.config.listSettings?.items || []
+        const otherItem = items.find((i) => i.value === '_')
+
+        participants.forEach((p) => {
+            const value = p.data?.[colorField.key]
+            if (value) {
+                const item = items.find((i) => i.value === value)
+                if (item?.color) {
+                    map.set(String(p.id), item.color)
+                } else if (otherItem?.color) {
+                    // Произвольное значение - берём цвет от "_"
+                    map.set(String(p.id), otherItem.color)
+                }
+            }
+        })
+
+        return map
+    }, [colorRow, colorField, participants])
+
     // Формируем столбцы из схемы (без ID)
     const columns: TableColumnConfig<TableDataItem>[] = useMemo(() => {
         const schemeColumns: TableColumnConfig<TableDataItem>[] = scheme.map((field) => {
             // Проверяем, можно ли фильтровать это поле (не фильтруем изображения и bool)
             const isFilterable = field.config.type !== 'img' && field.config.type !== 'bool'
+            // Это поле определяющее цвет строки?
+            const isColorField = colorRow && colorField?.key === field.key
 
             const column: TableColumnConfig<TableDataItem> = {
                 id: field.key,
@@ -214,27 +250,69 @@ export const ParticipantsTable = ({
                 meta: { sort: true },
                 template: (item) => {
                     const value = item.data?.[field.key]
+                    const rowColor = colorRow ? rowColorMap.get(String(item.id)) : undefined
+
+                    // Обёртка для применения цвета к ячейке
+                    const CellWrapper = ({ children }: { children: React.ReactNode }) => {
+                        if (!rowColor) return <>{children}</>
+                        return (
+                            <div
+                                style={{
+                                    backgroundColor: rowColor,
+                                    margin: '-8px -12px',
+                                    padding: '8px 12px',
+                                    color: '#fff',
+                                    textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                                }}
+                            >
+                                {children}
+                            </div>
+                        )
+                    }
 
                     switch (field.config.type) {
                         case 'img':
+                            // Изображения не окрашиваем
                             return <ImageCell value={value} />
 
                         case 'bool':
-                            return <BoolCell value={value} />
+                            return (
+                                <CellWrapper>
+                                    <BoolCell value={value} />
+                                </CellWrapper>
+                            )
 
                         case 'list':
                             if (field.config.listSettings?.multiple) {
-                                return <MultiListCell value={value} />
+                                return (
+                                    <CellWrapper>
+                                        <MultiListCell value={value} />
+                                    </CellWrapper>
+                                )
+                            }
+                            // Если это color field и colorRow=true, просто показываем текст
+                            if (isColorField && colorRow) {
+                                return (
+                                    <CellWrapper>
+                                        <TextCell value={String(value ?? '')} />
+                                    </CellWrapper>
+                                )
                             }
                             return (
-                                <ListCell
-                                    value={value}
-                                    items={field.config.listSettings?.items || []}
-                                />
+                                <CellWrapper>
+                                    <ListCell
+                                        value={value}
+                                        items={field.config.listSettings?.items || []}
+                                    />
+                                </CellWrapper>
                             )
 
                         default:
-                            return <TextCell value={String(value ?? '')} />
+                            return (
+                                <CellWrapper>
+                                    <TextCell value={String(value ?? '')} />
+                                </CellWrapper>
+                            )
                     }
                 },
             }
@@ -242,8 +320,19 @@ export const ParticipantsTable = ({
             return column
         })
 
-        return schemeColumns
-    }, [scheme, filters, handleFilterChange])
+        // Добавляем колонку "Печатей" в конец
+        const printCountColumn: TableColumnConfig<TableDataItem> = {
+            id: '_printCount',
+            name: 'Печатей',
+            meta: { sort: false },
+            template: (item) => {
+                const count = item.printCount ?? 0
+                return <TextCell value={String(count)} />
+            },
+        }
+
+        return [...schemeColumns, printCountColumn]
+    }, [scheme, filters, handleFilterChange, colorRow, colorField, rowColorMap])
 
     // Данные таблицы
     const tableData = useMemo(() => {

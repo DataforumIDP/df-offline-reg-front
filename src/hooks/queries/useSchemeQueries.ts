@@ -5,6 +5,7 @@ export interface SchemeField {
     id: number
     label: string
     key: string
+    scannerEditable?: boolean // только для bool - можно менять в сканере
     config: {
         type: 'text' | 'list' | 'bool' | 'id' | 'img' | 'code'
         uniq: boolean

@@ -75,7 +75,10 @@
 /* Main content */
 .mainContent {
     flex: 1;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
 }
 
 /* Мобильная кнопка меню - по умолчанию скрыта */

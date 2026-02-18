@@ -1,5 +1,6 @@
 import { Text, Card, Label, Checkbox } from '@gravity-ui/uikit'
 import { FormInput } from '@/components/molecules'
+import { DateField } from '@/components/atoms'
 import { useState, useEffect, useCallback } from 'react'
 import { useSnackbar } from 'notistack'
 import { useUpdateProjectMutation } from '@/hooks/mutations/useProjectMutations'
@@ -36,6 +37,9 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
     const [slug, setSlug] = useState('')
     const [description, setDescription] = useState('')
     const [isOperatorEditable, setIsOperatorEditable] = useState(false)
+    const [colorRow, setColorRow] = useState(false)
+    const [dateStart, setDateStart] = useState<Date | null>(null)
+    const [dateEnd, setDateEnd] = useState<Date | null>(null)
 
     // Дебаунс для каждого поля
     const debouncedTitle = useDebounce(title, 1000)
@@ -47,6 +51,9 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
         setSlug(project.slug)
         setDescription(project.description || '')
         setIsOperatorEditable(project.isOperatorEditable ?? false)
+        setColorRow(project.colorRow ?? false)
+        setDateStart(new Date(project.dateStart))
+        setDateEnd(new Date(project.dateEnd))
     }, [project])
 
     // Дебаунс обновление название
@@ -93,9 +100,59 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
         [project.id, updateMutation, enqueueSnackbar],
     )
 
+    // Обновление режима покраски строк
+    const handleColorRowChange = useCallback(
+        (checked: boolean) => {
+            setColorRow(checked)
+            updateMutation.mutate(
+                { id: project.id, data: { colorRow: checked } },
+                {
+                    onSuccess: () => {
+                        enqueueSnackbar('Сохранено', { variant: 'success' })
+                    },
+                },
+            )
+        },
+        [project.id, updateMutation, enqueueSnackbar],
+    )
+
+    // Обновление даты начала
+    const handleDateStartChange = useCallback(
+        (value: Date | null) => {
+            if (value) {
+                setDateStart(value)
+                updateMutation.mutate(
+                    { id: project.id, data: { dateStart: value.toISOString() } },
+                    {
+                        onSuccess: () => {
+                            enqueueSnackbar('Сохранено', { variant: 'success' })
+                        },
+                    },
+                )
+            }
+        },
+        [project.id, updateMutation, enqueueSnackbar],
+    )
+
+    // Обновление даты окончания
+    const handleDateEndChange = useCallback(
+        (value: Date | null) => {
+            if (value) {
+                setDateEnd(value)
+                updateMutation.mutate(
+                    { id: project.id, data: { dateEnd: value.toISOString() } },
+                    {
+                        onSuccess: () => {
+                            enqueueSnackbar('Сохранено', { variant: 'success' })
+                        },
+                    },
+                )
+            }
+        },
+        [project.id, updateMutation, enqueueSnackbar],
+    )
+
     const status = getProjectStatus(project.dateStart, project.dateEnd)
-    const formattedDateStart = new Date(project.dateStart).toLocaleDateString('ru-RU')
-    const formattedDateEnd = new Date(project.dateEnd).toLocaleDateString('ru-RU')
 
     return (
         <Card style={{ padding: '24px' }}>
@@ -156,8 +213,18 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                    <FormInput label="Дата начала" value={formattedDateStart} size="l" readOnly />
-                    <FormInput label="Дата окончания" value={formattedDateEnd} size="l" readOnly />
+                    <DateField
+                        label="Дата начала"
+                        value={dateStart}
+                        onUpdate={handleDateStartChange}
+                        size="l"
+                    />
+                    <DateField
+                        label="Дата окончания"
+                        value={dateEnd}
+                        onUpdate={handleDateEndChange}
+                        size="l"
+                    />
                 </div>
 
                 <div style={{ marginTop: '8px' }}>
@@ -167,6 +234,15 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
                         size="l"
                     >
                         Разрешить операторам редактировать данные участников
+                    </Checkbox>
+                </div>
+                <div style={{ marginTop: '8px' }}>
+                    <Checkbox
+                        checked={colorRow}
+                        onUpdate={handleColorRowChange}
+                        size="l"
+                    >
+                        Красить всю строку участника по цвету типа (вместо только ячейки типа)
                     </Checkbox>
                 </div>
             </div>

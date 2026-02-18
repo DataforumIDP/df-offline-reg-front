@@ -38,6 +38,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
     const [boolDefault, setBoolDefault] = useState<'none' | 'true' | 'false'>('none')
     const [random, setRandom] = useState(false)
     const [isRestarting, setIsRestarting] = useState(false)
+    const [scannerEditable, setScannerEditable] = useState(false)
 
     // Функция для перезапуска генерации (отключает random, затем включает обратно)
     const handleRestartGeneration = async () => {
@@ -120,6 +121,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
         }
 
         setRandom(field.config?.random || false)
+        setScannerEditable(field.scannerEditable || false)
     }, [field, open])
 
     const handleClose = () => {
@@ -135,6 +137,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
         setDefaultValue('')
         setBoolDefault('none')
         setRandom(false)
+        setScannerEditable(false)
         onClose()
     }
 
@@ -221,7 +224,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
         }
 
         updateMutation.mutate(
-            { label, key: keyValue, config },
+            { label, key: keyValue, config, scannerEditable: typeValue === 'bool' ? scannerEditable : undefined },
             {
                 onSuccess: () => {
                     enqueueSnackbar('Поле обновлено', { variant: 'success' })
@@ -434,6 +437,16 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
                                 </Button>
                             )}
                         </div>
+                    )}
+
+                    {/* Редактируемо в сканере - только для bool */}
+                    {typeValue === 'bool' && (
+                        <Checkbox
+                            checked={scannerEditable}
+                            onUpdate={(checked) => setScannerEditable(checked)}
+                        >
+                            Редактируемо в сканере
+                        </Checkbox>
                     )}
                 </div>
             </Dialog.Body>

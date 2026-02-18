@@ -23,6 +23,7 @@ export interface Project {
     dateStart: string
     dateEnd: string
     isOperatorEditable?: boolean
+    colorRow?: boolean
     rulesField?: string | null
     scanMode?: ScanMode
     stats?: ProjectStats

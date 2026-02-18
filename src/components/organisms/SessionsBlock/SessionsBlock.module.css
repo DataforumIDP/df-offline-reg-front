@@ -1,0 +1,74 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sessionsList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sessionItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--g-color-base-generic);
+    border-radius: 8px;
+}
+
+.sessionItem.current {
+    background: var(--g-color-base-positive-light);
+    border: 1px solid var(--g-color-line-positive);
+}
+
+.sessionInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sessionHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sessionDetails {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.terminateAllBtn {
+    margin-left: auto;
+}
+
+.emptyState {
+    text-align: center;
+    padding: 24px;
+    color: var(--g-color-text-secondary);
+}
+
+.qrScannerContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+}
+
+.qrScanner {
+    width: 300px;
+    height: 300px;
+    border-radius: 12px;
+    overflow: hidden;
+}

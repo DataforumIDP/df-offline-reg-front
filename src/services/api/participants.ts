@@ -10,6 +10,7 @@ export interface Participant {
     data: ParticipantFieldValue
     createdAt: string
     updatedAt: string
+    printCount?: number // Количество печатей
 }
 
 export interface ParticipantsQuery {

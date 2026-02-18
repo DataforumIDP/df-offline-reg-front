@@ -1,0 +1,58 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 24px;
+    border-top: 1px solid var(--g-color-line-generic);
+}
+
+.title {
+    text-align: center;
+}
+
+.description {
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.qrContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    min-height: 240px;
+    justify-content: center;
+}
+
+.qrCode {
+    border-radius: 8px;
+}
+
+.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.expired {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.retryLink {
+    background: none;
+    border: none;
+    color: var(--g-color-text-link);
+    cursor: pointer;
+    font-size: 14px;
+    text-decoration: underline;
+    padding: 0;
+}
+
+.retryLink:hover {
+    color: var(--g-color-text-link-hover);
+}

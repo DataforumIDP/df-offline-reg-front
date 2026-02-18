@@ -1,6 +1,7 @@
 import { Text } from '@gravity-ui/uikit'
 import { PageWrapper, PageHeader } from '@/components/atoms'
 import { PrintSettings } from '@/components/organisms/PrintSettings'
+import { SessionsBlock } from '@/components/organisms/SessionsBlock'
 import styles from './AccountSettingsPage.module.css'
 
 const AccountSettingsPage = () => {
@@ -9,6 +10,17 @@ const AccountSettingsPage = () => {
             <PageHeader>
                 <Text variant="display-1">Настройки</Text>
             </PageHeader>
+
+            <div className={styles.section}>
+                <Text variant="header-1" className={styles.sectionTitle}>
+                    Сессии
+                </Text>
+                <Text variant="body-2" color="secondary" className={styles.sectionDescription}>
+                    Управление активными сессиями вашего аккаунта. Вы можете завершить сессии на
+                    других устройствах или авторизовать новое устройство по QR коду.
+                </Text>
+                <SessionsBlock />
+            </div>
 
             <div className={styles.section}>
                 <Text variant="header-1" className={styles.sectionTitle}>

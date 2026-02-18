@@ -1,6 +1,7 @@
 import { TextInput, Text, Dialog } from '@gravity-ui/uikit'
 import { useState } from 'react'
 import { useCreateProjectMutation } from '@/hooks'
+import { DateField } from '@/components/atoms'
 
 interface CreateProjectModalProps {
     open: boolean
@@ -99,79 +100,27 @@ const CreateProjectModal = ({ open, onClose }: CreateProjectModalProps) => {
 
                     {/* Даты */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                        <div>
-                            <label
-                                style={{
-                                    display: 'block',
-                                    marginBottom: '4px',
-                                    fontSize: '12px',
-                                    color: 'var(--g-color-text-secondary)',
-                                }}
-                            >
-                                Дата начала *
-                            </label>
-                            <input
-                                type="date"
-                                value={dateStart ? dateStart.toISOString().split('T')[0] : ''}
-                                onChange={(e) =>
-                                    setDateStart(e.target.value ? new Date(e.target.value) : null)
-                                }
-                                disabled={isPending}
-                                style={{
-                                    width: '100%',
-                                    padding: '8px 12px',
-                                    border: '1px solid var(--g-color-line-generic)',
-                                    borderRadius: '4px',
-                                    fontSize: '14px',
-                                }}
-                            />
-                            {fieldErrors.dateStart && (
-                                <Text
-                                    variant="caption-2"
-                                    color="danger"
-                                    style={{ marginTop: '4px', display: 'block' }}
-                                >
-                                    {fieldErrors.dateStart}
-                                </Text>
-                            )}
-                        </div>
+                        <DateField
+                            label="Дата начала"
+                            value={dateStart}
+                            onUpdate={setDateStart}
+                            disabled={isPending}
+                            error={!!fieldErrors.dateStart}
+                            errorMessage={fieldErrors.dateStart}
+                            required
+                            size="l"
+                        />
 
-                        <div>
-                            <label
-                                style={{
-                                    display: 'block',
-                                    marginBottom: '4px',
-                                    fontSize: '12px',
-                                    color: 'var(--g-color-text-secondary)',
-                                }}
-                            >
-                                Дата окончания *
-                            </label>
-                            <input
-                                type="date"
-                                value={dateEnd ? dateEnd.toISOString().split('T')[0] : ''}
-                                onChange={(e) =>
-                                    setDateEnd(e.target.value ? new Date(e.target.value) : null)
-                                }
-                                disabled={isPending}
-                                style={{
-                                    width: '100%',
-                                    padding: '8px 12px',
-                                    border: '1px solid var(--g-color-line-generic)',
-                                    borderRadius: '4px',
-                                    fontSize: '14px',
-                                }}
-                            />
-                            {fieldErrors.dateEnd && (
-                                <Text
-                                    variant="caption-2"
-                                    color="danger"
-                                    style={{ marginTop: '4px', display: 'block' }}
-                                >
-                                    {fieldErrors.dateEnd}
-                                </Text>
-                            )}
-                        </div>
+                        <DateField
+                            label="Дата окончания"
+                            value={dateEnd}
+                            onUpdate={setDateEnd}
+                            disabled={isPending}
+                            error={!!fieldErrors.dateEnd}
+                            errorMessage={fieldErrors.dateEnd}
+                            required
+                            size="l"
+                        />
                     </div>
 
                     {/* Slug */}

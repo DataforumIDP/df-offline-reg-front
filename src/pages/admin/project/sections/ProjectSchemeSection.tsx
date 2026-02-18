@@ -122,6 +122,11 @@ const ProjectSchemeSection = () => {
                                                 Уникальное
                                             </Label>
                                         )}
+                                        {field.scannerEditable && (
+                                            <Label theme="utility" size="s">
+                                                В сканере
+                                            </Label>
+                                        )}
                                     </div>
                                     <Text variant="caption-2" color="secondary">
                                         {field.key}

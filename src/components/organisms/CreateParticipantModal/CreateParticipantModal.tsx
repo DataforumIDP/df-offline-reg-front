@@ -7,6 +7,7 @@ import { uploadImageWithMini } from '@/services/api/files'
 import { fetchPrintParticipant } from '@/services/api/participants'
 import { useAppSelector } from '@/store/hooks'
 import { previewBadgePdf, PrintTemplate } from '@/services/printService'
+import { SelectWithOther } from '@/components/atoms'
 
 export interface CreateParticipantModalProps {
     open: boolean
@@ -401,29 +402,11 @@ export const CreateParticipantModal = ({
                         >
                             {field.label}
                         </label>
-                        <Select
-                            value={
-                                isMultiple
-                                    ? Array.isArray(value)
-                                        ? value
-                                        : []
-                                    : value
-                                      ? [value]
-                                      : []
-                            }
-                            width="max"
+                        <SelectWithOther
+                            items={items}
+                            value={isMultiple ? (Array.isArray(value) ? value : []) : (value || '')}
                             multiple={isMultiple}
-                            onUpdate={(selected) => {
-                                if (isMultiple) {
-                                    updateField(field.key, selected)
-                                } else {
-                                    updateField(field.key, selected[0] || '')
-                                }
-                            }}
-                            options={items.map((item) => ({
-                                value: item.value,
-                                content: item.value,
-                            }))}
+                            onUpdate={(selected) => updateField(field.key, selected)}
                             size="l"
                             placeholder={`Выберите ${field.label.toLowerCase()}`}
                         />

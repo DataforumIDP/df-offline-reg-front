@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button, Text, Card } from '@gravity-ui/uikit'
 import { FormInput } from '@/components/molecules'
+import { QrLogin } from '@/components/molecules/QrLogin'
 import { useLoginAdminMutation } from '@/hooks/mutations/useAuthMutations'
 
 const LoginPage = () => {
@@ -94,6 +95,8 @@ const LoginPage = () => {
                         </Button>
                     </div>
                 </form>
+
+                <QrLogin />
             </Card>
         </div>
     )
