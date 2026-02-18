@@ -1,4 +1,4 @@
-import { Dialog, TextInput, Text, Checkbox, Select, Button, Loader } from '@gravity-ui/uikit'
+import { Dialog, TextInput, Text, Checkbox, Button, Loader } from '@gravity-ui/uikit'
 import { TrashBin, Printer } from '@gravity-ui/icons'
 import { useState, useCallback, useEffect, useMemo } from 'react'
 import { useSnackbar } from 'notistack'

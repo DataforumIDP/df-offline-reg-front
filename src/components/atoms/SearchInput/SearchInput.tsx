@@ -114,7 +114,7 @@ export const SearchInput = ({
             elements.push(
                 <DropdownMenu
                     key="history"
-                    items={historyItems.map((entry, index) => ({
+                    items={historyItems.map((entry) => ({
                         action: () => onApplyHistory(entry),
                         text: (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

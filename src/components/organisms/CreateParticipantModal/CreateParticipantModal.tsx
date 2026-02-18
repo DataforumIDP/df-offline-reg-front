@@ -1,4 +1,4 @@
-import { Dialog, TextInput, Text, Checkbox, Select, Button, Loader } from '@gravity-ui/uikit'
+import { Dialog, TextInput, Text, Checkbox, Button, Loader } from '@gravity-ui/uikit'
 import { useState, useCallback, useEffect } from 'react'
 import { useSnackbar } from 'notistack'
 import type { SchemeField } from '@/hooks/queries/useSchemeQueries'
