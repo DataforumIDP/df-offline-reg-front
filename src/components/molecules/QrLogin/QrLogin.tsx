@@ -101,7 +101,7 @@ export const QrLogin = () => {
             dispatch(setUser(user))
             
             // Редирект на главную
-            navigate('/admin/participants')
+            navigate('/admin/projects')
         })
 
         socket.on('code-expired', () => {
