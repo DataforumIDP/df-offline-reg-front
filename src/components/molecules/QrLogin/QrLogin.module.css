@@ -27,6 +27,13 @@
 
 .qrCode {
     border-radius: 8px;
+    overflow: hidden;
+}
+
+.qrCode :global(svg),
+.qrCode :global(canvas) {
+    display: block;
+    border-radius: 8px;
 }
 
 .loading {

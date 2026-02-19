@@ -30,6 +30,18 @@ apiClient.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config
+        const errorCode = error.response?.data?.code
+        const errorMessage = String(error.response?.data?.error || '')
+        const isSessionTerminatedError =
+            errorCode === 'SESSION_TERMINATED' ||
+            errorMessage.toLowerCase().includes('сессия завершена')
+
+        if (error.response?.status === 401 && isSessionTerminatedError) {
+            localStorage.removeItem('accessToken')
+            localStorage.removeItem('refreshToken')
+            window.location.href = '/admin'
+            return Promise.reject(error)
+        }
 
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true

@@ -48,6 +48,17 @@
     margin-top: 16px;
 }
 
+.scanButtonContent {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1;
+}
+
+.scanButtonContent svg {
+    display: block;
+}
+
 .terminateAllBtn {
     margin-left: auto;
 }

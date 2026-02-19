@@ -129,8 +129,10 @@ export const SessionsBlock = () => {
                     size="m"
                     onClick={() => setQrModalOpen(true)}
                 >
-                    <QrCode />
-                    <Text>Сканировать QR</Text>
+                    <span className={styles.scanButtonContent}>
+                        <QrCode />
+                        <Text>Сканировать QR</Text>
+                    </span>
                 </Button>
                 
                 {otherSessionsCount > 0 && (
