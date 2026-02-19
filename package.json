@@ -1,6 +1,6 @@
 {
-  "name": "registration.front-web",
-  "version": "0.1.22-a",
+  "name": "registration.front-app",
+  "version": "0.1.23-a",
   "type": "module",
   "main": "index.js",
   "license": "MIT",
