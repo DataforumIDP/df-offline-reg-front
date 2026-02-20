@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
 import 'react-phone-input-2/lib/style.css';
 import PhoneInput from '../../../components/atoms/PhoneInput/PhoneInput';
+import PingLayout from '@/components/atoms/PingLayout';
 
 const PhonePage = () => {
   const [phone, setPhone] = useState('');
 
   return (
+    
     <div style={{ 
       display: 'flex', 
       justifyContent: 'center', 
       alignItems: 'center', 
       minHeight: '100vh'
     }}>
+      <PingLayout />
       <div style={{ width: '100%', maxWidth: '400px', padding: '20px' }}>
         <PhoneInput 
           value={phone}
