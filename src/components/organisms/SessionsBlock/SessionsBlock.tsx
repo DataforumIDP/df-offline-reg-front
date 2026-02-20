@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Text, Button, Spin, Label, Modal } from '@gravity-ui/uikit'
+import { Text, Button, Spin, Label, Modal, Icon } from '@gravity-ui/uikit'
 import { TrashBin, QrCode } from '@gravity-ui/icons'
 import { fetchSessions, terminateSession, terminateAllOtherSessions, confirmQrAuth, type Session } from '@/services/api/sessions'
 import { QrScanner } from './QrScanner'
 import styles from './SessionsBlock.module.css'
+import { formatDateTime } from '@/utils/helpers'
 
 export const SessionsBlock = () => {
     const queryClient = useQueryClient()
@@ -52,17 +53,6 @@ export const SessionsBlock = () => {
         confirmQrMutation.mutate(code)
     }
 
-    const formatDate = (dateStr: string) => {
-        const date = new Date(dateStr)
-        return date.toLocaleString('ru-RU', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        })
-    }
-
     const otherSessionsCount = sessions.filter(s => !s.isCurrent).length
 
     if (isLoading) {
@@ -104,7 +94,7 @@ export const SessionsBlock = () => {
                                         </Text>
                                     )}
                                     <Text variant="body-1" color="secondary">
-                                        Последняя активность: {formatDate(session.lastActivity)}
+                                        Последняя активность: {formatDateTime(session.lastActivity)}
                                     </Text>
                                 </div>
                             </div>
@@ -129,10 +119,8 @@ export const SessionsBlock = () => {
                     size="m"
                     onClick={() => setQrModalOpen(true)}
                 >
-                    <span className={styles.scanButtonContent}>
-                        <QrCode />
-                        <Text>Сканировать QR</Text>
-                    </span>
+                    <Icon data={QrCode} />
+                    Сканировать QR
                 </Button>
                 
                 {otherSessionsCount > 0 && (

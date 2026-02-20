@@ -84,7 +84,7 @@
 /* Мобильная кнопка меню - по умолчанию скрыта */
 .mobileMenuButton {
     display: none;
-    padding: 12px;
+    padding: 8px;
     position: absolute;
     top: 0;
     left: 0;

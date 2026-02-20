@@ -22,6 +22,7 @@ import {
     useZoneParticipantsCountQuery,
 } from '@/hooks/queries/useZoneQueries'
 import styles from './ZoneEditModal.module.css'
+import { formatDateTime } from '@/utils/helpers'
 
 // QR Preview component
 const QrPreview = ({ value }: { value: string }) => {
@@ -153,13 +154,6 @@ const ZoneEditModal = ({
     }
 
     const qrValue = config ? `config_${JSON.stringify(config)}` : ''
-
-    const formatDate = (dateStr: string | null) => {
-        if (!dateStr) {
-            return 'Нет данных'
-        }
-        return new Date(dateStr).toLocaleString('ru-RU')
-    }
 
     return (
         <Dialog open={open} onClose={onClose} onEnterKeyDown={handleSave}>
@@ -301,9 +295,12 @@ const ZoneEditModal = ({
                                                         />
                                                         {scanner.name || scanner.scannerId}
                                                     </span>
-                                                    <span>
-                                                        Активность: {formatDate(scanner.lastSeenAt)}
-                                                    </span>
+                                                    {scanner.lastSeenAt && (
+                                                        <span>
+                                                            Активность:{' '}
+                                                            {formatDateTime(scanner.lastSeenAt)}
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <div className={styles.scannerLogs}>
                                                     {scanner.logsCount}
