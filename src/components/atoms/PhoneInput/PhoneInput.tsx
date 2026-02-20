@@ -14,11 +14,12 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   value,
   onChange,
   label = "Телефон",
-  country = "ru"
+  country = "ru",
+  ...props
 }) => {
   
   return (
-    <PhoneInputWrapper>
+    <PhoneInputWrapper {...props}>
       <Label>{label}</Label>
       <PI
         country={country}
