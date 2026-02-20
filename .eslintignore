@@ -1,4 +1,6 @@
 dist
+dist-electron
+electron
 node_modules
 coverage
 .env

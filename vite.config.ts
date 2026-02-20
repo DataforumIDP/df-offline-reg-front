@@ -5,6 +5,7 @@ import svgr from 'vite-plugin-svgr'
 
 export default defineConfig({
   plugins: [svgr(), react()],
+  base: './', // Required for Electron file:// protocol
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -20,6 +21,10 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    open: true,
+    open: false, // Don't open browser in dev (Electron opens)
+  },
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
   },
 })
