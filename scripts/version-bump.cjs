@@ -23,6 +23,7 @@ const BRANCH_LETTERS = {
   hotfix: 'h',
   feature: 'f',
   fix: 'x',
+  desctop: 'dt',
 };
 
 function getBranchLetter(branchName) {

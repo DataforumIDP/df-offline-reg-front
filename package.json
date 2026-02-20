@@ -1,12 +1,18 @@
 {
-  "name": "registration.front-app",
-  "version": "0.1.23-a",
-  "type": "module",
-  "main": "index.js",
+  "name": "rega-desktop",
+  "version": "0.1.24-dt",
+  "description": "REGA Desktop Application",
+  "author": "REGA",
+  "main": "dist-electron/main.js",
   "license": "MIT",
   "scripts": {
     "dev": "vite",
+    "dev:electron": "concurrently \"vite --port 3100\" \"wait-on http://localhost:3100 && cross-env NODE_ENV=development electron .\"",
     "build": "tsc && vite build",
+    "build:electron": "tsc -p tsconfig.electron.json",
+    "build:all": "yarn build && yarn build:electron",
+    "dist": "yarn build:all && electron-builder",
+    "dist:win": "yarn build:all && electron-builder --win",
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
@@ -17,7 +23,7 @@
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
+    "@emotion/styled": "^11.14.0",
     "@gravity-ui/chartkit": "^7.36.0",
     "@gravity-ui/date-components": "^3.4.2",
     "@gravity-ui/date-utils": "^2.6.0",
@@ -32,9 +38,11 @@
     "axios": "^1.6.7",
     "date-fns": "^2.30.0",
     "dayjs": "^1.11.19",
+    "express": "^5.2.1",
     "file-saver": "^2.0.5",
     "jspdf": "^4.0.0",
     "jsqr": "^1.4.0",
+    "multer": "^2.0.2",
     "notistack": "^3.0.2",
     "qr-code-styling": "^1.9.2",
     "react": "^18.3.1",
@@ -47,13 +55,20 @@
     "yet-another-react-lightbox": "^3.28.0"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/file-saver": "^2.0.7",
+    "@types/multer": "^2.0.0",
     "@types/node": "^20.10.6",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@typescript-eslint/eslint-plugin": "^6.16.0",
     "@typescript-eslint/parser": "^6.16.0",
     "@vitejs/plugin-react": "^4.2.1",
+    "concurrently": "^9.2.1",
+    "cross-env": "^7.0.3",
+    "electron": "^40.6.0",
+    "electron-builder": "^26.8.1",
+    "electron-updater": "^6.8.3",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.0.1",
@@ -64,6 +79,53 @@
     "prettier": "^3.1.1",
     "typescript": "^5.3.3",
     "vite": "^5.0.8",
-    "vite-plugin-svgr": "^4.5.0"
+    "vite-plugin-svgr": "^4.5.0",
+    "wait-on": "^9.0.4"
+  },
+  "build": {
+    "appId": "com.rega.desktop",
+    "productName": "REGA Desktop",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "public/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "public/fonts",
+        "to": "fonts"
+      },
+      {
+        "from": "build/icon.ico",
+        "to": "icon.ico"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico"
+    },
+    "publish": {
+      "provider": "generic",
+      "url": "${env.UPDATE_SERVER_URL}"
+    }
   }
 }
