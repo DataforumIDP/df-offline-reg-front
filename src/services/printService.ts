@@ -1,14 +1,52 @@
 import { fetchPrintTemplateById } from '@/services/api/templates'
 import { loadPrintSettings, sendPdfToPrintServer } from '@/components/organisms/PrintSettings'
+import { isElectron } from '@/hooks/useElectron'
 
 /**
- * Отправить Blob на печать: либо открыть в браузере, либо отправить на сервер REGA Print
- * Возвращает сообщение об успехе / ошибке
+ * Convert Blob to Base64
+ */
+async function blobToBase64(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+            const base64 = (reader.result as string).split(',')[1]
+            resolve(base64)
+        }
+        reader.onerror = reject
+        reader.readAsDataURL(blob)
+    })
+}
+
+/**
+ * Отправить Blob на печать:
+ * - Electron: печать через Ghostscript
+ * - Web: либо открыть в браузере, либо отправить на сервер REGA Print
  */
 export async function printOrSend(
     blob: Blob,
     copies: number = 1,
-): Promise<{ mode: 'web' | 'server'; message: string }> {
+): Promise<{ mode: 'web' | 'server' | 'electron'; message: string }> {
+    // Check if running in Electron
+    if (isElectron() && window.electronAPI) {
+        try {
+            const pdfBase64 = await blobToBase64(blob)
+            const result = await window.electronAPI.printPdf({
+                pdfBase64,
+                copies,
+                filename: `badge-${Date.now()}.pdf`,
+            })
+            
+            if (result.success) {
+                return { mode: 'electron', message: result.message || 'Отправлено на печать' }
+            } else {
+                throw new Error(result.error || 'Ошибка печати')
+            }
+        } catch (error: any) {
+            throw new Error(error.message || 'Ошибка печати в Electron')
+        }
+    }
+
+    // Web mode fallback
     const settings = loadPrintSettings()
 
     if (settings.mode === 'server') {
