@@ -404,7 +404,7 @@ export const CreateParticipantModal = ({
                         </label>
                         <SelectWithOther
                             items={items}
-                            value={isMultiple ? (Array.isArray(value) ? value : []) : (value || '')}
+                            value={isMultiple ? (Array.isArray(value) ? value : []) : value || ''}
                             multiple={isMultiple}
                             onUpdate={(selected) => updateField(field.key, selected)}
                             size="l"
@@ -460,7 +460,12 @@ export const CreateParticipantModal = ({
     const hasMultipleColumns = scheme.length > 8
 
     return (
-        <Dialog open={open} onClose={handleClose} aria-labelledby="create-participant-modal-title" size={hasMultipleColumns ? 'l' : undefined}>
+        <Dialog
+            open={open}
+            onClose={handleClose}
+            aria-labelledby="create-participant-modal-title"
+            size={hasMultipleColumns ? 'l' : undefined}
+        >
             <Dialog.Header caption="Добавить участника" id="create-participant-modal-title" />
             <Dialog.Body>
                 <div
@@ -469,7 +474,9 @@ export const CreateParticipantModal = ({
                         gridTemplateColumns: hasMultipleColumns ? 'repeat(2, 1fr)' : undefined,
                         flexDirection: hasMultipleColumns ? undefined : 'column',
                         gap: '16px',
-                        width: hasMultipleColumns ? '100% !important' : 'min(400px, calc(100vw - 64px))',
+                        width: hasMultipleColumns
+                            ? '100% !important'
+                            : 'min(400px, calc(100vw - 64px))',
                     }}
                 >
                     {scheme.map(renderField)}

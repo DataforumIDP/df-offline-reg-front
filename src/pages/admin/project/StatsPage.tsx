@@ -32,10 +32,13 @@ const ProjectStatsPage = () => {
     const projectIdNum = projectId ? parseInt(projectId, 10) : undefined
 
     // Преобразуем даты в ISO строки для запросов
-    const dateParams = useMemo(() => ({
-        dateStart: dateStart?.toISOString(),
-        dateEnd: dateEnd?.toISOString(),
-    }), [dateStart, dateEnd])
+    const dateParams = useMemo(
+        () => ({
+            dateStart: dateStart?.toISOString(),
+            dateEnd: dateEnd?.toISOString(),
+        }),
+        [dateStart, dateEnd],
+    )
 
     // Загружаем статистику по типам действий
     const {
@@ -125,7 +128,7 @@ const ProjectStatsPage = () => {
                     },
                     size: {
                         adaptive: true,
-                    }
+                    },
                 },
                 title: {
                     text: 'События',
@@ -229,17 +232,11 @@ const ProjectStatsPage = () => {
             </PageHeader>
 
             {statsError && (
-                <Alert
-                    theme="danger"
-                    title={`Ошибка: ${(statsError as Error).message}`}
-                />
+                <Alert theme="danger" title={`Ошибка: ${(statsError as Error).message}`} />
             )}
 
             {logsError && (
-                <Alert
-                    theme="warning"
-                    title={`Ошибка: ${(logsError as Error).message}`}
-                />
+                <Alert theme="warning" title={`Ошибка: ${(logsError as Error).message}`} />
             )}
 
             {/* Карточки со статистикой */}
@@ -253,7 +250,7 @@ const ProjectStatsPage = () => {
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
-                        aspectRatio: '16/8'
+                        aspectRatio: '16/8',
                     }}
                 >
                     {statsLoading ? (
@@ -390,12 +387,12 @@ const ProjectStatsPage = () => {
                         columns={userStatsColumns}
                         className="stats-table-large"
                         onRowClick={(row) => {
-                                setSelectedOperator({
-                                    userId: row.userId,
-                                    userName: row.userName,
-                                    userLogin: row.userLogin,
-                                })
-                            }}
+                            setSelectedOperator({
+                                userId: row.userId,
+                                userName: row.userName,
+                                userLogin: row.userLogin,
+                            })
+                        }}
                         getRowDescriptor={() => ({ interactive: true })}
                     />
                 ) : (

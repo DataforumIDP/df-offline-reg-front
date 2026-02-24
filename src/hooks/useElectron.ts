@@ -1,5 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
-import type { PrintSettings, Printer, PrintResult, UpdateStatus, GhostscriptInfo, AppInfo } from '@/types/electron'
+import type {
+    PrintSettings,
+    Printer,
+    PrintResult,
+    UpdateStatus,
+    GhostscriptInfo,
+    AppInfo,
+} from '@/types/electron'
 
 /**
  * Check if running in Electron
@@ -147,7 +154,6 @@ export const useElectronWindow = () => {
  */
 export const useElectronAppInfo = () => {
     const [appInfo, setAppInfo] = useState<AppInfo | null>(null)
-
 
     useEffect(() => {
         if (!isElectron()) return

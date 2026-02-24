@@ -46,7 +46,7 @@ const formatTimestamp = (ts: number): string => {
     if (diff < 3600000) return `${Math.floor(diff / 60000)} мин назад`
     if (diff < 86400000) return `${Math.floor(diff / 3600000)} ч назад`
     if (date.toDateString() === now.toDateString()) return 'сегодня'
-    
+
     return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
 }
 
@@ -105,7 +105,7 @@ export const SearchInput = ({
                     style={{ marginRight: 4 }}
                 >
                     <Icon data={Xmark} size={14} />
-                </Button>
+                </Button>,
             )
         }
 
@@ -130,7 +130,7 @@ export const SearchInput = ({
                             <Icon data={ClockArrowRotateLeft} size={16} />
                         </Button>
                     )}
-                />
+                />,
             )
         }
 
@@ -158,4 +158,3 @@ export const SearchInput = ({
 }
 
 export default SearchInput
-

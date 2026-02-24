@@ -45,11 +45,7 @@ const ClearConfirmModal = ({
                     {title}
                 </Text>
 
-                <Alert
-                    theme="danger"
-                    message={warningMessage}
-                    className={styles.alert}
-                />
+                <Alert theme="danger" message={warningMessage} className={styles.alert} />
 
                 <div className={styles.content}>
                     <Text variant="body-1">Для подтверждения введите название мероприятия:</Text>

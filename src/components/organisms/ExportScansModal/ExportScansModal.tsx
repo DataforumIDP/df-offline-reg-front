@@ -1,13 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import {
-    Modal,
-    Button,
-    Text,
-    Loader,
-    Checkbox,
-    Select,
-    type SelectOption,
-} from '@gravity-ui/uikit'
+import { Modal, Button, Text, Loader, Checkbox, Select, type SelectOption } from '@gravity-ui/uikit'
 import { Xmark } from '@gravity-ui/icons'
 import { Dayjs } from 'dayjs'
 import { useSchemeQuery, SchemeField } from '@/hooks/queries/useSchemeQueries'
@@ -53,18 +45,22 @@ const ExportScansModal = ({ open, onClose, projectId, projectTitle }: ExportScan
 
     // Опции для селекта полей
     const fieldOptions: SelectOption[] = useMemo(() => {
-        return schemeData?.fields?.map((f) => ({
-            value: f.key,
-            content: f.label,
-        })) || []
+        return (
+            schemeData?.fields?.map((f) => ({
+                value: f.key,
+                content: f.label,
+            })) || []
+        )
     }, [schemeData?.fields])
 
     // Опции для селекта зон
     const zoneOptions: SelectOption[] = useMemo(() => {
-        return zones?.map((z) => ({
-            value: String(z.id),
-            content: z.name,
-        })) || []
+        return (
+            zones?.map((z) => ({
+                value: String(z.id),
+                content: z.name,
+            })) || []
+        )
     }, [zones])
 
     // Фильтруемые поля - только list
@@ -126,9 +122,7 @@ const ExportScansModal = ({ open, onClose, projectId, projectTitle }: ExportScan
         } catch (err: any) {
             console.error('Export error:', err)
             const message =
-                err.response?.data?.message ||
-                err.response?.data?.error ||
-                'Ошибка экспорта'
+                err.response?.data?.message || err.response?.data?.error || 'Ошибка экспорта'
             setError(message)
         } finally {
             setIsExporting(false)
@@ -236,11 +230,7 @@ const ExportScansModal = ({ open, onClose, projectId, projectTitle }: ExportScan
 
                             {/* Опция печатей */}
                             <div className={styles.section}>
-                                <Checkbox
-                                    checked={addPrints}
-                                    onUpdate={setAddPrints}
-                                    size="l"
-                                >
+                                <Checkbox checked={addPrints} onUpdate={setAddPrints} size="l">
                                     Включить количество печатей
                                 </Checkbox>
                             </div>
@@ -294,7 +284,9 @@ const FilterField = ({ field, value, onChange }: FilterFieldProps) => {
 
     return (
         <div className={styles.filterField}>
-            <Text variant="body-2" color="secondary">{field.label}</Text>
+            <Text variant="body-2" color="secondary">
+                {field.label}
+            </Text>
             <Select
                 multiple
                 value={value}

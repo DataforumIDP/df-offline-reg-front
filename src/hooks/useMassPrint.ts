@@ -128,7 +128,15 @@ export const useMassPrint = ({
         } finally {
             setIsPrinting(false)
         }
-    }, [selectedIds, participants, templateEditor, enqueueSnackbar, projectId, setSelectedIds, setIsPrinting])
+    }, [
+        selectedIds,
+        participants,
+        templateEditor,
+        enqueueSnackbar,
+        projectId,
+        setSelectedIds,
+        setIsPrinting,
+    ])
 
     return { handleMassPrint }
 }

@@ -110,7 +110,9 @@ export const fetchParticipantPrintCount = (
     participantId: number,
 ): Promise<{ printCount: number }> => {
     return apiClient
-        .get<{ printCount: number }>(`/projects/${projectId}/participants/${participantId}/printCount`)
+        .get<{
+            printCount: number
+        }>(`/projects/${projectId}/participants/${participantId}/printCount`)
         .then((res) => res.data)
 }
 
@@ -249,7 +251,7 @@ export interface ExportScansParams {
  */
 export const fetchExportScans = async (
     projectId: number,
-    params: ExportScansParams
+    params: ExportScansParams,
 ): Promise<Blob> => {
     const response = await apiClient.post(`/projects/${projectId}/scans/excel`, params, {
         responseType: 'blob',

@@ -5,10 +5,7 @@ let ghostscriptPath: string | null = null
 
 export const findGhostscript = async (): Promise<string | null> => {
     if (ghostscriptPath) return ghostscriptPath
-    const possiblePaths = [
-        'C:\\Program Files\\gs',
-        'C:\\Program Files (x86)\\gs',
-    ]
+    const possiblePaths = ['C:\\Program Files\\gs', 'C:\\Program Files (x86)\\gs']
     for (const basePath of possiblePaths) {
         if (!fs.existsSync(basePath)) continue
         try {

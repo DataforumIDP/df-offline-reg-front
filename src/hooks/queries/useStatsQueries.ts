@@ -1,5 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchStatsLogs, fetchLogs, fetchOperatorStats, type LogsQuery, type StatsQuery } from '@/services/api/statsService'
+import {
+    fetchStatsLogs,
+    fetchLogs,
+    fetchOperatorStats,
+    type LogsQuery,
+    type StatsQuery,
+} from '@/services/api/statsService'
 
 /**
  * Запрос статистики по типам действий
@@ -31,7 +37,7 @@ export const useLogsQuery = (projectId: number | undefined, params?: LogsQuery) 
 export const useOperatorStatsQuery = (
     projectId: number | undefined,
     userId: number | undefined,
-    params?: StatsQuery
+    params?: StatsQuery,
 ) => {
     return useQuery({
         queryKey: ['operator-stats', projectId, userId, params],

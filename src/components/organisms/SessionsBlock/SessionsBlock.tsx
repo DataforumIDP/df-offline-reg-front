@@ -2,7 +2,13 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Text, Button, Spin, Label, Modal, Icon } from '@gravity-ui/uikit'
 import { TrashBin, QrCode } from '@gravity-ui/icons'
-import { fetchSessions, terminateSession, terminateAllOtherSessions, confirmQrAuth, type Session } from '@/services/api/sessions'
+import {
+    fetchSessions,
+    terminateSession,
+    terminateAllOtherSessions,
+    confirmQrAuth,
+    type Session,
+} from '@/services/api/sessions'
 import { QrScanner } from './QrScanner'
 import styles from './SessionsBlock.module.css'
 import { formatDateTime } from '@/utils/helpers'
@@ -53,7 +59,7 @@ export const SessionsBlock = () => {
         confirmQrMutation.mutate(code)
     }
 
-    const otherSessionsCount = sessions.filter(s => !s.isCurrent).length
+    const otherSessionsCount = sessions.filter((s) => !s.isCurrent).length
 
     if (isLoading) {
         return (
@@ -114,15 +120,11 @@ export const SessionsBlock = () => {
             )}
 
             <div className={styles.actions}>
-                <Button
-                    view="outlined"
-                    size="m"
-                    onClick={() => setQrModalOpen(true)}
-                >
+                <Button view="outlined" size="m" onClick={() => setQrModalOpen(true)}>
                     <Icon data={QrCode} />
                     Сканировать QR
                 </Button>
-                
+
                 {otherSessionsCount > 0 && (
                     <Button
                         view="outlined-danger"

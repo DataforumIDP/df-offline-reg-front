@@ -29,8 +29,8 @@ const AccountSettingsPage = () => {
                     </Text>
                     <Text variant="body-2" color="secondary" className={styles.sectionDescription}>
                         Выберите способ печати бейджей. В режиме «WEB» PDF будет открываться в новой
-                        вкладке браузера. В режиме «Сервер» PDF будет отправляться на приложение REGA
-                        Print для прямой печати.
+                        вкладке браузера. В режиме «Сервер» PDF будет отправляться на приложение
+                        REGA Print для прямой печати.
                     </Text>
                     <PrintSettings />
                 </div>

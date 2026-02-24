@@ -5,7 +5,11 @@ import { Button, Icon, Dialog } from '@gravity-ui/uikit'
 import { useState } from 'react'
 import { useLogoutMutation } from '@/hooks'
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
-import { setSidebarCompact, toggleSidebarCompact, setSidebarMobileOpen } from '@/store/slices/uiSlice'
+import {
+    setSidebarCompact,
+    toggleSidebarCompact,
+    setSidebarMobileOpen,
+} from '@/store/slices/uiSlice'
 import logoUrl from '../../assets/logo.svg?react'
 import styles from './AdminLayout.module.css'
 
@@ -73,7 +77,9 @@ const OperatorLayout = () => {
             )}
 
             {/* Сайдбар */}
-            <div className={`${styles.sidebar} ${sidebarMobileOpen ? styles.sidebarMobileOpen : ''}`}>
+            <div
+                className={`${styles.sidebar} ${sidebarMobileOpen ? styles.sidebarMobileOpen : ''}`}
+            >
                 <AsideHeader
                     compact={sidebarCompact}
                     onChangeCompact={(compact) => dispatch(setSidebarCompact(compact))}
@@ -105,15 +111,9 @@ const OperatorLayout = () => {
                 </div>
             </div>
 
-            <Dialog
-                open={logoutDialogOpen}
-                onClose={() => setLogoutDialogOpen(false)}
-                size="s"
-            >
+            <Dialog open={logoutDialogOpen} onClose={() => setLogoutDialogOpen(false)} size="s">
                 <Dialog.Header caption="Выход из аккаунта" />
-                <Dialog.Body>
-                    Вы уверены, что хотите выйти?
-                </Dialog.Body>
+                <Dialog.Body>Вы уверены, что хотите выйти?</Dialog.Body>
                 <Dialog.Footer
                     textButtonCancel="Отмена"
                     textButtonApply="Выйти"

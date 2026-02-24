@@ -1,6 +1,11 @@
 import { useCallback } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { setCanvasWidth, setCanvasHeight, setZoom, setSizeUnit } from '@/store/slices/templateEditorSlice'
+import {
+    setCanvasWidth,
+    setCanvasHeight,
+    setZoom,
+    setSizeUnit,
+} from '@/store/slices/templateEditorSlice'
 import { pxToMm, SCREEN_PX_PER_MM } from '../constants/templateEditor'
 
 export const useCanvasControls = () => {
@@ -9,8 +14,10 @@ export const useCanvasControls = () => {
     const { widthMm: canvasWidthMm, heightMm: canvasHeightMm, zoom, sizeUnit } = canvas
 
     // Значения для отображения в зависимости от единиц
-    const displayWidth = sizeUnit === 'mm' ? canvasWidthMm : Math.round(canvasWidthMm * (300 / 25.4))
-    const displayHeight = sizeUnit === 'mm' ? canvasHeightMm : Math.round(canvasHeightMm * (300 / 25.4))
+    const displayWidth =
+        sizeUnit === 'mm' ? canvasWidthMm : Math.round(canvasWidthMm * (300 / 25.4))
+    const displayHeight =
+        sizeUnit === 'mm' ? canvasHeightMm : Math.round(canvasHeightMm * (300 / 25.4))
 
     // Размер холста на экране (с учётом масштаба)
     const canvasDisplayWidth = canvasWidthMm * SCREEN_PX_PER_MM * (zoom / 100)

@@ -35,10 +35,7 @@ const SelectWithOther = ({
     const hasOther = !!otherItem
 
     // Фильтруем items без "_"
-    const regularItems = useMemo(
-        () => items.filter((item) => item.value !== '_'),
-        [items],
-    )
+    const regularItems = useMemo(() => items.filter((item) => item.value !== '_'), [items])
 
     // Список всех известных значений
     const knownValues = useMemo(

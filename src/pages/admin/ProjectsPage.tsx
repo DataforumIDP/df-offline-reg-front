@@ -117,7 +117,12 @@ const ProjectsPage = () => {
                                 <Card
                                     key={project.id}
                                     type="action"
-                                    style={{ padding: '20px', cursor: 'pointer', display: 'flex', flexDirection: 'column' }}
+                                    style={{
+                                        padding: '20px',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                    }}
                                     onClick={() =>
                                         (window.location.href = `/admin/projects/${project.id}/participants`)
                                     }
@@ -165,7 +170,14 @@ const ProjectsPage = () => {
                                             borderTop: '1px solid var(--g-color-line-generic)',
                                         }}
                                     >
-                                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <div
+                                            style={{
+                                                flex: 1,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                            }}
+                                        >
                                             <Text variant="caption-2" color="secondary">
                                                 Участников
                                             </Text>
@@ -173,7 +185,14 @@ const ProjectsPage = () => {
                                                 {stats.participants}
                                             </Text>
                                         </div>
-                                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <div
+                                            style={{
+                                                flex: 1,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                            }}
+                                        >
                                             <Text variant="caption-2" color="secondary">
                                                 Распечатано
                                             </Text>

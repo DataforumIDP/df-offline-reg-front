@@ -5,7 +5,10 @@ import { useSnackbar } from 'notistack'
 import Lightbox from 'yet-another-react-lightbox'
 import 'yet-another-react-lightbox/styles.css'
 import type { SchemeField } from '@/hooks/queries/useSchemeQueries'
-import { useParticipantQuery, useParticipantPrintCountQuery } from '@/hooks/queries/useParticipantQueries'
+import {
+    useParticipantQuery,
+    useParticipantPrintCountQuery,
+} from '@/hooks/queries/useParticipantQueries'
 import { useProjectQuery } from '@/hooks/queries/useProjectQueries'
 import {
     useUpdateParticipantMutation,
@@ -395,7 +398,7 @@ export const ParticipantModal = ({
                         </label>
                         <SelectWithOther
                             items={items}
-                            value={isMultiple ? (Array.isArray(value) ? value : []) : (value || '')}
+                            value={isMultiple ? (Array.isArray(value) ? value : []) : value || ''}
                             multiple={isMultiple}
                             disabled={!canEdit}
                             onUpdate={(selected) => updateField(field.key, selected)}
@@ -472,7 +475,12 @@ export const ParticipantModal = ({
 
     return (
         <>
-            <Dialog open={open} onClose={handleClose} aria-labelledby="participant-modal-title" size={hasMultipleColumns ? 'l' : undefined}>
+            <Dialog
+                open={open}
+                onClose={handleClose}
+                aria-labelledby="participant-modal-title"
+                size={hasMultipleColumns ? 'l' : undefined}
+            >
                 <Dialog.Header caption="Участник" id="participant-modal-title" />
                 <Dialog.Body>
                     {isLoading ? (
@@ -481,7 +489,9 @@ export const ParticipantModal = ({
                                 display: 'flex',
                                 justifyContent: 'center',
                                 padding: '48px',
-                                width: hasMultipleColumns ? 'min(700px, calc(100vw - 64px))' : 'min(400px, calc(100vw - 64px))',
+                                width: hasMultipleColumns
+                                    ? 'min(700px, calc(100vw - 64px))'
+                                    : 'min(400px, calc(100vw - 64px))',
                             }}
                         >
                             <Loader size="l" />
@@ -490,10 +500,14 @@ export const ParticipantModal = ({
                         <div
                             style={{
                                 display: hasMultipleColumns ? 'grid' : 'flex',
-                                gridTemplateColumns: hasMultipleColumns ? 'repeat(2, 1fr)' : undefined,
+                                gridTemplateColumns: hasMultipleColumns
+                                    ? 'repeat(2, 1fr)'
+                                    : undefined,
                                 flexDirection: hasMultipleColumns ? undefined : 'column',
                                 gap: '16px',
-                                width: hasMultipleColumns ? '100%' : 'min(400px, calc(100vw - 64px))',
+                                width: hasMultipleColumns
+                                    ? '100%'
+                                    : 'min(400px, calc(100vw - 64px))',
                             }}
                         >
                             {/* Количество печатей - read only */}
