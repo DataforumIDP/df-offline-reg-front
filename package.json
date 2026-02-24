@@ -1,6 +1,6 @@
 {
   "name": "registration.front",
-  "version": "0.1.28-a",
+  "version": "0.1.29-a",
   "main": "index.js",
   "type": "module",
   "electronMain": "dist-electron/main.js",
