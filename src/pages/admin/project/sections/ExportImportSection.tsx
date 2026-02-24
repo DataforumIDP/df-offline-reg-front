@@ -248,7 +248,11 @@ const ExportImportSection = () => {
                         Выгрузка участников
                     </Button>
 
-                    <Button view="outlined" size="l" onClick={() => setIsExportScansModalOpen(true)}>
+                    <Button
+                        view="outlined"
+                        size="l"
+                        onClick={() => setIsExportScansModalOpen(true)}
+                    >
                         Выгрузка сканов
                     </Button>
 

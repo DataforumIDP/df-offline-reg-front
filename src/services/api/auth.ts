@@ -29,9 +29,7 @@ export const fetchLoginOperator = (credentials: LoginRequest): Promise<LoginResp
  * Регистрация оператора (вход по коду мероприятия и ФИО)
  */
 export const fetchRegisterOperator = (data: RegisterOperatorRequest): Promise<LoginResponse> => {
-    return apiClient
-        .post('/accounts/reg', data)
-        .then((res) => mapAccountToUser(res.data))
+    return apiClient.post('/accounts/reg', data).then((res) => mapAccountToUser(res.data))
 }
 
 /**

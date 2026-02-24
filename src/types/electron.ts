@@ -40,7 +40,11 @@ export interface ElectronAPI {
     getPrinters: () => Promise<Printer[]>
     getPrintSettings: () => Promise<PrintSettings>
     setPrintSettings: (settings: Partial<PrintSettings>) => Promise<boolean>
-    printPdf: (data: { pdfBase64: string; copies?: number; filename?: string }) => Promise<PrintResult>
+    printPdf: (data: {
+        pdfBase64: string
+        copies?: number
+        filename?: string
+    }) => Promise<PrintResult>
     checkGhostscript: () => Promise<GhostscriptInfo>
 
     // App info

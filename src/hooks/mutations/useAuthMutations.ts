@@ -2,7 +2,12 @@ import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useAppDispatch } from '@/store/hooks'
 import { setUser, clearUser } from '@/store/slices/authSlice'
-import { fetchLoginAdmin, fetchLoginOperator, fetchLogout, fetchRegisterOperator } from '@/services/api/auth'
+import {
+    fetchLoginAdmin,
+    fetchLoginOperator,
+    fetchLogout,
+    fetchRegisterOperator,
+} from '@/services/api/auth'
 import type { LoginRequest, LoginResponse, FormErrors, RegisterOperatorRequest } from '@/types/auth'
 import { AxiosError } from 'axios'
 

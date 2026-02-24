@@ -19,7 +19,7 @@
     .grid {
         grid-template-columns: 1fr;
     }
-    
+
     .schemeColumn {
         order: -1;
     }

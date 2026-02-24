@@ -53,43 +53,52 @@ export const QrScanner = ({ onScan, onClose, isLoading, error }: QrScannerProps)
     const startScanning = () => {
         // Используем jsQR для сканирования QR кодов
         // Динамический импорт для уменьшения bundle size
-        import('jsqr').then((jsQR) => {
-            scanIntervalRef.current = window.setInterval(() => {
-                if (!videoRef.current || !canvasRef.current) return
+        import('jsqr')
+            .then((jsQR) => {
+                scanIntervalRef.current = window.setInterval(() => {
+                    if (!videoRef.current || !canvasRef.current) return
 
-                const canvas = canvasRef.current
-                const video = videoRef.current
-                const ctx = canvas.getContext('2d')
+                    const canvas = canvasRef.current
+                    const video = videoRef.current
+                    const ctx = canvas.getContext('2d')
 
-                if (!ctx || video.readyState !== video.HAVE_ENOUGH_DATA) return
+                    if (!ctx || video.readyState !== video.HAVE_ENOUGH_DATA) return
 
-                canvas.width = video.videoWidth
-                canvas.height = video.videoHeight
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+                    canvas.width = video.videoWidth
+                    canvas.height = video.videoHeight
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
 
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-                const code = jsQR.default(imageData.data, imageData.width, imageData.height)
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+                    const code = jsQR.default(imageData.data, imageData.width, imageData.height)
 
-                if (code?.data) {
-                    // Ожидаем код в формате "REGA_AUTH:XXXXXXXX"
-                    const match = code.data.match(/^REGA_AUTH:([A-Z0-9]{8})$/)
-                    if (match) {
-                        if (scanIntervalRef.current) {
-                            clearInterval(scanIntervalRef.current)
+                    if (code?.data) {
+                        // Ожидаем код в формате "REGA_AUTH:XXXXXXXX"
+                        const match = code.data.match(/^REGA_AUTH:([A-Z0-9]{8})$/)
+                        if (match) {
+                            if (scanIntervalRef.current) {
+                                clearInterval(scanIntervalRef.current)
+                            }
+                            onScan(match[1])
                         }
-                        onScan(match[1])
                     }
-                }
-            }, 250)
-        }).catch((err) => {
-            console.error('Failed to load jsQR:', err)
-            setCameraError('Ошибка загрузки сканера')
-        })
+                }, 250)
+            })
+            .catch((err) => {
+                console.error('Failed to load jsQR:', err)
+                setCameraError('Ошибка загрузки сканера')
+            })
     }
 
     return (
         <div className={styles.qrScannerContainer}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            <div
+                style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    width: '100%',
+                }}
+            >
                 <Text variant="header-1">Сканировать QR код</Text>
                 <Button view="flat" size="l" onClick={onClose}>
                     <Xmark />

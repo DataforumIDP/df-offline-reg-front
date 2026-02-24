@@ -5905,11 +5905,6 @@ qrcode-generator@^1.4.4:
   resolved "https://registry.yarnpkg.com/qrcode-generator/-/qrcode-generator-1.5.2.tgz#43faea8061a60d2b4ca5e9b0c0c0fb99e2d93e3a"
   integrity sha512-pItrW0Z9HnDBnFmgiNrY1uxRdri32Uh9EjNYLPVC2zZ3ZRIIEqBoDgm4DkvDwNNDHTK7FNkmr8zAa77BYc9xNw==
 
-qrcode-generator@^2.0.4:
-  version "2.0.4"
-  resolved "https://registry.yarnpkg.com/qrcode-generator/-/qrcode-generator-2.0.4.tgz#e8b3f30922577eba52078aa9c0d5a2a74fe1fd94"
-  integrity sha512-mZSiP6RnbHl4xL2Ap5HfkjLnmxfKcPWpWe/c+5XxCuetEenqmNFf1FH/ftXPCtFG5/TDobjsjz6sSNL0Sr8Z9g==
-
 qs@^6.14.0, qs@^6.14.1:
   version "6.15.0"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.15.0.tgz#db8fd5d1b1d2d6b5b33adaf87429805f1909e7b3"
@@ -5998,13 +5993,6 @@ react-is@^19.2.3:
   version "19.2.4"
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-19.2.4.tgz#a080758243c572ccd4a63386537654298c99d135"
   integrity sha512-W+EWGn2v0ApPKgKKCy/7s7WHXkboGcsrXE+2joLyVxkbyVQfO3MUEaUQDHoSmb8TFFrSKYa9mw64WZHNHSDzYA==
-
-react-qrcode-logo@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/react-qrcode-logo/-/react-qrcode-logo-4.0.0.tgz#e26558ed16cc4f5aa3a8e84cdd39844bb9fc669f"
-  integrity sha512-TcDdsJQe7P0OY7uA7Do4Z0DfIIjjqx81RbBGQY+90T2Ba42pUCx/cSI2UTwPPoH9WwE0StLb8A98mFgKIAI4JQ==
-  dependencies:
-    qrcode-generator "^2.0.4"
 
 react-redux@^8.1.3:
   version "8.1.3"

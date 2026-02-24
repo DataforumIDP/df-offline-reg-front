@@ -17,25 +17,13 @@ interface PageHeaderActionsProps {
 }
 
 export const PageWrapper = ({ children, className }: PageWrapperProps) => {
-    return (
-        <div className={`${styles.page} ${className || ''}`}>
-            {children}
-        </div>
-    )
+    return <div className={`${styles.page} ${className || ''}`}>{children}</div>
 }
 
 export const PageHeader = ({ children, className }: PageHeaderProps) => {
-    return (
-        <div className={`${styles.header} ${className || ''}`}>
-            {children}
-        </div>
-    )
+    return <div className={`${styles.header} ${className || ''}`}>{children}</div>
 }
 
 export const PageHeaderActions = ({ children, className }: PageHeaderActionsProps) => {
-    return (
-        <div className={`${styles.headerActions} ${className || ''}`}>
-            {children}
-        </div>
-    )
+    return <div className={`${styles.headerActions} ${className || ''}`}>{children}</div>
 }

@@ -35,7 +35,7 @@ a {
         max-width: calc(100vw - 32px) !important;
         margin: 16px !important;
     }
-    
+
     .g-dialog__body {
         max-width: 100% !important;
         overflow-x: auto;

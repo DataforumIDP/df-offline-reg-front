@@ -110,10 +110,7 @@ const ExportModal = ({ open, onClose, projectId, projectTitle }: ExportModalProp
                         )}
 
                         <div className={styles.printCheckbox}>
-                            <Checkbox
-                                checked={includePrints}
-                                onUpdate={setIncludePrints}
-                            >
+                            <Checkbox checked={includePrints} onUpdate={setIncludePrints}>
                                 Добавить количество печатей
                             </Checkbox>
                         </div>

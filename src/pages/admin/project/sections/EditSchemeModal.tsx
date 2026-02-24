@@ -43,13 +43,13 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
     // Функция для перезапуска генерации (отключает random, затем включает обратно)
     const handleRestartGeneration = async () => {
         if (!field || isRestarting) return
-        
+
         setIsRestarting(true)
-        
+
         try {
             // Формируем конфиг с random: false
             const configOff: any = { ...field.config, random: false }
-            
+
             await new Promise<void>((resolve, reject) => {
                 updateMutation.mutate(
                     { label: field.label, key: field.key, config: configOff },
@@ -59,10 +59,10 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
                     },
                 )
             })
-            
+
             // Затем включаем обратно
             const configOn: any = { ...field.config, random: true }
-            
+
             await new Promise<void>((resolve, reject) => {
                 updateMutation.mutate(
                     { label: field.label, key: field.key, config: configOn },
@@ -224,7 +224,12 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
         }
 
         updateMutation.mutate(
-            { label, key: keyValue, config, scannerEditable: typeValue === 'bool' ? scannerEditable : undefined },
+            {
+                label,
+                key: keyValue,
+                config,
+                scannerEditable: typeValue === 'bool' ? scannerEditable : undefined,
+            },
             {
                 onSuccess: () => {
                     enqueueSnackbar('Поле обновлено', { variant: 'success' })

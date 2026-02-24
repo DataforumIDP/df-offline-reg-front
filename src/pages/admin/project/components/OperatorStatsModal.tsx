@@ -35,7 +35,7 @@ const OperatorStatsModal = ({
     const { data, isLoading } = useOperatorStatsQuery(
         projectId ? parseInt(projectId, 10) : undefined,
         operator?.userId,
-        dateParams
+        dateParams,
     )
 
     const { data: schemeData } = useSchemeQuery(projectId)
@@ -55,7 +55,7 @@ const OperatorStatsModal = ({
 
     const getColorFromListField = (
         participant: Record<string, unknown>,
-        field: SchemeField | null
+        field: SchemeField | null,
     ): string | null => {
         if (!field || !field.config.listSettings) return null
 
@@ -122,7 +122,11 @@ const OperatorStatsModal = ({
                 <Icon
                     data={row.created ? CircleCheck : CircleXmark}
                     size={18}
-                    style={{ color: row.created ? 'var(--g-color-text-positive)' : 'var(--g-color-text-secondary)' }}
+                    style={{
+                        color: row.created
+                            ? 'var(--g-color-text-positive)'
+                            : 'var(--g-color-text-secondary)',
+                    }}
                 />
             ),
         },
@@ -134,7 +138,11 @@ const OperatorStatsModal = ({
                 <Icon
                     data={row.updated ? CircleCheck : CircleXmark}
                     size={18}
-                    style={{ color: row.updated ? 'var(--g-color-text-info)' : 'var(--g-color-text-secondary)' }}
+                    style={{
+                        color: row.updated
+                            ? 'var(--g-color-text-info)'
+                            : 'var(--g-color-text-secondary)',
+                    }}
                 />
             ),
         },
@@ -143,9 +151,7 @@ const OperatorStatsModal = ({
             name: 'Печать',
             width: 70,
             template: (row: any) => (
-                <Text color={row.printCount > 0 ? 'primary' : 'secondary'}>
-                    {row.printCount}
-                </Text>
+                <Text color={row.printCount > 0 ? 'primary' : 'secondary'}>{row.printCount}</Text>
             ),
         },
         {
@@ -167,45 +173,61 @@ const OperatorStatsModal = ({
     return (
         <Dialog open={open} onClose={onClose} size="m">
             <Dialog.Header
-                caption={operator ? `Статистика: ${operator.userName || operator.userLogin}` : 'Статистика оператора'}
+                caption={
+                    operator
+                        ? `Статистика: ${operator.userName || operator.userLogin}`
+                        : 'Статистика оператора'
+                }
             />
             <Dialog.Body>
                 <div style={{ minHeight: '500px' }}>
-                {isLoading ? (
-                    <Skeleton style={{ height: 200 }} />
-                ) : data?.participants && data.participants.length > 0 ? (
-                    <>
-                        <TextInput
-                            placeholder="Поиск по участникам..."
-                            value={searchValue}
-                            onUpdate={setSearchValue}
-                            hasClear
-                            style={{ marginBottom: '12px' }}
-                        />
-                        <div style={{ maxHeight: '400px', overflowY: 'auto', overflowX: 'hidden' }}>
-                            <Table data={filteredParticipants} columns={columns} className="operator-stats-table" />
-                        </div>
-                        <Text
-                            variant="body-2"
-                            color="secondary"
-                            style={{ marginTop: '16px', display: 'block' }}
-                        >
-                            {debouncedSearch.trim() ? (
-                                <>Найдено: <strong>{filteredParticipants.length}</strong> из {data.totalParticipants}</>
-                            ) : (
-                                <>Всего участников: <strong>{data.totalParticipants}</strong></>
-                            )}
-                        </Text>
-                    </>
-                ) : (
-                    <Text color="secondary">Нет данных о действиях оператора</Text>
-                )}
+                    {isLoading ? (
+                        <Skeleton style={{ height: 200 }} />
+                    ) : data?.participants && data.participants.length > 0 ? (
+                        <>
+                            <TextInput
+                                placeholder="Поиск по участникам..."
+                                value={searchValue}
+                                onUpdate={setSearchValue}
+                                hasClear
+                                style={{ marginBottom: '12px' }}
+                            />
+                            <div
+                                style={{
+                                    maxHeight: '400px',
+                                    overflowY: 'auto',
+                                    overflowX: 'hidden',
+                                }}
+                            >
+                                <Table
+                                    data={filteredParticipants}
+                                    columns={columns}
+                                    className="operator-stats-table"
+                                />
+                            </div>
+                            <Text
+                                variant="body-2"
+                                color="secondary"
+                                style={{ marginTop: '16px', display: 'block' }}
+                            >
+                                {debouncedSearch.trim() ? (
+                                    <>
+                                        Найдено: <strong>{filteredParticipants.length}</strong> из{' '}
+                                        {data.totalParticipants}
+                                    </>
+                                ) : (
+                                    <>
+                                        Всего участников: <strong>{data.totalParticipants}</strong>
+                                    </>
+                                )}
+                            </Text>
+                        </>
+                    ) : (
+                        <Text color="secondary">Нет данных о действиях оператора</Text>
+                    )}
                 </div>
             </Dialog.Body>
-            <Dialog.Footer
-                onClickButtonCancel={onClose}
-                textButtonCancel="Закрыть"
-            />
+            <Dialog.Footer onClickButtonCancel={onClose} textButtonCancel="Закрыть" />
         </Dialog>
     )
 }

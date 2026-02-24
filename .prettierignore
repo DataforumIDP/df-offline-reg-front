@@ -6,3 +6,4 @@ out/
 build/
 .env.local
 .env.*.local
+/release

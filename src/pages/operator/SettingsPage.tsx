@@ -10,19 +10,19 @@ const OperatorSettingsPage = () => {
             </PageHeader>
 
             <section>
-                <Text 
-                    variant="header-1" 
-                    style={{ 
+                <Text
+                    variant="header-1"
+                    style={{
                         display: 'block',
                         marginBottom: '12px',
                     }}
                 >
                     Печать
                 </Text>
-                <Text 
-                    variant="body-2" 
-                    color="secondary" 
-                    style={{ 
+                <Text
+                    variant="body-2"
+                    color="secondary"
+                    style={{
                         display: 'block',
                         marginBottom: '20px',
                         lineHeight: '1.5',

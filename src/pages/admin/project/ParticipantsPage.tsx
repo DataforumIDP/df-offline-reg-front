@@ -71,9 +71,12 @@ const ProjectParticipantsPage = () => {
     })
 
     // Обработчик клика по строке
-    const handleRowClick = useCallback((participant: Participant) => {
-        state.openParticipantModal(participant.id)
-    }, [state])
+    const handleRowClick = useCallback(
+        (participant: Participant) => {
+            state.openParticipantModal(participant.id)
+        },
+        [state],
+    )
 
     return (
         <PageWrapper>
@@ -98,7 +101,11 @@ const ProjectParticipantsPage = () => {
                     )}
                     {hasCodeField && (
                         <Tooltip content={<Hotkey view="dark" value="alt+f" />} placement="top">
-                            <Button view="outlined" size="l" onClick={() => state.setSearchByCodeModalOpen(true)}>
+                            <Button
+                                view="outlined"
+                                size="l"
+                                onClick={() => state.setSearchByCodeModalOpen(true)}
+                            >
                                 <Button.Icon>
                                     <Magnifier />
                                 </Button.Icon>
@@ -107,7 +114,11 @@ const ProjectParticipantsPage = () => {
                         </Tooltip>
                     )}
                     <Tooltip content={<Hotkey view="dark" value="alt+c" />} placement="top">
-                        <Button view="action" size="l" onClick={() => state.setCreateModalOpen(true)}>
+                        <Button
+                            view="action"
+                            size="l"
+                            onClick={() => state.setCreateModalOpen(true)}
+                        >
                             <Button.Icon>
                                 <Plus />
                             </Button.Icon>
@@ -131,7 +142,15 @@ const ProjectParticipantsPage = () => {
             </div>
 
             {isLoading ? (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, minHeight: 0 }}>
+                <div
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        flex: 1,
+                        minHeight: 0,
+                    }}
+                >
                     <Loader size="l" />
                 </div>
             ) : (

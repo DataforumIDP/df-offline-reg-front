@@ -77,7 +77,14 @@ export const useParticipantsHotkeys = ({
                 // ignore
             }
         },
-        [hasCodeField, selectedIdsLength, onCreateOpen, onSearchByCodeOpen, onMassPrint, onResetFilters],
+        [
+            hasCodeField,
+            selectedIdsLength,
+            onCreateOpen,
+            onSearchByCodeOpen,
+            onMassPrint,
+            onResetFilters,
+        ],
     )
 
     useEffect(() => {

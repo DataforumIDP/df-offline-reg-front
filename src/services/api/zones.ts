@@ -124,7 +124,7 @@ export const fetchZoneScanners = (zoneId: number): Promise<ZoneScanner[]> => {
  */
 export const fetchZoneParticipantsCount = (
     zoneId: number,
-    params?: { dateStart?: string; dateEnd?: string }
+    params?: { dateStart?: string; dateEnd?: string },
 ): Promise<{ count: number }> => {
     return apiClient
         .get<{ count: number }>(`/zones/${zoneId}/participants-count`, { params })

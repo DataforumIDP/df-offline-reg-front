@@ -76,7 +76,7 @@ const gravityTheme = createTheme({
                         '& .MuiInputAdornment-root .MuiIconButton-root': {
                             color: colors.textSecondary,
                             padding: '1px',
-                            width: "10px !important",
+                            width: '10px !important',
                             '& svg': {
                                 fontSize: '14px',
                             },
@@ -175,10 +175,10 @@ export const DateTimePicker = ({
                                     height: '12px',
                                     padding: '0px',
                                     paddingRight: '16px',
-                                    "& svg": { 
+                                    '& svg': {
                                         fontSize: '16px',
-                                    }
-                                }
+                                    },
+                                },
                             },
                         },
                         actionBar: {

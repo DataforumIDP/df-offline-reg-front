@@ -35,7 +35,7 @@ export async function printOrSend(
                 copies,
                 filename: `badge-${Date.now()}.pdf`,
             })
-            
+
             if (result.success) {
                 return { mode: 'electron', message: result.message || 'Отправлено на печать' }
             } else {
@@ -109,7 +109,7 @@ export async function printMultipleBadgesByTemplateId(
 export async function previewBadgeByTemplateId(
     templateId: number,
     data: PrintData,
-): Promise<{ mode: 'web' | 'server'; message: string }> {
+): Promise<{ mode: 'web' | 'server' | 'electron'; message: string }> {
     const blob = await printBadgeByTemplateId(templateId, data)
     return printOrSend(blob)
 }
@@ -756,7 +756,7 @@ export async function generateMultipleBadgesPdf(
 export async function previewBadgePdf(
     template: PrintTemplate,
     data: PrintData,
-): Promise<{ mode: 'web' | 'server'; message: string }> {
+): Promise<{ mode: 'web' | 'server' | 'electron'; message: string }> {
     const blob = await generateBadgePdf(template, data)
     return printOrSend(blob)
 }

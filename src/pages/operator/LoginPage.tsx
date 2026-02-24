@@ -108,11 +108,7 @@ const OperatorLoginPage = () => {
                         </div>
 
                         {/* Поле кода мероприятия с историей */}
-                        <FormField
-                            label="Код мероприятия"
-                            required
-                            error={fieldErrors.project}
-                        >
+                        <FormField label="Код мероприятия" required error={fieldErrors.project}>
                             <div ref={setAnchorRef} style={{ position: 'relative' }}>
                                 <TextInput
                                     value={project}
@@ -127,17 +123,19 @@ const OperatorLoginPage = () => {
                                                 view="flat"
                                                 size="s"
                                                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                                style={{ 
+                                                style={{
                                                     marginRight: '4px',
                                                     minWidth: '28px',
                                                     padding: '0 4px',
                                                 }}
                                             >
-                                                <Icon 
-                                                    data={ChevronDown} 
-                                                    size={16} 
+                                                <Icon
+                                                    data={ChevronDown}
+                                                    size={16}
                                                     style={{
-                                                        transform: isDropdownOpen ? 'rotate(180deg)' : 'none',
+                                                        transform: isDropdownOpen
+                                                            ? 'rotate(180deg)'
+                                                            : 'none',
                                                         transition: 'transform 0.2s',
                                                     }}
                                                 />
@@ -191,7 +189,9 @@ const OperatorLoginPage = () => {
                                                 <Button
                                                     view="flat"
                                                     size="xs"
-                                                    onClick={(e) => handleRemoveFromHistory(e, slug)}
+                                                    onClick={(e) =>
+                                                        handleRemoveFromHistory(e, slug)
+                                                    }
                                                 >
                                                     <Icon data={TrashBin} size={14} />
                                                 </Button>

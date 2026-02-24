@@ -196,9 +196,9 @@ export const ParticipantsTable = ({
     // Находим первое поле типа list (без multiple) для покраски строк
     const colorField = useMemo(() => {
         if (!colorRow) return null
-        return scheme.find(
-            (f) => f.config.type === 'list' && !f.config.listSettings?.multiple
-        ) || null
+        return (
+            scheme.find((f) => f.config.type === 'list' && !f.config.listSettings?.multiple) || null
+        )
     }, [colorRow, scheme])
 
     // Карта: participantId -> цвет строки

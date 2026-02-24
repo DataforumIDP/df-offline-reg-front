@@ -55,7 +55,9 @@ export interface StatsQuery {
  * Получить статистику по типам действий
  */
 export const fetchStatsLogs = (projectId: number, params?: StatsQuery): Promise<StatsResponse> => {
-    return apiClient.get(`/projects/${projectId}/participants/log/stats`, { params }).then((res) => res.data)
+    return apiClient
+        .get(`/projects/${projectId}/participants/log/stats`, { params })
+        .then((res) => res.data)
 }
 
 /**
@@ -87,7 +89,7 @@ export interface OperatorStatsResponse {
 export const fetchOperatorStats = (
     projectId: number,
     userId: number,
-    params?: StatsQuery
+    params?: StatsQuery,
 ): Promise<OperatorStatsResponse> => {
     return apiClient
         .get(`/projects/${projectId}/operator/${userId}`, { params })

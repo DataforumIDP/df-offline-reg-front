@@ -237,11 +237,7 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
                     </Checkbox>
                 </div>
                 <div style={{ marginTop: '8px' }}>
-                    <Checkbox
-                        checked={colorRow}
-                        onUpdate={handleColorRowChange}
-                        size="l"
-                    >
+                    <Checkbox checked={colorRow} onUpdate={handleColorRowChange} size="l">
                         Красить всю строку участника по цвету типа (вместо только ячейки типа)
                     </Checkbox>
                 </div>

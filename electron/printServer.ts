@@ -59,7 +59,11 @@ export class PrintServer {
                 const copies = parseInt(req.body?.copies) || 1
                 await this.printFile(pdfPath, copies)
                 this.cleanupFile(pdfPath)
-                res.json({ success: true, message: `Sent to print (${copies} copies)`, printer: this.printer })
+                res.json({
+                    success: true,
+                    message: `Sent to print (${copies} copies)`,
+                    printer: this.printer,
+                })
             } catch (error: any) {
                 if (req.file) {
                     this.cleanupFile(req.file.path)
@@ -75,7 +79,9 @@ export class PrintServer {
     }
 
     private cleanupFile(filePath: string) {
-        try { if (fs.existsSync(filePath)) fs.unlinkSync(filePath) } catch {}
+        try {
+            if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+        } catch {}
     }
 
     async start(): Promise<void> {
@@ -86,10 +92,13 @@ export class PrintServer {
                     resolve()
                 })
                 this.server.on('error', (err: any) => {
-                    if (err.code === 'EADDRINUSE') reject(new Error(`Port ${this.port} already in use`))
+                    if (err.code === 'EADDRINUSE')
+                        reject(new Error(`Port ${this.port} already in use`))
                     else reject(err)
                 })
-            } catch (error) { reject(error) }
+            } catch (error) {
+                reject(error)
+            }
         })
     }
 
@@ -100,7 +109,13 @@ export class PrintServer {
         }
     }
 
-    getPrinter() { return this.printer }
-    getPort() { return this.port }
-    isRunning() { return this.running }
+    getPrinter() {
+        return this.printer
+    }
+    getPort() {
+        return this.port
+    }
+    isRunning() {
+        return this.running
+    }
 }
