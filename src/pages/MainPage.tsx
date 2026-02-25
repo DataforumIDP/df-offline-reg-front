@@ -64,6 +64,9 @@ const MainPage = () => {
             >
                 Войти как оператор
             </Button>
+            <Text variant="body-2" color="secondary">
+                V {typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev'}
+            </Text>
         </div>
     )
 }

@@ -1,4 +1,3 @@
-
 import { app } from 'electron'
 import { fileURLToPath } from 'url'
 import * as path from 'path'
@@ -40,21 +39,25 @@ function getIconPath() {
 }
 
 function configureAutoUpdater() {
-    const updateServer = store.get('updateServer')
+    let updateServer = store.get('updateServer')
     if (!updateServer) {
-        console.log('[Updater] No update server configured')
-        return
+        updateServer = 'https://e8c490b0-8f86-49e6-b849-57f0230dd8a5.selstorage.ru/windows/'
+        store.set('updateServer', updateServer)
     }
+    console.log('[Updater] updateServer:', store.get('updateServer'))
     autoUpdater.setFeedURL({ provider: 'generic', url: updateServer })
     autoUpdater.autoDownload = true
     autoUpdater.autoInstallOnAppQuit = true
     autoUpdater.on('checking-for-update', () => {
+        console.log('[Updater] checking for update')
         mainWindow?.webContents.send('update-status', { status: 'checking' })
     })
     autoUpdater.on('update-available', (info: any) => {
+        console.log('[Updater] update available:', info)
         mainWindow?.webContents.send('update-status', { status: 'available', version: info.version })
     })
     autoUpdater.on('update-not-available', () => {
+        console.log('[Updater] update not available')
         mainWindow?.webContents.send('update-status', { status: 'not-available' })
     })
     autoUpdater.on('download-progress', (progress: any) => {
@@ -80,6 +83,7 @@ function configureAutoUpdater() {
         }
     })
     autoUpdater.on('error', (error: any) => {
+        console.log('[Updater] error:', error)
         mainWindow?.webContents.send('update-status', { status: 'error', error: error.message })
     })
     setTimeout(() => { autoUpdater.checkForUpdates().catch(() => {}) }, 5000)
