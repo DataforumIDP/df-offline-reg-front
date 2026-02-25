@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useProjectsQuery } from '@/hooks'
 import { PageWrapper, PageHeader, PageHeaderActions, SearchInput } from '@/components/atoms'
 import CreateProjectModal from '@/components/organisms/CreateProjectModal'
+import { useNavigate } from 'react-router-dom'
+
 
 // Определяем статус проекта (прошедший, идущий, будущий)
 const getProjectStatus = (
@@ -27,6 +29,7 @@ const ProjectsPage = () => {
     const [search, setSearch] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+    const navigate = useNavigate()
 
     // Получаем список проектов с поиском и пагинацией
     const { data, isLoading, error } = useProjectsQuery({
@@ -123,9 +126,7 @@ const ProjectsPage = () => {
                                         display: 'flex',
                                         flexDirection: 'column',
                                     }}
-                                    onClick={() =>
-                                        (window.location.href = `/admin/projects/${project.id}/participants`)
-                                    }
+                                    onClick={() => navigate(`/admin/projects/${project.id}/participants`)}
                                 >
                                     <div
                                         style={{

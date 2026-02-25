@@ -1,4 +1,4 @@
-import { findGhostscript } from './ghostscript'
+import { findGhostscript } from './ghostscript.js'
 import * as fs from 'fs'
 import { promisify } from 'util'
 import { exec } from 'child_process'

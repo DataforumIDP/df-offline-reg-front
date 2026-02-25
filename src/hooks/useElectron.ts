@@ -12,8 +12,14 @@ import type {
  * Check if running in Electron
  */
 export const isElectron = (): boolean => {
-    // Используем переменную окружения, чтобы явно контролировать режим
-    // VITE_IS_ELECTRON=true для Electron, false для web
+    // Prefer runtime detection: check exposed preload API or Electron userAgent.
+    // Fallback to build-time Vite env flag if explicitly set.
+    try {
+        if (typeof window !== 'undefined' && typeof (window as any).electronAPI === 'object') return true
+        if (typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.includes('Electron')) return true
+    } catch {
+        // ignore
+    }
     return import.meta.env.VITE_IS_ELECTRON === 'true'
 }
 

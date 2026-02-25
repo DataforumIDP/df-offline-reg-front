@@ -1,4 +1,8 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
+import { BrowserRouter, HashRouter } from 'react-router-dom'
+
+const isElectron = (typeof window !== 'undefined' && window.navigator?.userAgent?.includes('Electron')) || import.meta.env.MODE === 'electron'
+const Router = isElectron ? HashRouter : BrowserRouter
 
 // Лейауты
 import AdminLayout from '@components/organisms/AdminLayout'
