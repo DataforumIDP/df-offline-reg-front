@@ -1,9 +1,15 @@
+
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import svgr from 'vite-plugin-svgr'
 import dotenv from 'dotenv'
+import { readFileSync } from 'fs'
 dotenv.config()
+
+// Получаем версию из package.json
+const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8'))
+const appVersion = pkg.version
 
 export default defineConfig(({ mode }) => {
     const IS_ELECTRON = mode === 'electron' || process.env.PLATFORM === 'electron'
@@ -30,7 +36,9 @@ export default defineConfig(({ mode }) => {
             port: 3000,
             open: !IS_ELECTRON, // Don't open browser in dev (Electron opens)
         },
-
+        define: {
+            __APP_VERSION__: JSON.stringify(appVersion),
+        },
         build: IS_ELECTRON
             ? {
                   outDir: 'dist',

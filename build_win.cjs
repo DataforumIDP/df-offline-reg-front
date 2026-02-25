@@ -37,12 +37,8 @@ const config = {
     },
     publish: [
         {
-            provider: 's3',
-            bucket: 'rega-update',   // => ваш бакет
-            path: 'windows',                     // опционально — префикс в бакете
-            region: 'ru-1',              // ваш регион
-            endpoint: 's3.ru-1.storage.selcloud.ru',
-            acl: 'public-read'                   // если файлы публичные
+            provider: 'generic',
+            url: 'https://e8c490b0-8f86-49e6-b849-57f0230dd8a5.selstorage.ru/windows/'
         }
     ],
 };
