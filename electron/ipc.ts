@@ -2,9 +2,9 @@ import { ipcMain, IpcMainInvokeEvent, dialog, shell } from 'electron'
 import * as path from 'path'
 import * as os from 'os'
 import * as fs from 'fs'
-import { SimpleStore } from './store'
-import { printPdfGhostscript } from './printJob'
-import { PrintServer } from './printServer'
+import { SimpleStore } from './store.js'
+import { printPdfGhostscript } from './printJob.js'
+import { PrintServer } from './printServer.js'
 
 import { app } from 'electron'
 export function setupIPC(store: SimpleStore, printServer: PrintServer, mainWindow: Electron.BrowserWindow) {
@@ -55,7 +55,7 @@ export function setupIPC(store: SimpleStore, printServer: PrintServer, mainWindo
         }
     })
     ipcMain.handle('check-ghostscript', async () => {
-        const { findGhostscript } = await import('./ghostscript')
+        const { findGhostscript } = await import('./ghostscript.js')
         const gsPath = await findGhostscript()
         return { installed: !!gsPath, path: gsPath }
     })

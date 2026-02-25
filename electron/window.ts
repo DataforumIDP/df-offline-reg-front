@@ -1,11 +1,9 @@
-import { BrowserWindow, Menu, shell, dialog, HandlerDetails, Event as ElectronEvent, Input } from 'electron'
+import { BrowserWindow, Menu, shell, HandlerDetails } from 'electron'
 import * as path from 'path'
 
 export function createMainWindow(isDev: boolean, iconPath: string, __dirname: string) {
     // Correct preload path for both dev and prod
-    const preloadPath = isDev
-        ? path.join(__dirname, 'preload.js')
-        : path.join(process.cwd(), 'dist-electron', 'preload.js')
+    const preloadPath = path.join(__dirname, 'preload.js')
     const mainWindow = new BrowserWindow({
         width: 1920,
         height: 1080,
@@ -17,10 +15,12 @@ export function createMainWindow(isDev: boolean, iconPath: string, __dirname: st
         icon: iconPath,
         backgroundColor: '#1a1a2e',
         webPreferences: {
+            nodeIntegration: true,
             preload: preloadPath,
             contextIsolation: true,
-            nodeIntegration: false,
-            devTools: isDev,
+            devTools: true,
+            // Use sandbox to allow ESM preload modules in stable Electron
+            sandbox: false,
         },
     })
     Menu.setApplicationMenu(null)

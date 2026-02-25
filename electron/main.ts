@@ -2,15 +2,17 @@
 import { app } from 'electron'
 import { fileURLToPath } from 'url'
 import * as path from 'path'
-const { autoUpdater } = require('electron-updater')
-import { SimpleStore } from './store'
-import { printPdfGhostscript } from './printJob'
-import { PrintServer } from './printServer'
-import { createMainWindow } from './window'
-import { setupIPC } from './ipc'
+import updaterPkg from 'electron-updater'
+const { autoUpdater } = (updaterPkg as any) || updaterPkg
+import { SimpleStore } from './store.js'
+import { printPdfGhostscript } from './printJob.js'
+import { PrintServer } from './printServer.js'
+import { createMainWindow } from './window.js'
+import { setupIPC } from './ipc.js'
 
-// CommonJS: __filename and __dirname are available by default
-// No need to redeclare them
+// Provide __filename and __dirname for ESM runtime
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 let store: SimpleStore
 let mainWindow: Electron.BrowserWindow | null = null

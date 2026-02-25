@@ -20,6 +20,9 @@ const NotFoundPage = () => {
             <Text variant="header-1">Страница не найдена</Text>
             <Text variant="body-1" color="secondary">
                 Извините, запрашиваемая страница не существует.
+            <Text variant="body-1" color="secondary">
+                {`Текущий адрес: ${window.location.href}`}
+            </Text>
             </Text>
             <Button view="action" size="l" onClick={() => navigate('/')}>
                 На главную
