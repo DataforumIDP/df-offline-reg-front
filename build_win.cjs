@@ -35,12 +35,6 @@ const config = {
         ],
         "icon": "build/icon.ico"
     },
-    "nsis": {
-        "oneClick": false, // чтобы пользователь мог выбрать путь установки
-        "perMachine": true, // установка для всех пользователей (Program Files)
-        "allowToChangeInstallationDirectory": true, // разрешить выбор папки
-        "installDirectory": "C:\\Program Files\\DataforumRega" // дефолтная папка
-    },
     publish: [
         {
             provider: 'generic',
