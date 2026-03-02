@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => {
 
     return {
         plugins: [svgr(), react()],
-        base: './', // Required for Electron file:// protocol
+        base: IS_ELECTRON ? './' : '/', // './' for Electron file:// protocol, '/' for web
         resolve: {
             alias: {
                 '@': path.resolve(__dirname, './src'),
