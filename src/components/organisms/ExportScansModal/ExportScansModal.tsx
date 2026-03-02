@@ -1,12 +1,25 @@
-import { useState, useEffect, useMemo } from 'react'
-import { Modal, Button, Text, Loader, Checkbox, Select, type SelectOption } from '@gravity-ui/uikit'
-import { Xmark } from '@gravity-ui/icons'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import {
+    Modal,
+    Button,
+    Text,
+    Loader,
+    Checkbox,
+    Select,
+    type SelectOption,
+    TextInput,
+    TabProvider,
+    TabList,
+    Tab,
+    TabPanel,
+} from '@gravity-ui/uikit'
+import { Xmark, FileArrowUp } from '@gravity-ui/icons'
 import { Dayjs } from 'dayjs'
 import { useSchemeQuery, SchemeField } from '@/hooks/queries/useSchemeQueries'
 import { useZonesQuery } from '@/hooks/queries/useZoneQueries'
-import { fetchExportScans, ExportScansParams } from '@/services/api/participants'
 import { DateTimePicker } from '@/components/atoms'
-import { saveAs } from 'file-saver'
+import { useExcelUpload } from './useExcelUpload'
+import { useExportScans } from './useExportScans'
 import styles from './ExportScansModal.module.css'
 
 interface ExportScansModalProps {
@@ -17,6 +30,11 @@ interface ExportScansModalProps {
 }
 
 const ExportScansModal = ({ open, onClose, projectId, projectTitle }: ExportScansModalProps) => {
+    const fileInputRef = useRef<HTMLInputElement>(null)
+    
+    // Активный таб
+    const [activeTab, setActiveTab] = useState<'manual' | 'excel'>('manual')
+    
     // Выбранные ключи схемы
     const [selectedKeys, setSelectedKeys] = useState<string[]>([])
     // Выбранные зоны
@@ -28,9 +46,10 @@ const ExportScansModal = ({ open, onClose, projectId, projectTitle }: ExportScan
     const [filters, setFilters] = useState<Record<string, string[]>>({})
     // Включать печати
     const [addPrints, setAddPrints] = useState(true)
-    // Состояние загрузки
-    const [isExporting, setIsExporting] = useState(false)
-    const [error, setError] = useState<string | null>(null)
+
+    // Хуки для логики
+    const excelUpload = useExcelUpload()
+    const exportScans = useExportScans(onClose)
 
     // Запросы данных
     const { data: schemeData, isLoading: isLoadingScheme } = useSchemeQuery(String(projectId))
@@ -45,22 +64,18 @@ const ExportScansModal = ({ open, onClose, projectId, projectTitle }: ExportScan
 
     // Опции для селекта полей
     const fieldOptions: SelectOption[] = useMemo(() => {
-        return (
-            schemeData?.fields?.map((f) => ({
-                value: f.key,
-                content: f.label,
-            })) || []
-        )
+        return schemeData?.fields?.map((f) => ({
+            value: f.key,
+            content: f.label,
+        })) || []
     }, [schemeData?.fields])
 
     // Опции для селекта зон
     const zoneOptions: SelectOption[] = useMemo(() => {
-        return (
-            zones?.map((z) => ({
-                value: String(z.id),
-                content: z.name,
-            })) || []
-        )
+        return zones?.map((z) => ({
+            value: String(z.id),
+            content: z.name,
+        })) || []
     }, [zones])
 
     // Фильтруемые поля - только list
@@ -80,53 +95,39 @@ const ExportScansModal = ({ open, onClose, projectId, projectTitle }: ExportScan
         })
     }
 
-    const handleExport = async () => {
-        if (selectedKeys.length === 0) {
-            setError('Выберите хотя бы одно поле для экспорта')
-            return
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            excelUpload.handleExcelUpload(file)
         }
-
-        setIsExporting(true)
-        setError(null)
-
-        try {
-            const params: ExportScansParams = {
-                keys: selectedKeys,
-                addPrints,
-            }
-
-            // Зоны (если выбраны конкретные)
-            if (selectedZones.length > 0) {
-                params.zones = selectedZones.map(Number)
-            }
-
-            // Временной диапазон
-            if (dateStart || dateEnd) {
-                params.timeRange = [
-                    dateStart ? dateStart.toISOString() : new Date(0).toISOString(),
-                    dateEnd ? dateEnd.toISOString() : new Date().toISOString(),
-                ]
-            }
-
-            // Фильтры
-            if (Object.keys(filters).length > 0) {
-                params.filter = Object.entries(filters).map(([key, value]) => ({
-                    [key]: value,
-                }))
-            }
-
-            const blob = await fetchExportScans(projectId, params)
-            const filename = `scans_${projectTitle}_${new Date().toISOString().split('T')[0]}.xlsx`
-            saveAs(blob, filename)
-            onClose()
-        } catch (err: any) {
-            console.error('Export error:', err)
-            const message =
-                err.response?.data?.message || err.response?.data?.error || 'Ошибка экспорта'
-            setError(message)
-        } finally {
-            setIsExporting(false)
+        // Сбрасываем input для повторной загрузки того же файла
+        if (fileInputRef.current) {
+            fileInputRef.current.value = ''
         }
+    }
+
+    const handleManualExport = () => {
+        exportScans.handleManualExport({
+            projectId,
+            projectTitle,
+            selectedKeys,
+            selectedZones,
+            dateStart,
+            dateEnd,
+            filters,
+            addPrints,
+        })
+    }
+
+    const handleExcelExport = () => {
+        exportScans.handleExcelExport(
+            projectId,
+            projectTitle,
+            excelUpload.excelRows,
+            selectedKeys,
+            addPrints,
+            excelUpload.allRowsValid
+        )
     }
 
     const handleReset = () => {
@@ -136,10 +137,17 @@ const ExportScansModal = ({ open, onClose, projectId, projectTitle }: ExportScan
         setDateEnd(null)
         setFilters({})
         setAddPrints(true)
-        setError(null)
+        exportScans.setError(null)
+        excelUpload.reset()
+        setActiveTab('manual')
+    }
+
+    const handleTabChange = (value: string) => {
+        setActiveTab(value as 'manual' | 'excel')
     }
 
     const isLoading = isLoadingScheme || isLoadingZones
+    const error = exportScans.error || excelUpload.error
 
     return (
         <Modal open={open} onClose={onClose}>
@@ -160,102 +168,275 @@ const ExportScansModal = ({ open, onClose, projectId, projectTitle }: ExportScan
                     </div>
                 ) : (
                     <>
-                        <div className={styles.content}>
-                            {/* Выбор полей схемы */}
-                            <div className={styles.section}>
-                                <Text variant="subheader-1">Поля для выгрузки</Text>
-                                <Select
-                                    multiple
-                                    filterable
-                                    value={selectedKeys}
-                                    onUpdate={setSelectedKeys}
-                                    options={fieldOptions}
-                                    placeholder="Выберите поля"
-                                    width="max"
-                                />
+                        {/* Табы */}
+                        <TabProvider value={activeTab} onUpdate={handleTabChange}>
+                            <div className={styles.tabs}>
+                                <TabList>
+                                    <Tab value="manual">Ручная настройка</Tab>
+                                    <Tab value="excel">Excel</Tab>
+                                </TabList>
                             </div>
 
-                            {/* Выбор зон */}
-                            {zones && zones.length > 1 && (
-                                <div className={styles.section}>
-                                    <Text variant="subheader-1">Зоны</Text>
-                                    <Select
-                                        multiple
-                                        value={selectedZones}
-                                        onUpdate={setSelectedZones}
-                                        options={zoneOptions}
-                                        placeholder="Все зоны"
-                                        width="max"
-                                    />
-                                </div>
-                            )}
+                            <TabPanel value="manual">
+                                <div className={styles.content}>
+                                    {/* Выбор полей схемы */}
+                                    <div className={styles.section}>
+                                        <Text variant="subheader-1">Поля для выгрузки</Text>
+                                        <Select
+                                            multiple
+                                            filterable
+                                            value={selectedKeys}
+                                            onUpdate={setSelectedKeys}
+                                            options={fieldOptions}
+                                            placeholder="Выберите поля"
+                                            width="max"
+                                        />
+                                    </div>
 
-                            {/* Временной диапазон */}
-                            <div className={styles.section}>
-                                <Text variant="subheader-1">Период</Text>
-                                <div className={styles.dateRange}>
-                                    <DateTimePicker
-                                        value={dateStart}
-                                        onChange={setDateStart}
-                                        placeholder="Начало периода"
-                                        maxDateTime={dateEnd || undefined}
-                                    />
-                                    <DateTimePicker
-                                        value={dateEnd}
-                                        onChange={setDateEnd}
-                                        placeholder="Конец периода"
-                                        minDateTime={dateStart || undefined}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Фильтры по полям */}
-                            {filterableFields.length > 0 && (
-                                <div className={styles.section}>
-                                    <Text variant="subheader-1">Фильтры</Text>
-                                    <div className={styles.filtersList}>
-                                        {filterableFields.map((field) => (
-                                            <FilterField
-                                                key={field.id}
-                                                field={field}
-                                                value={filters[field.key] || []}
-                                                onChange={(vals) =>
-                                                    handleFilterChange(field.key, vals)
-                                                }
+                                    {/* Выбор зон */}
+                                    {zones && zones.length > 1 && (
+                                        <div className={styles.section}>
+                                            <Text variant="subheader-1">Зоны</Text>
+                                            <Select
+                                                multiple
+                                                value={selectedZones}
+                                                onUpdate={setSelectedZones}
+                                                options={zoneOptions}
+                                                placeholder="Все зоны"
+                                                width="max"
                                             />
-                                        ))}
+                                        </div>
+                                    )}
+
+                                    {/* Временной диапазон */}
+                                    <div className={styles.section}>
+                                        <Text variant="subheader-1">Период</Text>
+                                        <div className={styles.dateRange}>
+                                            <DateTimePicker
+                                                value={dateStart}
+                                                onChange={setDateStart}
+                                                placeholder="Начало периода"
+                                                maxDateTime={dateEnd || undefined}
+                                            />
+                                            <DateTimePicker
+                                                value={dateEnd}
+                                                onChange={setDateEnd}
+                                                placeholder="Конец периода"
+                                                minDateTime={dateStart || undefined}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Фильтры по полям */}
+                                    {filterableFields.length > 0 && (
+                                        <div className={styles.section}>
+                                            <Text variant="subheader-1">Фильтры</Text>
+                                            <div className={styles.filtersList}>
+                                                {filterableFields.map((field) => (
+                                                    <FilterField
+                                                        key={field.id}
+                                                        field={field}
+                                                        value={filters[field.key] || []}
+                                                        onChange={(vals) =>
+                                                            handleFilterChange(field.key, vals)
+                                                        }
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Опция печатей */}
+                                    <div className={styles.section}>
+                                        <Checkbox
+                                            checked={addPrints}
+                                            onUpdate={setAddPrints}
+                                            size="l"
+                                        >
+                                            Включить количество печатей
+                                        </Checkbox>
                                     </div>
                                 </div>
-                            )}
+                            </TabPanel>
 
-                            {/* Опция печатей */}
-                            <div className={styles.section}>
-                                <Checkbox checked={addPrints} onUpdate={setAddPrints} size="l">
-                                    Включить количество печатей
-                                </Checkbox>
-                            </div>
+                            <TabPanel value="excel">
+                                <div className={styles.content}>
+                                    {!excelUpload.showPreview ? (
+                                        <>
+                                            <div className={styles.section}>
+                                                <Text variant="subheader-1">
+                                                    Загрузите Excel файл
+                                                </Text>
+                                                <Text variant="body-2" color="secondary">
+                                                    Файл должен содержать колонки: Дата, Время, Зал,
+                                                    Название
+                                                </Text>
+                                                <input
+                                                    ref={fileInputRef}
+                                                    type="file"
+                                                    accept=".xlsx,.xls"
+                                                    onChange={handleFileSelect}
+                                                    style={{ display: 'none' }}
+                                                />
+                                                <Button 
+                                                    view="outlined" 
+                                                    size="l"
+                                                    onClick={() => fileInputRef.current?.click()}
+                                                    style={{ marginTop: 12 }}
+                                                >
+                                                    <Button.Icon>
+                                                        <FileArrowUp />
+                                                    </Button.Icon>
+                                                    Выбрать файл
+                                                </Button>
+                                            </div>
 
-                            {error && (
-                                <div className={styles.error}>
-                                    <Text variant="body-1" color="danger">
-                                        {error}
-                                    </Text>
+                                            <div className={styles.section}>
+                                                <Text variant="subheader-1">
+                                                    Поля для выгрузки
+                                                </Text>
+                                                <Select
+                                                    multiple
+                                                    filterable
+                                                    value={selectedKeys}
+                                                    onUpdate={setSelectedKeys}
+                                                    options={fieldOptions}
+                                                    placeholder="Выберите поля"
+                                                    width="max"
+                                                />
+                                            </div>
+
+                                            <div className={styles.section}>
+                                                <Checkbox
+                                                    checked={addPrints}
+                                                    onUpdate={setAddPrints}
+                                                    size="l"
+                                                >
+                                                    Включить количество печатей
+                                                </Checkbox>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className={styles.section}>
+                                                <Text variant="subheader-1">
+                                                    Предпросмотр данных
+                                                </Text>
+                                                <Text variant="body-2" color="secondary">
+                                                    Проверьте данные и при необходимости отредактируйте
+                                                    названия листов
+                                                </Text>
+                                                <div className={styles.tableContainer}>
+                                                    {excelUpload.excelRows.map((row, index) => (
+                                                        <div
+                                                            key={index}
+                                                            className={`${styles.previewRow} ${
+                                                                !row.isValid
+                                                                    ? styles.invalidRow
+                                                                    : ''
+                                                            }`}
+                                                        >
+                                                            <div className={styles.previewField}>
+                                                                <Text
+                                                                    variant="caption-2"
+                                                                    color="secondary"
+                                                                >
+                                                                    Дата
+                                                                </Text>
+                                                                <Text variant="body-1">
+                                                                    {row.date}
+                                                                </Text>
+                                                            </div>
+                                                            <div className={styles.previewField}>
+                                                                <Text
+                                                                    variant="caption-2"
+                                                                    color="secondary"
+                                                                >
+                                                                    Время
+                                                                </Text>
+                                                                <Text variant="body-1">
+                                                                    {row.time}
+                                                                </Text>
+                                                            </div>
+                                                            <div className={styles.previewField}>
+                                                                <Text
+                                                                    variant="caption-2"
+                                                                    color="secondary"
+                                                                >
+                                                                    Зал
+                                                                </Text>
+                                                                <Text variant="body-1">
+                                                                    {row.zone}
+                                                                </Text>
+                                                            </div>
+                                                            <div className={styles.previewField}>
+                                                                <Text
+                                                                    variant="caption-2"
+                                                                    color="secondary"
+                                                                >
+                                                                    Название листа
+                                                                </Text>
+                                                                <TextInput
+                                                                    value={row.title}
+                                                                    onUpdate={(val) =>
+                                                                        excelUpload.handleTitleChange(index, val)
+                                                                    }
+                                                                    validationState={
+                                                                        row.isValid
+                                                                            ? undefined
+                                                                            : 'invalid'
+                                                                    }
+                                                                    errorMessage={row.error}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <Button
+                                                    view="flat"
+                                                    onClick={() => excelUpload.setShowPreview(false)}
+                                                >
+                                                    Загрузить другой файл
+                                                </Button>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
-                            )}
-                        </div>
+                            </TabPanel>
+                        </TabProvider>
+
+                        {error && (
+                            <div className={styles.error}>
+                                <Text variant="body-1" color="danger">
+                                    {error}
+                                </Text>
+                            </div>
+                        )}
 
                         <div className={styles.actions}>
                             <Button view="flat" size="l" onClick={handleReset}>
                                 Сбросить
                             </Button>
-                            <Button
-                                view="action"
-                                size="l"
-                                onClick={handleExport}
-                                loading={isExporting}
-                            >
-                                Выгрузить
-                            </Button>
+                            {activeTab === 'manual' ? (
+                                <Button
+                                    view="action"
+                                    size="l"
+                                    onClick={handleManualExport}
+                                    loading={exportScans.isExporting}
+                                >
+                                    Выгрузить
+                                </Button>
+                            ) : (
+                                <Button
+                                    view="action"
+                                    size="l"
+                                    onClick={handleExcelExport}
+                                    loading={exportScans.isExporting}
+                                    disabled={!excelUpload.showPreview || !excelUpload.allRowsValid}
+                                >
+                                    Скачать
+                                </Button>
+                            )}
                         </div>
                     </>
                 )}
@@ -284,9 +465,7 @@ const FilterField = ({ field, value, onChange }: FilterFieldProps) => {
 
     return (
         <div className={styles.filterField}>
-            <Text variant="body-2" color="secondary">
-                {field.label}
-            </Text>
+            <Text variant="body-2" color="secondary">{field.label}</Text>
             <Select
                 multiple
                 value={value}

@@ -168,7 +168,7 @@ export const CreateParticipantModal = ({
 
     // Чекбоксы футера
     const [keepOpen, setKeepOpen] = useState(false)
-    const [printAfterSave, setPrintAfterSave] = useState(false)
+    const [printAfterSave, setPrintAfterSave] = useState(true)
 
     // Инициализация формы при открытии
     useEffect(() => {
