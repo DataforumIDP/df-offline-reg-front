@@ -46,6 +46,8 @@ const ExportScansModal = ({ open, onClose, projectId, projectTitle }: ExportScan
     const [filters, setFilters] = useState<Record<string, string[]>>({})
     // Включать печати
     const [addPrints, setAddPrints] = useState(true)
+    // Включать участников, которые уже были в зоне до начала периода
+    const [inclusive, setInclusive] = useState(true)
 
     // Хуки для логики
     const excelUpload = useExcelUpload()
@@ -116,6 +118,7 @@ const ExportScansModal = ({ open, onClose, projectId, projectTitle }: ExportScan
             dateEnd,
             filters,
             addPrints,
+            inclusive,
         })
     }
 
@@ -126,6 +129,7 @@ const ExportScansModal = ({ open, onClose, projectId, projectTitle }: ExportScan
             excelUpload.excelRows,
             selectedKeys,
             addPrints,
+            inclusive,
             excelUpload.allRowsValid
         )
     }
@@ -137,6 +141,7 @@ const ExportScansModal = ({ open, onClose, projectId, projectTitle }: ExportScan
         setDateEnd(null)
         setFilters({})
         setAddPrints(true)
+        setInclusive(true)
         exportScans.setError(null)
         excelUpload.reset()
         setActiveTab('manual')
@@ -256,6 +261,20 @@ const ExportScansModal = ({ open, onClose, projectId, projectTitle }: ExportScan
                                             Включить количество печатей
                                         </Checkbox>
                                     </div>
+
+                                    {/* Опция включительно */}
+                                    <div className={styles.section}>
+                                        <Checkbox
+                                            checked={inclusive}
+                                            onUpdate={setInclusive}
+                                            size="l"
+                                        >
+                                            Включать уже находящихся в зоне
+                                        </Checkbox>
+                                        <Text variant="caption-1" color="secondary">
+                                            Учитывать участников, которые вошли до начала периода и находились в зоне
+                                        </Text>
+                                    </div>
                                 </div>
                             </TabPanel>
 
@@ -314,6 +333,19 @@ const ExportScansModal = ({ open, onClose, projectId, projectTitle }: ExportScan
                                                 >
                                                     Включить количество печатей
                                                 </Checkbox>
+                                            </div>
+
+                                            <div className={styles.section}>
+                                                <Checkbox
+                                                    checked={inclusive}
+                                                    onUpdate={setInclusive}
+                                                    size="l"
+                                                >
+                                                    Включать уже находящихся в зоне
+                                                </Checkbox>
+                                                <Text variant="caption-1" color="secondary">
+                                                    Учитывать участников, которые вошли до начала периода и находились в зоне
+                                                </Text>
                                             </div>
                                         </>
                                     ) : (

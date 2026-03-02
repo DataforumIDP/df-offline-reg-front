@@ -15,6 +15,7 @@ interface UseExportScansParams {
     dateEnd: Dayjs | null
     filters: Record<string, string[]>
     addPrints: boolean
+    inclusive: boolean
 }
 
 export const useExportScans = (onClose: () => void) => {
@@ -34,6 +35,7 @@ export const useExportScans = (onClose: () => void) => {
             const exportParams: ExportScansParams = {
                 keys: params.selectedKeys,
                 addPrints: params.addPrints,
+                inclusive: params.inclusive,
             }
 
             // Зоны (если выбраны конкретные)
@@ -78,6 +80,7 @@ export const useExportScans = (onClose: () => void) => {
         excelRows: ExcelRow[],
         selectedKeys: string[],
         addPrints: boolean,
+        inclusive: boolean,
         allRowsValid: boolean
     ) => {
         if (!allRowsValid) {
@@ -107,6 +110,7 @@ export const useExportScans = (onClose: () => void) => {
                         })),
                         keys: selectedKeys.length > 0 ? selectedKeys : undefined,
                         addPrints,
+                        inclusive,
                     }),
                 }
             )
