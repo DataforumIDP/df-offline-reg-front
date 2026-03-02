@@ -244,6 +244,7 @@ export interface ExportScansParams {
     filter?: Record<string, any>[] // Фильтры по полям
     timeRange?: string[] // [startISO, endISO]
     addPrints?: boolean // Включать количество печатей
+    inclusive?: boolean // Включать участников, которые уже были в зоне
 }
 
 /**
