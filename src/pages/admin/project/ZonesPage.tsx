@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react'
 import { Text, Button, Loader, Card, Label, Select } from '@gravity-ui/uikit'
-import { Plus, Gear } from '@gravity-ui/icons'
+import { Plus, Gear, Display } from '@gravity-ui/icons'
 import { useParams } from 'react-router-dom'
 import { useSnackbar } from 'notistack'
 import { PageWrapper, PageHeader, PageHeaderActions } from '@/components/atoms'
@@ -17,6 +17,7 @@ import {
 } from '@/hooks/mutations/useZoneMutations'
 import ZoneEditModal from './components/ZoneEditModal'
 import AccessRulesModal from './components/AccessRulesModal'
+import DevicesModal from './components/DevicesModal'
 import type { Zone } from '@/services/api/zones'
 import styles from './ZonesPage.module.css'
 
@@ -42,6 +43,7 @@ const ProjectZonesPage = () => {
     const [selectedZone, setSelectedZone] = useState<Zone | null>(null)
     const [isCreating, setIsCreating] = useState(false)
     const [accessModalOpen, setAccessModalOpen] = useState(false)
+    const [devicesModalOpen, setDevicesModalOpen] = useState(false)
 
     // Получаем поля типа list из схемы
     const listFields = useMemo(() => {
@@ -254,6 +256,12 @@ const ProjectZonesPage = () => {
                             Настройки доступа
                         </Button>
                     )}
+                    <Button view="outlined" size="l" onClick={() => setDevicesModalOpen(true)}>
+                        <Button.Icon>
+                            <Display />
+                        </Button.Icon>
+                        Устройства
+                    </Button>
                 </PageHeaderActions>
             </PageHeader>
 
@@ -313,6 +321,13 @@ const ProjectZonesPage = () => {
                 onCreateRule={handleCreateRule}
                 onDeleteRule={handleDeleteRule}
                 isLoading={createRuleMutation.isPending || deleteRuleMutation.isPending}
+            />
+
+            {/* Модалка устройств */}
+            <DevicesModal
+                open={devicesModalOpen}
+                onClose={() => setDevicesModalOpen(false)}
+                projectId={projectId ? Number(projectId) : undefined}
             />
         </PageWrapper>
     )

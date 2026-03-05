@@ -1,0 +1,64 @@
+.devices-loading,
+.devices-empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+}
+
+.devices-stats {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--g-color-line-generic);
+}
+
+.devices-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.devices-zone-section {
+    margin-bottom: 24px;
+}
+
+.devices-zone-section:last-child {
+    margin-bottom: 0;
+}
+
+.devices-zone-title {
+    margin-bottom: 12px;
+    display: inline-block;
+}
+
+.devices-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.device-card {
+    padding: 12px;
+}
+
+.device-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.device-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.device-card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}

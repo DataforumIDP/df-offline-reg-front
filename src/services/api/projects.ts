@@ -80,3 +80,27 @@ export const fetchUpdateProject = (
 export const fetchDeleteProject = (id: number): Promise<void> => {
     return apiClient.delete(`/projects/${id}`).then(() => {})
 }
+
+/**
+ * Устройство (сканер) проекта
+ */
+export interface Device {
+    id: number
+    scannerId: string
+    projectId: number
+    zoneId: number
+    zoneName: string
+    name: string | null
+    lastSeenAt: string | null
+    isCheckedOut: boolean
+    checkedOutAt: string | null
+    createdAt: string
+    updatedAt: string
+}
+
+/**
+ * Получить список устройств (сканеров) проекта
+ */
+export const fetchProjectDevices = (projectId: number): Promise<Device[]> => {
+    return apiClient.get<Device[]>(`/projects/${projectId}/devices`).then((res) => res.data)
+}

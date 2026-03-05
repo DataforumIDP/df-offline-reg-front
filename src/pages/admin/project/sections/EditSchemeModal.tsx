@@ -39,6 +39,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
     const [random, setRandom] = useState(false)
     const [isRestarting, setIsRestarting] = useState(false)
     const [scannerEditable, setScannerEditable] = useState(false)
+    const [isMark, setIsMark] = useState(false)
 
     // Функция для перезапуска генерации (отключает random, затем включает обратно)
     const handleRestartGeneration = async () => {
@@ -122,6 +123,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
 
         setRandom(field.config?.random || false)
         setScannerEditable(field.scannerEditable || false)
+        setIsMark(field.config?.isMark || false)
     }, [field, open])
 
     const handleClose = () => {
@@ -138,6 +140,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
         setBoolDefault('none')
         setRandom(false)
         setScannerEditable(false)
+        setIsMark(false)
         onClose()
     }
 
@@ -211,6 +214,11 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
         // random flag for code type
         if (typeValue === 'code') {
             config.random = random
+        }
+
+        // isMark flag for bool type
+        if (typeValue === 'bool') {
+            config.isMark = isMark
         }
 
         // Если ключ изменился — спрашиваем подтверждение, что данные участников будут мигрированы
@@ -451,6 +459,16 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
                             onUpdate={(checked) => setScannerEditable(checked)}
                         >
                             Редактируемо в сканере
+                        </Checkbox>
+                    )}
+
+                    {/* Поле-отметка для режима выдачи сканера - только для bool */}
+                    {typeValue === 'bool' && (
+                        <Checkbox
+                            checked={isMark}
+                            onUpdate={(checked) => setIsMark(checked)}
+                        >
+                            Поле отметки (режим выдачи сканера)
                         </Checkbox>
                     )}
                 </div>
