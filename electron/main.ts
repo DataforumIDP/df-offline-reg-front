@@ -25,6 +25,11 @@ const gotTheLock = app.requestSingleInstanceLock()
 if (!gotTheLock) {
     app.quit()
 } else {
+    // Разрешаем подключение к серверам с невалидным SSL сертификатом
+    app.on('certificate-error', (_event, _webContents, _url, _error, _certificate, callback) => {
+        callback(true)
+    })
+
     app.on('second-instance', () => {
         if (mainWindow) {
             if (mainWindow.isMinimized()) mainWindow.restore()

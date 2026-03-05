@@ -2,12 +2,11 @@ import { Text, Spin, Alert } from '@gravity-ui/uikit'
 import { useQrAuth } from '@/hooks/useQrAuth'
 import { useQrCodeRenderer } from '@/hooks/useQrCodeRenderer'
 import { useCountdown } from '@/hooks/useCountdown'
+import { getActiveServerUrl } from '@/services/serverStorage'
 import styles from './QrLogin.module.css'
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
-
 export const QrLogin = () => {
-    const { code, ttl, status, error, retry } = useQrAuth(API_URL)
+    const { code, ttl, status, error, retry } = useQrAuth(getActiveServerUrl())
     const qrRef = useQrCodeRenderer(code ? `REGA_AUTH:${code}` : null)
     const { formatted: timeFormatted } = useCountdown(ttl)
 
