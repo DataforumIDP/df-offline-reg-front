@@ -3,6 +3,7 @@ import { Button, Text, Card, TextInput, Icon, Popup } from '@gravity-ui/uikit'
 import { TrashBin, ChevronDown } from '@gravity-ui/icons'
 import { FormField } from '@/components/atoms/FormField'
 import { FormInput } from '@/components/molecules'
+import { ServerSelector } from '@/components/molecules/ServerSelector'
 import { useRegisterOperatorMutation } from '@/hooks/mutations/useAuthMutations'
 
 const STORAGE_KEY = 'rega_operator_projects'
@@ -231,6 +232,10 @@ const OperatorLoginPage = () => {
                         </Button>
                     </div>
                 </form>
+
+                <div style={{ textAlign: 'center' }}>
+                    <ServerSelector />
+                </div>
             </Card>
         </div>
     )

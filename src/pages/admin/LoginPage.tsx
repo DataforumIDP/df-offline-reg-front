@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Button, Text, Card } from '@gravity-ui/uikit'
 import { FormInput } from '@/components/molecules'
 import { QrLogin } from '@/components/molecules/QrLogin'
+import { ServerSelector } from '@/components/molecules/ServerSelector'
 import { useLoginAdminMutation } from '@/hooks/mutations/useAuthMutations'
 
 const LoginPage = () => {
@@ -97,6 +98,10 @@ const LoginPage = () => {
                 </form>
 
                 <QrLogin />
+
+                <div style={{ textAlign: 'center' }}>
+                    <ServerSelector />
+                </div>
             </Card>
         </div>
     )

@@ -37,9 +37,8 @@ const config = {
     },
     "nsis": {
         "oneClick": false, // чтобы пользователь мог выбрать путь установки
-        "perMachine": true, // установка для всех пользователей (Program Files)
-        "allowToChangeInstallationDirectory": true, // разрешить выбор папки
-        "installDirectory": "C:\\Program Files\\DataforumRega" // дефолтная папка
+        "perMachine": true, // установка для текущего пользователя (localappdata)
+        "allowToChangeInstallationDirectory": false,
     },
     publish: [
         {
