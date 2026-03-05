@@ -11,6 +11,7 @@ export interface SchemeField {
         uniq: boolean
         optional: boolean // true = необязательное, false = обязательное
         maxLength?: number
+        isMark?: boolean // только для bool — поле-отметка для режима выдачи сканера
         listSettings?: {
             multiple: boolean
             items: Array<{ value: string; color?: string }>
