@@ -36,9 +36,6 @@ const MainPage = () => {
             }}
         >
             <Text variant="display-2">REGA</Text>
-            <Text variant="body-2" color="secondary">
-                Система регистрации участников мероприятий
-            </Text>
             <Button
                 style={{ minWidth: 240 }}
                 view="action"

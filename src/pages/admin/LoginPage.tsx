@@ -45,7 +45,7 @@ const LoginPage = () => {
                 <form onSubmit={handleSubmit}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         <div style={{ textAlign: 'center' }}>
-                            <Text variant="display-1">REGA</Text>
+                            <Text variant="display-1">СРП Нова</Text>
                             <Text
                                 variant="body-2"
                                 color="secondary"

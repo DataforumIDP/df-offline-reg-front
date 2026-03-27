@@ -5,6 +5,7 @@ import { useAppDispatch } from '@/hooks'
 import { setUser, setLoading } from '@/store/slices/authSlice'
 import apiClient from '@/services/api'
 import type { AuthUser } from '@/types/auth'
+import { PingLayout } from '@/components/layouts'
 
 function App() {
     const dispatch = useAppDispatch()
@@ -41,7 +42,9 @@ function App() {
             autoHideDuration={3000}
             anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
-            <AppRouter />
+            <PingLayout>
+                <AppRouter />
+            </PingLayout>
         </SnackbarProvider>
     )
 }

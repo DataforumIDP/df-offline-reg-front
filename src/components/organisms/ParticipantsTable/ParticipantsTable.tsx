@@ -14,6 +14,7 @@ import type { SchemeField } from '@/hooks/queries/useSchemeQueries'
 import type { Participant } from '@/services/api/participants'
 import { ColumnFilter } from '@/components/molecules'
 import { getMiniUrl } from '@/services/api/files'
+import { formatPhone } from '@/utils/phoneUtils'
 import styles from './ParticipantsTable.module.css'
 
 // Тип для фильтров
@@ -308,9 +309,14 @@ export const ParticipantsTable = ({
                             )
 
                         default:
+                            // Для текстовых полей с isPhone форматируем номер телефона
+                            const displayValue =
+                                field.config.type === 'text' && field.config.isPhone
+                                    ? formatPhone(value)
+                                    : String(value ?? '')
                             return (
                                 <CellWrapper>
-                                    <TextCell value={String(value ?? '')} />
+                                    <TextCell value={displayValue} />
                                 </CellWrapper>
                             )
                     }

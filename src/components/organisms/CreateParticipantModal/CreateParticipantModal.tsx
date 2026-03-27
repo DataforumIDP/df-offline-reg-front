@@ -7,7 +7,7 @@ import { uploadImageWithMini } from '@/services/api/files'
 import { fetchPrintParticipant } from '@/services/api/participants'
 import { useAppSelector } from '@/store/hooks'
 import { previewBadgePdf, PrintTemplate } from '@/services/printService'
-import { SelectWithOther } from '@/components/atoms'
+import { SelectWithOther, PhoneInput } from '@/components/atoms'
 
 export interface CreateParticipantModalProps {
     open: boolean
@@ -424,6 +424,28 @@ export const CreateParticipantModal = ({
                 )
 
             default:
+                // Телефон или обычный текст
+                if (field.config.type === 'text' && field.config.isPhone) {
+                    return (
+                        <div key={field.key}>
+                            <PhoneInput
+                                label={field.label}
+                                value={value || ''}
+                                onChange={(v) => updateField(field.key, v)}
+                            />
+                            {error && (
+                                <Text
+                                    variant="caption-2"
+                                    color="danger"
+                                    style={{ marginTop: '4px', display: 'block' }}
+                                >
+                                    {error}
+                                </Text>
+                            )}
+                        </div>
+                    )
+                }
+
                 // text и другие типы
                 return (
                     <div key={field.key}>

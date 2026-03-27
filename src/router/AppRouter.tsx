@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import { BrowserRouter, HashRouter } from 'react-router-dom'
+import NavigationListener from '@/components/atoms/NavigationListener'
 
 const isElectron = (typeof window !== 'undefined' && window.navigator?.userAgent?.includes('Electron')) || import.meta.env.MODE === 'electron'
 const Router = isElectron ? HashRouter : BrowserRouter
@@ -32,6 +33,7 @@ import ForbiddenPage from '@pages/ForbiddenPage'
 const AppRouter = () => {
     return (
         <Router>
+            <NavigationListener />
             <Routes>
                 {/* Главная страница */}
                 <Route path="/" element={<MainPage />} />

@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { getActiveServerUrl } from './serverStorage'
+import { dispatchNavigation } from '@/utils/navigation'
 
 const API_BASE_URL = getActiveServerUrl()
 
@@ -37,10 +38,19 @@ apiClient.interceptors.response.use(
             errorCode === 'SESSION_TERMINATED' ||
             errorMessage.toLowerCase().includes('сессия завершена')
 
+        // Игнорируем 401 для auth-эндпоинтов (логин, регистрация)
+        // Они должны обрабатываться в мутациях, а не в интерсепторе
+        const isAuthEndpoint = originalRequest?.url?.includes('/accounts/auth/') ||
+                               originalRequest?.url?.includes('/accounts/reg')
+
+        if (isAuthEndpoint) {
+            return Promise.reject(error)
+        }
+
         if (error.response?.status === 401 && isSessionTerminatedError) {
             localStorage.removeItem('accessToken')
             localStorage.removeItem('refreshToken')
-            window.location.href = '/admin'
+            dispatchNavigation('/admin', true)
             return Promise.reject(error)
         }
 
@@ -53,7 +63,7 @@ apiClient.interceptors.response.use(
             if (!refreshToken) {
                 localStorage.removeItem('accessToken')
                 localStorage.removeItem('refreshToken')
-                window.location.href = '/admin'
+                dispatchNavigation('/admin', true)
                 return Promise.reject(error)
             }
 
@@ -74,7 +84,7 @@ apiClient.interceptors.response.use(
                 // Если обновление токена не удалось, перенаправляем на логин
                 localStorage.removeItem('accessToken')
                 localStorage.removeItem('refreshToken')
-                window.location.href = '/admin'
+                dispatchNavigation('/admin', true)
                 return Promise.reject(refreshError)
             }
         }

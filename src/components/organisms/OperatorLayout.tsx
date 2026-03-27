@@ -85,7 +85,7 @@ const OperatorLayout = () => {
                     onChangeCompact={(compact) => dispatch(setSidebarCompact(compact))}
                     logo={{
                         icon: logoUrl,
-                        text: 'REGA',
+                        text: 'СРП Нова',
                         onClick: () => dispatch(toggleSidebarCompact()),
                     }}
                     hideCollapseButton={true}

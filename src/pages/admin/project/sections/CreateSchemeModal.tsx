@@ -32,6 +32,7 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
         defaultValue: '',
         boolDefault: 'none' as 'none' | 'true' | 'false',
         random: false,
+        isPhone: false, // для text — поле телефона
     })
 
     const [errors, setErrors] = useState<Record<string, string>>({})
@@ -49,6 +50,7 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
             defaultValue: '',
             boolDefault: 'none',
             random: false,
+            isPhone: false,
         })
         setErrors({})
         onClose()
@@ -81,8 +83,11 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
             optional: formData.optional,
         }
 
-        if (formData.type === 'text' && formData.maxLength) {
-            config.maxLength = Number(formData.maxLength)
+        if (formData.type === 'text') {
+            if (formData.maxLength) {
+                config.maxLength = Number(formData.maxLength)
+            }
+            config.isPhone = formData.isPhone
         }
 
         if (formData.type === 'list') {
@@ -265,6 +270,16 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
                             onUpdate={(checked) => setFormData({ ...formData, uniq: checked })}
                         >
                             Уникальное значение
+                        </Checkbox>
+                    )}
+
+                    {/* Поле телефона - только для text */}
+                    {formData.type === 'text' && (
+                        <Checkbox
+                            checked={formData.isPhone}
+                            onUpdate={(checked) => setFormData({ ...formData, isPhone: checked })}
+                        >
+                            Номер телефона
                         </Checkbox>
                     )}
 

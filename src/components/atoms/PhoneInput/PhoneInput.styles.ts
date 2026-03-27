@@ -16,7 +16,7 @@ export const PhoneInputWrapper = styled.div`
     border: 1px solid var(--g-color-line-generic) !important;
     border-left: none !important;
     padding: 9px 12px !important;
-    padding-left: 60px !important;
+    padding-left: 50px !important;
     outline: none !important;
     box-sizing: border-box !important;
   }
@@ -27,6 +27,7 @@ export const PhoneInputWrapper = styled.div`
     border: 1px solid var(--g-color-line-generic) !important;
     border-right: none !important;
     height: 36px !important;
+    padding-left: 4px !important;
   }
 
   /* === BORDER-RADIUS === */
@@ -68,7 +69,7 @@ export const PhoneInputWrapper = styled.div`
     color: var(--g-color-text-primary) !important;
     background-color: var(--g-color-base-background) !important;
     border: 1px solid var(--g-color-line-generic) !important;
-    border-radius: 6px !important;
+    border-radius: 8px !important;
     padding: 10px !important;
     margin: 8px !important;
   }
@@ -102,8 +103,8 @@ export const PhoneInputWrapper = styled.div`
 `;
 
 export const Label = styled.div`
-  font-size: 14px;
+  font-size: 12px;
   color: var(--g-color-text-secondary);
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   font-weight: 500;
 `;

@@ -122,6 +122,11 @@ const ProjectSchemeSection = () => {
                                                 Уникальное
                                             </Label>
                                         )}
+                                        {field.config.isPhone && (
+                                            <Label theme="info" size="s">
+                                                Телефон
+                                            </Label>
+                                        )}
                                         {field.scannerEditable && (
                                             <Label theme="utility" size="s">
                                                 В сканере

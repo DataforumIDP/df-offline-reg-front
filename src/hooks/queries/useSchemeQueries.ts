@@ -12,6 +12,7 @@ export interface SchemeField {
         optional: boolean // true = необязательное, false = обязательное
         maxLength?: number
         isMark?: boolean // только для bool — поле-отметка для режима выдачи сканера
+        isPhone?: boolean // только для text — поле содержит номер телефона
         listSettings?: {
             multiple: boolean
             items: Array<{ value: string; color?: string }>

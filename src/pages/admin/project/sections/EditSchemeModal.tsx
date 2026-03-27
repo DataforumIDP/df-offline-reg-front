@@ -40,6 +40,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
     const [isRestarting, setIsRestarting] = useState(false)
     const [scannerEditable, setScannerEditable] = useState(false)
     const [isMark, setIsMark] = useState(false)
+    const [isPhone, setIsPhone] = useState(false)
 
     // Функция для перезапуска генерации (отключает random, затем включает обратно)
     const handleRestartGeneration = async () => {
@@ -124,6 +125,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
         setRandom(field.config?.random || false)
         setScannerEditable(field.scannerEditable || false)
         setIsMark(field.config?.isMark || false)
+        setIsPhone(field.config?.isPhone || false)
     }, [field, open])
 
     const handleClose = () => {
@@ -141,6 +143,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
         setRandom(false)
         setScannerEditable(false)
         setIsMark(false)
+        setIsPhone(false)
         onClose()
     }
 
@@ -173,6 +176,11 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
 
         if (typeValue === 'text' && maxLength) {
             config.maxLength = Number(maxLength)
+        }
+
+        // isPhone flag for text type
+        if (typeValue === 'text') {
+            config.isPhone = isPhone
         }
 
         if (typeValue === 'list') {
@@ -359,6 +367,16 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
                             Уникальное значение
                         </Checkbox>
                     </div>
+
+                    {/* Номер телефона - только для text */}
+                    {typeValue === 'text' && (
+                        <Checkbox
+                            checked={isPhone}
+                            onUpdate={(checked) => setIsPhone(checked)}
+                        >
+                            Номер телефона
+                        </Checkbox>
+                    )}
 
                     {/* Редактируемые поля только для list */}
                     {field.config.type === 'list' && (

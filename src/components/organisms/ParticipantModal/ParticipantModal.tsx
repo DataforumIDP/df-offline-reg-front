@@ -19,7 +19,7 @@ import { previewBadgePdf, PrintTemplate } from '@/services/printService'
 import { fetchPrintParticipant } from '@/services/api/participants'
 import { UserRole } from '@/types/auth'
 import { ConfirmDeleteModal } from './ConfirmDeleteModal'
-import { SelectWithOther } from '@/components/atoms'
+import { SelectWithOther, PhoneInput } from '@/components/atoms'
 
 export interface ParticipantModalProps {
     open: boolean
@@ -436,6 +436,28 @@ export const ParticipantModal = ({
                 )
 
             default:
+                // Телефон или обычный текст
+                if (field.config.type === 'text' && field.config.isPhone) {
+                    return (
+                        <div key={field.key}>
+                            <PhoneInput
+                                label={field.label}
+                                value={value || ''}
+                                onChange={(v) => updateField(field.key, v)}
+                            />
+                            {error && (
+                                <Text
+                                    variant="caption-2"
+                                    color="danger"
+                                    style={{ marginTop: '4px', display: 'block' }}
+                                >
+                                    {error}
+                                </Text>
+                            )}
+                        </div>
+                    )
+                }
+
                 return (
                     <div key={field.key}>
                         <label

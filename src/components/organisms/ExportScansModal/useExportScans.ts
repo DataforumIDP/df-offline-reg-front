@@ -2,9 +2,8 @@ import { useState } from 'react'
 import { Dayjs } from 'dayjs'
 import { fetchExportScans, ExportScansParams } from '@/services/api/participants'
 import { saveAs } from 'file-saver'
+import { getActiveServerUrl } from '@/services/serverStorage'
 import type { ExcelRow } from './useExcelUpload'
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
 
 interface UseExportScansParams {
     projectId: number
@@ -94,7 +93,7 @@ export const useExportScans = (onClose: () => void) => {
         try {
             const token = localStorage.getItem('accessToken')
             const response = await fetch(
-                `${API_BASE_URL}/projects/${projectId}/scanners/logs/mass`,
+                `${getActiveServerUrl()}/projects/${projectId}/scanners/logs/mass`,
                 {
                     method: 'POST',
                     headers: {

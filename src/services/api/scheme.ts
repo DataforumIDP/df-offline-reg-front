@@ -9,7 +9,9 @@ export interface ProjectSchemeField {
     config: {
         type: 'text' | 'list' | 'bool' | 'id' | 'img' | 'code'
         uniq: boolean
-        optional?: boolean        isMark?: boolean        maxLength?: number
+        optional?: boolean
+        isMark?: boolean
+        maxLength?: number
         listSettings?: {
             items: { value: string; color: string }[]
             multiple?: boolean

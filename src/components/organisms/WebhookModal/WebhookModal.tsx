@@ -8,7 +8,7 @@ import {
     useUpdateWebhookMutation,
     useDeleteWebhookMutation,
 } from '@/hooks/mutations/useWebhookMutations'
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+import { getActiveServerUrl } from '@/services/serverStorage'
 
 interface WebhookModalProps {
     open: boolean
@@ -135,7 +135,7 @@ export const WebhookModal = ({ open, onClose, projectId, webhook }: WebhookModal
         if (!webhook) {
             return
         }
-        const url = `${API_BASE_URL}/webhooks/${webhook.slug}`
+        const url = `${getActiveServerUrl()}/webhooks/${webhook.slug}`
         navigator.clipboard.writeText(url)
         enqueueSnackbar('URL скопирован', { variant: 'success' })
     }
