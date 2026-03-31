@@ -16,6 +16,7 @@ const FONT_OPTIONS = [
     { value: 'Roboto', content: 'Roboto' },
     { value: 'Segoe UI', content: 'Segoe UI' },
     { value: 'Times New Roman', content: 'Times New Roman' },
+    { value: 'TikTok Sans', content: 'TikTok Sans' },
 ]
 
 const FONT_SIZE_OPTIONS = [

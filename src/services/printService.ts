@@ -327,6 +327,12 @@ const FONT_URLS: Record<string, Record<string, string>> = {
         italic: '/fonts/Times New Roman/timesnrcyrmt_inclined.ttf',
         bolditalic: '/fonts/Times New Roman/timesnrcyrmt_boldinclined.ttf',
     },
+    'TikTok Sans': {
+        normal: '/fonts/TTSans/TTSansReg.ttf',
+        bold: '/fonts/TTSans/TTSansSemiBold.ttf',
+        italic: '/fonts/Times New Roman/timesnrcyrmt_inclined.ttf',
+        bolditalic: '/fonts/Times New Roman/timesnrcyrmt_boldinclined.ttf',
+    },
 }
 
 /**
@@ -336,6 +342,7 @@ const FONT_URLS: Record<string, Record<string, string>> = {
 const FONT_FALLBACK: Record<string, string> = {
     Arial: 'Roboto',
     Helvetica: 'Roboto',
+    'TikTok Sans': 'Roboto',
     'Segoe UI': 'Segoe UI', // есть локально
     Tahoma: 'Roboto',
     Verdana: 'Roboto',

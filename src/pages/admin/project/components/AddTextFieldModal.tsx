@@ -16,6 +16,7 @@ const FONT_OPTIONS = [
     { value: 'Segoe UI', content: 'Segoe UI' },
     { value: 'Times New Roman', content: 'Times New Roman' },
     { value: 'Roboto', content: 'Roboto' },
+    { value: 'TikTok Sans', content: 'TikTok Sans' },
     // { value: 'Open Sans', content: 'Open Sans' },
     // { value: 'PT Sans', content: 'PT Sans' },
     // { value: 'Montserrat', content: 'Montserrat' },
