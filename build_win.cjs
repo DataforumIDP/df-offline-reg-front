@@ -37,7 +37,7 @@ const config = {
     },
     "nsis": {
         "oneClick": false, // чтобы пользователь мог выбрать путь установки
-        "perMachine": true, // установка для текущего пользователя (localappdata)
+        "perMachine": true, // установка в Program Files (для всех пользователей)
         "allowToChangeInstallationDirectory": false,
     },
     publish: [

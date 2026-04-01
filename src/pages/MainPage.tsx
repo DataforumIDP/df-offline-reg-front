@@ -19,7 +19,7 @@ const MainPage = () => {
         if (user.role === 'admin') {
             navigate('/admin/projects')
         } else {
-            navigate('/operator/table')
+            navigate('/operator/participants')
         }
     }, [user, isAuthenticated, navigate])
 

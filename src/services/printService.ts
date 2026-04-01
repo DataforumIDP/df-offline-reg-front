@@ -372,12 +372,25 @@ function getFontKey(
 }
 
 /**
+ * Получить корректный URL шрифта с учётом Electron file:// протокола
+ */
+function resolveFontUrl(url: string): string {
+    // В Electron production (file://) относительные пути /fonts/... не резолвятся корректно
+    if (typeof window !== 'undefined' && window.location.protocol === 'file:') {
+        // Получаем директорию текущего index.html
+        const base = window.location.href.replace(/\/[^/]*$/, '')
+        return base + url
+    }
+    return url
+}
+
+/**
  * Загрузить шрифт по URL
  */
 async function loadFontFromUrl(url: string): Promise<ArrayBuffer> {
-    console.log(`Loading font from: ${url}`)
-    const response = await fetch(url, {
-        mode: 'cors',
+    const resolvedUrl = resolveFontUrl(url)
+    console.log(`Loading font from: ${resolvedUrl}`)
+    const response = await fetch(resolvedUrl, {
         cache: 'force-cache',
     })
     if (!response.ok) {
