@@ -80,6 +80,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     close: () => ipcRenderer.send('window-close'),
     toggleFullscreen: () => ipcRenderer.send('window-toggle-fullscreen'),
 
+    // Font loading for jsPDF (renderer can't fetch file:// fonts)
+    readFontFile: (relativePath: string): Promise<string> =>
+        ipcRenderer.invoke('read-font-file', relativePath),
+
     // Updates
     checkForUpdates: (): Promise<{ checking: boolean; info?: any; error?: string }> =>
         ipcRenderer.invoke('check-for-updates'),

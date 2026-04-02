@@ -298,6 +298,26 @@ export function clearFontCache(): void {
 }
 
 /**
+ * Проверить доступность всех шрифтов (для диагностики)
+ */
+export async function checkFontsAvailability(): Promise<
+    { font: string; variant: string; url: string; ok: boolean; error?: string }[]
+> {
+    const results: { font: string; variant: string; url: string; ok: boolean; error?: string }[] = []
+    for (const [fontName, variants] of Object.entries(FONT_URLS)) {
+        for (const [variant, url] of Object.entries(variants)) {
+            try {
+                const buf = await loadFontFromUrl(url)
+                results.push({ font: fontName, variant, url, ok: buf.byteLength > 1000 })
+            } catch (e: any) {
+                results.push({ font: fontName, variant, url, ok: false, error: e.message })
+            }
+        }
+    }
+    return results
+}
+
+/**
  * URL-адреса шрифтов для загрузки
  *
  * ВАЖНО: Стандартные шрифты jsPDF (Helvetica, Times, Courier) НЕ поддерживают кириллицу!
@@ -372,25 +392,34 @@ function getFontKey(
 }
 
 /**
- * Получить корректный URL шрифта с учётом Electron file:// протокола
- */
-function resolveFontUrl(url: string): string {
-    // В Electron production (file://) относительные пути /fonts/... не резолвятся корректно
-    if (typeof window !== 'undefined' && window.location.protocol === 'file:') {
-        // Получаем директорию текущего index.html
-        const base = window.location.href.replace(/\/[^/]*$/, '')
-        return base + url
-    }
-    return url
-}
-
-/**
  * Загрузить шрифт по URL
+ * В Electron: читаем файл через IPC (fetch не работает с file://)
+ * В Web: обычный fetch
  */
 async function loadFontFromUrl(url: string): Promise<ArrayBuffer> {
-    const resolvedUrl = resolveFontUrl(url)
-    console.log(`Loading font from: ${resolvedUrl}`)
-    const response = await fetch(resolvedUrl, {
+    // Electron: загрузка через IPC из файловой системы
+    if (typeof window !== 'undefined' && (window as any).electronAPI?.readFontFile) {
+        try {
+            // url вида '/fonts/Roboto/Roboto-Regular.ttf' -> 'fonts/Roboto/Roboto-Regular.ttf'
+            const relativePath = url.startsWith('/') ? url.slice(1) : url
+            console.log(`Loading font via IPC: ${relativePath}`)
+            const base64 = await (window as any).electronAPI.readFontFile(relativePath)
+            const binary = atob(base64)
+            const bytes = new Uint8Array(binary.length)
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i)
+            }
+            console.log(`Font loaded via IPC, size: ${bytes.byteLength} bytes`)
+            return bytes.buffer
+        } catch (error) {
+            console.error(`Failed to load font via IPC: ${url}`, error)
+            throw error
+        }
+    }
+
+    // Web: обычный fetch
+    console.log(`Loading font from: ${url}`)
+    const response = await fetch(url, {
         cache: 'force-cache',
     })
     if (!response.ok) {

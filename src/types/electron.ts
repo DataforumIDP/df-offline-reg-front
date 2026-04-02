@@ -47,6 +47,9 @@ export interface ElectronAPI {
     }) => Promise<PrintResult>
     checkGhostscript: () => Promise<GhostscriptInfo>
 
+    // Font loading (for jsPDF in renderer)
+    readFontFile: (relativePath: string) => Promise<string>
+
     // App info
     getAppInfo: () => Promise<AppInfo>
 

@@ -65,4 +65,20 @@ export function setupIPC(store: SimpleStore, printServer: PrintServer, mainWindo
             name: app.getName(),
         }
     })
+
+    // Read font file from app resources (for jsPDF in renderer)
+    ipcMain.handle('read-font-file', async (_event: IpcMainInvokeEvent, relativePath: string) => {
+        // Sanitize path to prevent directory traversal
+        const normalized = path.normalize(relativePath).replace(/\\/g, '/')
+        if (normalized.includes('..') || path.isAbsolute(relativePath)) {
+            throw new Error('Invalid font path')
+        }
+        // Fonts are in dist/ (copied from public/ by Vite)
+        const fontPath = path.join(app.getAppPath(), 'dist', normalized)
+        if (!fs.existsSync(fontPath)) {
+            throw new Error(`Font not found: ${normalized}`)
+        }
+        const buffer = fs.readFileSync(fontPath)
+        return buffer.toString('base64')
+    })
 }

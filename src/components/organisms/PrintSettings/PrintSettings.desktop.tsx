@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Text, TextInput, Button, RadioGroup, Alert, Select } from '@gravity-ui/uikit'
+import { Text, TextInput, Button, RadioGroup, Alert, Select, Loader } from '@gravity-ui/uikit'
 import { Printer, CircleCheck, CircleXmark } from '@gravity-ui/icons'
 import { useElectronPrint } from '@/hooks/useElectron'
+import { checkFontsAvailability } from '@/services/printService'
 import styles from './PrintSettings.module.css'
+
+type FontCheckResult = { font: string; variant: string; url: string; ok: boolean; error?: string }
 
 export const PrintSettings = () => {
     const electron = useElectronPrint()
@@ -12,6 +15,8 @@ export const PrintSettings = () => {
     const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('landscape')
     const [saved, setSaved] = useState(false)
     const [saving, setSaving] = useState(false)
+    const [fontResults, setFontResults] = useState<FontCheckResult[] | null>(null)
+    const [fontsLoading, setFontsLoading] = useState(false)
 
     useEffect(() => {
         if (electron.settings) {
@@ -138,6 +143,52 @@ export const PrintSettings = () => {
             </Button>
 
             {saved && <Alert theme="success" message="Настройки печати сохранены" />}
+
+            {/* Font diagnostics */}
+            <div className={styles.section}>
+                <Text variant="subheader-2" className={styles.sectionTitle}>
+                    Шрифты для печати
+                </Text>
+                <Button
+                    view="outlined"
+                    size="m"
+                    onClick={async () => {
+                        setFontsLoading(true)
+                        try {
+                            const results = await checkFontsAvailability()
+                            setFontResults(results)
+                        } catch (e) {
+                            console.error('Font check failed:', e)
+                        } finally {
+                            setFontsLoading(false)
+                        }
+                    }}
+                    loading={fontsLoading}
+                >
+                    Проверить шрифты
+                </Button>
+                {fontResults && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        {fontResults.map((r, i) => (
+                            <div key={i} className={styles.statusBar} style={{ padding: '6px 12px' }}>
+                                {r.ok ? (
+                                    <CircleCheck className={styles.statusIconOk} style={{ width: 16, height: 16 }} />
+                                ) : (
+                                    <CircleXmark className={styles.statusIconError} style={{ width: 16, height: 16 }} />
+                                )}
+                                <Text variant="body-1">
+                                    {r.font} ({r.variant})
+                                </Text>
+                                {!r.ok && r.error && (
+                                    <Text variant="caption-2" color="danger" style={{ marginLeft: 'auto' }}>
+                                        {r.error}
+                                    </Text>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
     )
 }
