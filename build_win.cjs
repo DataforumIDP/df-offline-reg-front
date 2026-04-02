@@ -36,9 +36,11 @@ const config = {
         "icon": "build/icon.ico"
     },
     "nsis": {
-        "oneClick": false, // чтобы пользователь мог выбрать путь установки
-        "perMachine": true, // установка в Program Files (для всех пользователей)
-        "allowToChangeInstallationDirectory": false,
+        "oneClick": true,
+        "perMachine": true,
+        "allowElevation": true,
+        // Путь установки совпадает с Inno Setup чтобы OTA обновляло те же файлы
+        "include": "installer-files/custom-nsis.nsh",
     },
     publish: [
         {
