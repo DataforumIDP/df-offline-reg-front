@@ -33,9 +33,20 @@ const CanvasTextField = ({ element, screenPxPerMm, zoom, canvasWidthMm }: Canvas
     const scale = (zoom / 100) * screenPxPerMm
 
     // Получаем лейбл поля из схемы
-    const fieldLabel = element.fieldKey
-        ? scheme?.fields.find((f) => f.key === element.fieldKey)?.label || element.fieldKey
-        : 'Без привязки'
+    const getFieldLabel = () => {
+        if (!element.fieldKey) return 'Без привязки'
+        
+        const baseLabel = scheme?.fields.find((f) => f.key === element.fieldKey)?.label || element.fieldKey
+        
+        // Если указан сепаратор - показываем с индексом
+        if (element.separator !== undefined && element.separatorIndex !== undefined) {
+            const indexSuffix = element.separatorExtra ? '+' : ''
+            return `${baseLabel}[${element.separatorIndex}${indexSuffix}]`
+        }
+        
+        return baseLabel
+    }
+    const fieldLabel = getFieldLabel()
 
     // Вычисляем размеры в пикселях экрана
     const width = element.fullWidth ? canvasWidthMm * scale : element.width * scale

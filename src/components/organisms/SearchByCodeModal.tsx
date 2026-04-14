@@ -1,7 +1,35 @@
 import { Dialog, TextInput } from '@gravity-ui/uikit'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useSnackbar } from 'notistack'
 import { fetchParticipantByCode } from '@/services/api/participants'
+
+// Карта замены кириллических символов на латинские (раскладка ЙЦУКЕН -> QWERTY)
+// Для USB сканеров, которые отправляют коды в неправильной раскладке
+const CYRILLIC_TO_LATIN: Record<string, string> = {
+    'й': 'q', 'ц': 'w', 'у': 'e', 'к': 'r', 'е': 't', 'н': 'y', 'г': 'u',
+    'ш': 'i', 'щ': 'o', 'з': 'p', 'х': '[', 'ъ': ']', 'ф': 'a', 'ы': 's',
+    'в': 'd', 'а': 'f', 'п': 'g', 'р': 'h', 'о': 'j', 'л': 'k', 'д': 'l',
+    'ж': ';', 'э': "'", 'я': 'z', 'ч': 'x', 'с': 'c', 'м': 'v', 'и': 'b',
+    'т': 'n', 'ь': 'm', 'б': ',', 'ю': '.',
+}
+
+/**
+ * Конвертирует кириллические символы в латинские (для сканеров с неправильной раскладкой)
+ */
+function convertCyrillicToLatin(input: string): string {
+    return input
+        .split('')
+        .map(char => {
+            const lower = char.toLowerCase()
+            const replacement = CYRILLIC_TO_LATIN[lower]
+            if (replacement !== undefined) {
+                // Сохраняем регистр
+                return char === lower ? replacement : replacement.toUpperCase()
+            }
+            return char
+        })
+        .join('')
+}
 
 interface SearchByCodeModalProps {
     open: boolean
@@ -19,6 +47,18 @@ const SearchByCodeModal = ({
     const { enqueueSnackbar } = useSnackbar()
     const [code, setCode] = useState('')
     const [isSearching, setIsSearching] = useState(false)
+    const inputRef = useRef<HTMLInputElement>(null)
+
+    // Фокус на поле при открытии модалки
+    useEffect(() => {
+        if (open) {
+            // Небольшая задержка для корректной работы с анимацией модалки
+            const timer = setTimeout(() => {
+                inputRef.current?.focus()
+            }, 100)
+            return () => clearTimeout(timer)
+        }
+    }, [open])
 
     const handleClose = useCallback(() => {
         setCode('')
@@ -31,9 +71,12 @@ const SearchByCodeModal = ({
             return
         }
 
+        // Конвертируем кириллицу в латиницу (для сканеров с неправильной раскладкой)
+        const normalizedCode = convertCyrillicToLatin(code.trim())
+
         setIsSearching(true)
         try {
-            const participant = await fetchParticipantByCode(Number(projectId), code.trim())
+            const participant = await fetchParticipantByCode(Number(projectId), normalizedCode)
             handleClose()
             onParticipantFound(participant.id)
         } catch (error: any) {
@@ -85,7 +128,7 @@ const SearchByCodeModal = ({
                             onKeyDown={handleKeyDown}
                             placeholder="Код..."
                             size="l"
-                            autoFocus
+                            controlRef={inputRef}
                         />
                     </div>
                 </div>

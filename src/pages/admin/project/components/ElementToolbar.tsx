@@ -116,6 +116,28 @@ const ElementToolbar = () => {
         }
     }
 
+    const handleSeparatorToggle = (checked: boolean) => {
+        const updates: Partial<TextFieldElement> = checked
+            ? { separator: ' ', separatorIndex: 0, separatorExtra: false }
+            : { separator: undefined, separatorIndex: undefined, separatorExtra: false }
+        dispatch(updateElement({ id: selectedElement.id, updates }))
+    }
+
+    const handleSeparatorChange = (value: string) => {
+        dispatch(updateElement({ id: selectedElement.id, updates: { separator: value } }))
+    }
+
+    const handleSeparatorIndexChange = (value: string) => {
+        const num = parseInt(value, 10)
+        if (!isNaN(num) && num >= 0) {
+            dispatch(updateElement({ id: selectedElement.id, updates: { separatorIndex: num } }))
+        }
+    }
+
+    const handleSeparatorExtraChange = (checked: boolean) => {
+        dispatch(updateElement({ id: selectedElement.id, updates: { separatorExtra: checked } }))
+    }
+
     const handleDelete = () => {
         dispatch(removeElement(selectedElement.id))
     }
@@ -311,6 +333,43 @@ const ElementToolbar = () => {
                         size="s"
                         className={styles.maxLinesInput}
                     />
+                )}
+            </div>
+
+            <div className={styles.divider} />
+
+            <div className={styles.group}>
+                <Checkbox
+                    checked={!!selectedElement.separator}
+                    onUpdate={handleSeparatorToggle}
+                    size="m"
+                >
+                    Сепаратор
+                </Checkbox>
+                {selectedElement.separator !== undefined && (
+                    <>
+                        <TextInput
+                            value={selectedElement.separator}
+                            onUpdate={handleSeparatorChange}
+                            size="s"
+                            placeholder="пробел"
+                            className={styles.separatorInput}
+                        />
+                        <TextInput
+                            value={String(selectedElement.separatorIndex ?? 0)}
+                            onUpdate={handleSeparatorIndexChange}
+                            type="number"
+                            size="s"
+                            className={styles.separatorIndexInput}
+                        />
+                        <Checkbox
+                            checked={selectedElement.separatorExtra || false}
+                            onUpdate={handleSeparatorExtraChange}
+                            size="m"
+                        >
+                            +
+                        </Checkbox>
+                    </>
                 )}
             </div>
 

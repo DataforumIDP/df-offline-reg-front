@@ -32,11 +32,21 @@ const ElementsList = () => {
             })),
     ]
 
-    const getFieldLabel = (fieldKey: string | undefined) => {
+    const getFieldLabel = (element: TextFieldElement) => {
+        const fieldKey = element.fieldKey
         if (!fieldKey) {
             return 'Без привязки'
         }
-        return scheme?.fields.find((f) => f.key === fieldKey)?.label || fieldKey
+        
+        const baseLabel = scheme?.fields.find((f) => f.key === fieldKey)?.label || fieldKey
+        
+        // Если указан сепаратор - показываем с индексом
+        if (element.separator !== undefined && element.separatorIndex !== undefined) {
+            const indexSuffix = element.separatorExtra ? '+' : ''
+            return `${baseLabel}[${element.separatorIndex}${indexSuffix}]`
+        }
+        
+        return baseLabel
     }
 
     const handleSelect = (id: string) => {
@@ -110,7 +120,7 @@ const ElementsList = () => {
                                     />
                                 </div>
                             ) : (
-                                <Text variant="body-2">{getFieldLabel(element.fieldKey)}</Text>
+                                <Text variant="body-2">{getFieldLabel(element)}</Text>
                             )}
                         </div>
 

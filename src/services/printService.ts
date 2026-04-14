@@ -609,6 +609,25 @@ async function renderTextElement(
         return
     }
 
+    // Применяем разбиение по сепаратору если указан
+    if (element.separator !== undefined && element.separatorIndex !== undefined) {
+        const parts = text.split(element.separator).map(part => part.trim()).filter(part => part.length > 0)
+        const index = element.separatorIndex
+        
+        if (element.separatorExtra) {
+            // Захватываем все части начиная с индекса
+            text = parts.slice(index).join(element.separator).trim()
+        } else {
+            // Берём только одну часть по индексу
+            text = parts[index]?.trim() ?? ''
+        }
+        
+        // Если часть не найдена - возвращаем пустоту
+        if (!text) {
+            return
+        }
+    }
+
     // Применяем верхний регистр если включён
     if (element.uppercase) {
         text = text.toUpperCase()

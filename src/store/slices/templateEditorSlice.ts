@@ -32,6 +32,12 @@ export interface TextFieldElement {
     maxLines?: number
     // Верхний регистр - все буквы в CAPS
     uppercase?: boolean
+    // Сепаратор для разбиения значения поля на части (например, пробел для ФИО)
+    separator?: string
+    // Индекс части после разбиения (0, 1, 2...)
+    separatorIndex?: number
+    // Захватить все части начиная с separatorIndex (для сложных отчеств: "Мушравов Оглы")
+    separatorExtra?: boolean
 }
 
 export type ResourceType = 'field' | 'fixed'
@@ -124,6 +130,9 @@ const defaultTextFieldProps: Omit<TextFieldElement, 'id'> = {
     multiline: false,
     maxLines: 1,
     uppercase: false,
+    separator: undefined,
+    separatorIndex: undefined,
+    separatorExtra: false,
 }
 
 const defaultQrProps: Omit<QrElement, 'id'> = {

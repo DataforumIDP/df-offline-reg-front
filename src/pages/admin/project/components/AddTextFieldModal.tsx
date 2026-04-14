@@ -64,6 +64,11 @@ const AddTextFieldModal = ({ open, onClose }: AddTextFieldModalProps) => {
     const [width, setWidth] = useState('40')
     const [multiline, setMultiline] = useState(false)
     const [maxLines, setMaxLines] = useState(1)
+    // Сепаратор для разбиения поля (например, ФИО по пробелу)
+    const [useSeparator, setUseSeparator] = useState(false)
+    const [separator, setSeparator] = useState(' ')
+    const [separatorIndex, setSeparatorIndex] = useState(0)
+    const [separatorExtra, setSeparatorExtra] = useState(false)
 
     // Сброс формы при открытии
     const handleOpenChange = (isOpen: boolean) => {
@@ -83,6 +88,10 @@ const AddTextFieldModal = ({ open, onClose }: AddTextFieldModalProps) => {
             setWidth('40')
             setMultiline(false)
             setMaxLines(1)
+            setUseSeparator(false)
+            setSeparator(' ')
+            setSeparatorIndex(0)
+            setSeparatorExtra(false)
         }
     }
 
@@ -101,6 +110,9 @@ const AddTextFieldModal = ({ open, onClose }: AddTextFieldModalProps) => {
                 width: parseFloat(width),
                 multiline,
                 maxLines: multiline ? maxLines : undefined,
+                separator: useSeparator ? separator : undefined,
+                separatorIndex: useSeparator ? separatorIndex : undefined,
+                separatorExtra: useSeparator ? separatorExtra : false,
             }),
         )
         onClose()
@@ -245,6 +257,51 @@ const AddTextFieldModal = ({ open, onClose }: AddTextFieldModalProps) => {
                             </div>
                         )}
                     </div>
+
+                    {/* Разбиение по сепаратору */}
+                    <div className={styles.row}>
+                        <div className={styles.field}>
+                            <Checkbox
+                                checked={useSeparator}
+                                onUpdate={setUseSeparator}
+                            >
+                                Разбить по сепаратору
+                            </Checkbox>
+                        </div>
+                    </div>
+                    {useSeparator && (
+                        <div className={styles.row}>
+                            <div className={styles.field}>
+                                <Text variant="body-2">Сепаратор</Text>
+                                <TextInput
+                                    value={separator}
+                                    onUpdate={setSeparator}
+                                    placeholder="пробел"
+                                />
+                            </div>
+                            <div className={styles.field}>
+                                <Text variant="body-2">Индекс части</Text>
+                                <TextInput
+                                    value={String(separatorIndex)}
+                                    onUpdate={(value) => {
+                                        const num = parseInt(value, 10)
+                                        if (!isNaN(num) && num >= 0) {
+                                            setSeparatorIndex(num)
+                                        }
+                                    }}
+                                    type="number"
+                                />
+                            </div>
+                            <div className={styles.field}>
+                                <Checkbox
+                                    checked={separatorExtra}
+                                    onUpdate={setSeparatorExtra}
+                                >
+                                    + остаток
+                                </Checkbox>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </Dialog.Body>
             <Dialog.Footer
