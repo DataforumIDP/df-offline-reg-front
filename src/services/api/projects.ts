@@ -24,6 +24,7 @@ export interface Project {
     dateEnd: string
     isOperatorEditable?: boolean
     colorRow?: boolean
+    journalEnabled?: boolean
     rulesField?: string | null
     scanMode?: ScanMode
     stats?: ProjectStats

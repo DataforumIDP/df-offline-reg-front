@@ -19,6 +19,7 @@ import ProjectParticipantsPage from '@pages/admin/project/ParticipantsPage'
 import ProjectTemplatesPage from '@pages/admin/project/TemplatesPage'
 import ProjectHooksPage from '@pages/admin/project/HooksPage'
 import ProjectZonesPage from '@pages/admin/project/ZonesPage'
+import ProjectJournalPage from '@pages/admin/project/JournalPage'
 import AccountSettingsPage from '@pages/admin/AccountSettingsPage'
 
 // Страницы оператора
@@ -62,6 +63,7 @@ const AppRouter = () => {
                     />
                     <Route path="/admin/projects/:id/hooks" element={<ProjectHooksPage />} />
                     <Route path="/admin/projects/:id/zones" element={<ProjectZonesPage />} />
+                    <Route path="/admin/projects/:id/journal" element={<ProjectJournalPage />} />
                 </Route>
 
                 {/* Вход оператора */}
