@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Text, TextInput, Button, RadioGroup, Alert, Select, Loader } from '@gravity-ui/uikit'
+import { Text, TextInput, Button, RadioGroup, Alert, Select } from '@gravity-ui/uikit'
 import { Printer, CircleCheck, CircleXmark } from '@gravity-ui/icons'
 import { useElectronPrint } from '@/hooks/useElectron'
 import { checkFontsAvailability } from '@/services/printService'

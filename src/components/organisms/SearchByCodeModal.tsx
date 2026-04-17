@@ -51,13 +51,12 @@ const SearchByCodeModal = ({
 
     // Фокус на поле при открытии модалки
     useEffect(() => {
-        if (open) {
-            // Небольшая задержка для корректной работы с анимацией модалки
-            const timer = setTimeout(() => {
-                inputRef.current?.focus()
-            }, 100)
-            return () => clearTimeout(timer)
-        }
+        if (!open) return
+        // Небольшая задержка для корректной работы с анимацией модалки
+        const timer = setTimeout(() => {
+            inputRef.current?.focus()
+        }, 100)
+        return () => clearTimeout(timer)
     }, [open])
 
     const handleClose = useCallback(() => {

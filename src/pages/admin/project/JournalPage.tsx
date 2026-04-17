@@ -24,7 +24,7 @@ import { useZonesQuery } from '@/hooks/queries/useZoneQueries'
 import type { JournalRecord } from '@/services/api/journal'
 import styles from './JournalPage.module.css'
 
-const SortableTable = withTableSorting(Table)
+const SortableTable = withTableSorting<JournalRecord>(Table)
 
 const JournalPage = () => {
     const { id: projectId } = useParams<{ id: string }>()
@@ -65,7 +65,6 @@ const JournalPage = () => {
     const returnMutation = useReturnJournalRecordMutation(Number(projectId))
 
     const records = recordsData?.records || []
-    const totalPages = recordsData?.totalPages || 1
     const totalRecords = recordsData?.totalRecords || 0
 
     // Опции для селекта статуса
