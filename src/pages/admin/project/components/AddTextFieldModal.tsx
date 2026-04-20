@@ -13,6 +13,8 @@ interface AddTextFieldModalProps {
 
 const FONT_OPTIONS = [
     // { value: 'Arial', content: 'Arial' },
+    { value: 'Inter', content: 'Inter' },
+    { value: 'InterGF', content: 'InterGF' },
     { value: 'Segoe UI', content: 'Segoe UI' },
     { value: 'Times New Roman', content: 'Times New Roman' },
     { value: 'Roboto', content: 'Roboto' },

@@ -13,6 +13,8 @@ import {
 import styles from './ElementToolbar.module.css'
 
 const FONT_OPTIONS = [
+    { value: 'Inter', content: 'Inter' },
+    { value: 'InterGF', content: 'InterGF' },
     { value: 'Roboto', content: 'Roboto' },
     { value: 'Segoe UI', content: 'Segoe UI' },
     { value: 'Times New Roman', content: 'Times New Roman' },
