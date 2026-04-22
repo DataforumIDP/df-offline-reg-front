@@ -1,6 +1,6 @@
 {
   "name": "registration.front",
-  "version": "1.0.13-r",
+  "version": "1.0.14-r",
   "type": "module",
   "author": {
     "name": "Dataforum",
@@ -19,6 +19,7 @@
     "build:all": "yarn build:renderer && yarn build:electron",
     "dist": "yarn build:all && electron-builder",
     "dist:win": "npx cross-env UPDATE_SERVER_URL=https://e8c490b0-8f86-49e6-b849-57f0230dd8a5.selstorage.ru/windows/ yarn build:all && electron-builder --win --config ./build_win.cjs",
+    "dist:linux": "powershell -ExecutionPolicy Bypass -File ./dist-linux.ps1",
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",

@@ -326,13 +326,6 @@ export async function checkFontsAvailability(): Promise<
  * Используем локальные шрифты из public/fonts
  */
 const FONT_URLS: Record<string, Record<string, string>> = {
-    // Inter - современный шрифт с поддержкой кириллицы
-    Inter: {
-        normal: '/fonts/Inter/Inter-Regular.otf',
-        bold: '/fonts/Inter/Inter-Bold.otf',
-        italic: '/fonts/Inter/Inter-Italic.otf',
-        bolditalic: '/fonts/Inter/Inter-BoldItalic.otf',
-    },
     // Roboto - основной шрифт с полной поддержкой кириллицы
     Roboto: {
         normal: '/fonts/Roboto/Roboto-Regular.ttf',
@@ -367,6 +360,12 @@ const FONT_URLS: Record<string, Record<string, string>> = {
         italic: '/fonts/InterGF/Inter_18pt-Italic.ttf',
         bolditalic: '/fonts/InterGF/Inter_18pt-BoldItalic.ttf',
     },
+    Montserrat: {
+        normal: '/fonts/Montserrat/Montserrat-Regular.ttf',
+        bold: '/fonts/Montserrat/Montserrat-Bold.ttf',
+        italic: '/fonts/Montserrat/Montserrat-Italic.ttf',
+        bolditalic: '/fonts/Montserrat/Montserrat-BoldItalic.ttf',
+    },
 }
 
 /**
@@ -386,8 +385,8 @@ const FONT_FALLBACK: Record<string, string> = {
     'Courier New': 'Roboto',
     'Open Sans': 'Roboto',
     'PT Serif': 'Times New Roman',
-    Inter: 'Inter',
     InterGF: 'InterGF',
+    Montserrat: 'Montserrat',
 }
 
 // ========== Вспомогательные функции ==========
