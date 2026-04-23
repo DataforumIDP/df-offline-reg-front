@@ -59,10 +59,13 @@ export interface ElectronAPI {
     toggleFullscreen: () => void
 
     // Updates
-    checkForUpdates: () => Promise<{ checking: boolean; info?: any; error?: string }>
+    checkForUpdates: () => Promise<{ checking: boolean; error?: string }>
+    installUpdate: () => Promise<void>
     onUpdateStatus: (callback: (status: UpdateStatus) => void) => () => void
     setUpdateServer: (url: string) => Promise<boolean>
     getUpdateServer: () => Promise<string>
+    getUpdateChannel: () => Promise<string>
+    setUpdateChannel: (channel: string) => Promise<boolean>
 }
 
 declare global {

@@ -1,0 +1,80 @@
+.body {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.versions {
+    display: flex;
+    gap: 24px;
+    padding: 8px 0;
+}
+
+.versionItem {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.divider {
+    height: 1px;
+    background: var(--g-color-line-generic);
+    margin: 12px 0;
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 36px;
+}
+
+.statusRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.progressBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.progress {
+    width: 100%;
+}
+
+.footer {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+/* Icons */
+
+.iconOk {
+    color: var(--g-color-text-positive);
+    flex-shrink: 0;
+}
+
+.iconInfo {
+    color: var(--g-color-text-info);
+    flex-shrink: 0;
+}
+
+.iconError {
+    color: var(--g-color-text-danger);
+    flex-shrink: 0;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.iconSpin {
+    color: var(--g-color-text-secondary);
+    flex-shrink: 0;
+    animation: spin 1s linear infinite;
+}

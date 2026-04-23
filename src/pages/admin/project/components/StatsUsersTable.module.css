@@ -1,0 +1,22 @@
+.card {
+    padding: 20px;
+}
+
+.title {
+    margin-bottom: 16px;
+    display: block;
+}
+
+.table {
+    width: 100%;
+    font-size: 15px;
+}
+
+.table table {
+    width: 100%;
+}
+
+.table td,
+.table th {
+    font-size: 15px;
+}

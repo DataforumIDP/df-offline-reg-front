@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Button, Text, Card, TextInput, Icon, Popup } from '@gravity-ui/uikit'
-import { TrashBin, ChevronDown } from '@gravity-ui/icons'
+import { TrashBin, ChevronDown, ArrowLeft } from '@gravity-ui/icons'
+import { useNavigate } from 'react-router-dom'
 import { FormField } from '@/components/atoms/FormField'
 import { FormInput } from '@/components/molecules'
 import { ServerSelector } from '@/components/molecules/ServerSelector'
@@ -38,6 +39,7 @@ const removeFromHistory = (slug: string) => {
 }
 
 const OperatorLoginPage = () => {
+    const navigate = useNavigate()
     const registerMutation = useRegisterOperatorMutation()
     const [project, setProject] = useState('')
     const [name, setName] = useState('')
@@ -97,7 +99,19 @@ const OperatorLoginPage = () => {
             >
                 <form onSubmit={handleSubmit}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                        <div style={{ textAlign: 'center' }}>
+                        <Button
+                            view="flat"
+                            size="s"
+                            onClick={() => navigate('/')}
+                            style={{ alignSelf: 'flex-start', marginBottom: '-8px' }}
+                        >
+                            <Button.Icon>
+                                <ArrowLeft />
+                            </Button.Icon>
+                            Назад
+                        </Button>
+
+                <div style={{ textAlign: 'center' }}>
                             <Text variant="display-1">СРП Нова</Text>
                             <Text
                                 variant="body-2"

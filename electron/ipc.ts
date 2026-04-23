@@ -5,6 +5,8 @@ import * as fs from 'fs'
 import { SimpleStore } from './store.js'
 import { printPdfGhostscript } from './printJob.js'
 import { PrintServer } from './printServer.js'
+import updaterPkg from 'electron-updater'
+const { autoUpdater } = (updaterPkg as any) || updaterPkg
 
 import { app } from 'electron'
 export function setupIPC(store: SimpleStore, printServer: PrintServer, mainWindow: Electron.BrowserWindow) {
@@ -64,6 +66,43 @@ export function setupIPC(store: SimpleStore, printServer: PrintServer, mainWindo
             version: app.getVersion(),
             name: app.getName(),
         }
+    })
+
+    // ── Обновления ────────────────────────────────────────────────────────────
+
+    ipcMain.handle('check-for-updates', async () => {
+        try {
+            await autoUpdater.checkForUpdates()
+            return { checking: true }
+        } catch (e: any) {
+            return { checking: false, error: e.message }
+        }
+    })
+
+    ipcMain.handle('install-update', () => {
+        autoUpdater.quitAndInstall(false, true)
+    })
+
+    ipcMain.handle('get-update-channel', () => {
+        return store.get('updateChannel') || 'r'
+    })
+
+    ipcMain.handle('set-update-channel', (_event: IpcMainInvokeEvent, channel: string) => {
+        const allowed = ['r', 'a']
+        if (!allowed.includes(channel)) return false
+        store.set('updateChannel', channel)
+        autoUpdater.channel = channel
+        return true
+    })
+
+    ipcMain.handle('get-update-server', () => {
+        return store.get('updateServer') || ''
+    })
+
+    ipcMain.handle('set-update-server', (_event: IpcMainInvokeEvent, url: string) => {
+        store.set('updateServer', url)
+        autoUpdater.setFeedURL({ provider: 'generic', url })
+        return true
     })
 
     // Read font file from app resources (for jsPDF in renderer)

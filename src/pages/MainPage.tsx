@@ -1,11 +1,17 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Button, Text } from '@gravity-ui/uikit'
 import { useNavigate } from 'react-router-dom'
 import { useAppSelector } from '@/hooks'
+import { isElectron } from '@/hooks/useElectron'
+import UpdateModal from '@/components/organisms/UpdateModal'
 
 const MainPage = () => {
     const navigate = useNavigate()
     const { user, isAuthenticated } = useAppSelector((state) => state.auth)
+    const [updateOpen, setUpdateOpen] = useState(false)
+
+    const appVersion =
+        typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev'
 
     // Если пользователь авторизирован, перенаправляем его
     useEffect(() => {
@@ -61,9 +67,22 @@ const MainPage = () => {
             >
                 Войти как оператор
             </Button>
-            <Text variant="body-2" color="secondary">
-                V {typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev'}
-            </Text>
+            {isElectron() ? (
+                <Button view="flat" size="xs" onClick={() => setUpdateOpen(true)}>
+                    <Text variant="body-2" color="secondary">
+                        V {appVersion}
+                    </Text>
+                </Button>
+            ) : (
+                <Text variant="body-2" color="secondary">
+                    V {appVersion}
+                </Text>
+            )}
+            <UpdateModal
+                open={updateOpen}
+                onClose={() => setUpdateOpen(false)}
+                currentVersion={appVersion}
+            />
         </div>
     )
 }

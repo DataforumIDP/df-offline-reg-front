@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Dialog, Select, Text, TextInput, Checkbox, RadioGroup } from '@gravity-ui/uikit'
 import { useParams } from 'react-router-dom'
 import { useSchemeQuery, SchemeField } from '@/hooks/queries/useSchemeQueries'
 import { useAppDispatch } from '@/store/hooks'
 import { addTextField, TextAlign, FontWeight, FontStyle } from '@/store/slices/templateEditorSlice'
+import { useCloudFontsQuery } from '@/hooks/queries/useCloudFontsQueries'
 import styles from './AddTextFieldModal.module.css'
 
 interface AddTextFieldModalProps {
@@ -11,7 +12,7 @@ interface AddTextFieldModalProps {
     onClose: () => void
 }
 
-const FONT_OPTIONS = [
+const STATIC_FONT_OPTIONS = [
     // { value: 'Arial', content: 'Arial' },
     { value: 'InterGF', content: 'InterGF' },
     { value: 'Segoe UI', content: 'Segoe UI' },
@@ -51,6 +52,15 @@ const AddTextFieldModal = ({ open, onClose }: AddTextFieldModalProps) => {
     const { id: projectId } = useParams()
     const dispatch = useAppDispatch()
     const { data: scheme } = useSchemeQuery(projectId || '')
+    const { data: cloudFontsData } = useCloudFontsQuery()
+
+    const FONT_OPTIONS = useMemo(() => {
+        const cloud = (cloudFontsData?.fonts || []).map((f) => ({
+            value: f.name,
+            content: `☁ ${f.name}`,
+        }))
+        return [...STATIC_FONT_OPTIONS, ...cloud]
+    }, [cloudFontsData])
 
     // Состояние формы
     const [selectedFieldKey, setSelectedFieldKey] = useState<string | undefined>(undefined)

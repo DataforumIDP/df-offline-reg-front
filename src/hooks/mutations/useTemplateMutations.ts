@@ -49,6 +49,9 @@ export const useUpdatePrintTemplateMutation = () => {
             queryClient.invalidateQueries({
                 queryKey: ['print-template', data.id],
             })
+            queryClient.invalidateQueries({
+                queryKey: ['project-print-template'],
+            })
         },
         onError: (error) => {
             const message = getErrorMessage(error)

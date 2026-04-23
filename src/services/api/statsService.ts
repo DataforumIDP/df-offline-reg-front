@@ -12,6 +12,7 @@ export interface LogRecord {
         login: string
         name: string | null
     }
+    currentData: Record<string, unknown>
     participant?: {
         id: number
         data: Record<string, unknown>

@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { Button, Text, Card } from '@gravity-ui/uikit'
+import { ArrowLeft } from '@gravity-ui/icons'
+import { useNavigate } from 'react-router-dom'
 import { FormInput } from '@/components/molecules'
 import { QrLogin } from '@/components/molecules/QrLogin'
 import { ServerSelector } from '@/components/molecules/ServerSelector'
 import { useLoginAdminMutation } from '@/hooks/mutations/useAuthMutations'
 
 const LoginPage = () => {
+    const navigate = useNavigate()
     const loginMutation = useLoginAdminMutation()
     const [login, setLogin] = useState('')
     const [password, setPassword] = useState('')
@@ -44,7 +47,19 @@ const LoginPage = () => {
             >
                 <form onSubmit={handleSubmit}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                        <div style={{ textAlign: 'center' }}>
+                        <Button
+                            view="flat"
+                            size="s"
+                            onClick={() => navigate('/')}
+                            style={{ alignSelf: 'flex-start', marginBottom: '-8px' }}
+                        >
+                            <Button.Icon>
+                                <ArrowLeft />
+                            </Button.Icon>
+                            Назад
+                        </Button>
+
+                <div style={{ textAlign: 'center' }}>
                             <Text variant="display-1">СРП Нова</Text>
                             <Text
                                 variant="body-2"

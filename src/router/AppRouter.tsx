@@ -21,6 +21,7 @@ import ProjectHooksPage from '@pages/admin/project/HooksPage'
 import ProjectZonesPage from '@pages/admin/project/ZonesPage'
 import ProjectJournalPage from '@pages/admin/project/JournalPage'
 import AccountSettingsPage from '@pages/admin/AccountSettingsPage'
+import FontsPage from '@pages/admin/FontsPage'
 
 // Страницы оператора
 import OperatorLoginPage from '@pages/operator/LoginPage'
@@ -49,6 +50,9 @@ const AppRouter = () => {
 
                     {/* Настройки аккаунта */}
                     <Route path="/admin/settings" element={<AccountSettingsPage />} />
+
+                    {/* Шрифты */}
+                    <Route path="/admin/fonts" element={<FontsPage />} />
 
                     {/* Страницы проекта */}
                     <Route path="/admin/projects/:id/settings" element={<ProjectSettingsPage />} />

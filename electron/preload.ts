@@ -85,8 +85,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('read-font-file', relativePath),
 
     // Updates
-    checkForUpdates: (): Promise<{ checking: boolean; info?: any; error?: string }> =>
+    checkForUpdates: (): Promise<{ checking: boolean; error?: string }> =>
         ipcRenderer.invoke('check-for-updates'),
+    installUpdate: (): Promise<void> =>
+        ipcRenderer.invoke('install-update'),
     onUpdateStatus: (callback: (status: UpdateStatus) => void) => {
         const handler = (_: any, status: UpdateStatus) => callback(status)
         ipcRenderer.on('update-status', handler)
@@ -95,4 +97,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     setUpdateServer: (url: string): Promise<boolean> =>
         ipcRenderer.invoke('set-update-server', url),
     getUpdateServer: (): Promise<string> => ipcRenderer.invoke('get-update-server'),
+    getUpdateChannel: (): Promise<string> => ipcRenderer.invoke('get-update-channel'),
+    setUpdateChannel: (channel: string): Promise<boolean> => ipcRenderer.invoke('set-update-channel', channel),
 })

@@ -10,6 +10,7 @@ import {
     Link as LinkIcon,
     Bars,
     ListCheck as ClipboardList,
+    TextAlignLeft,
 } from '@gravity-ui/icons'
 import { Button, Icon, Dialog } from '@gravity-ui/uikit'
 import { useState } from 'react'
@@ -98,6 +99,13 @@ const AdminLayout = () => {
             icon: Persons,
             current: location.pathname === '/admin/projects',
             onItemClick: () => navigate('/admin/projects'),
+        },
+        {
+            id: 'fonts',
+            title: 'Шрифты',
+            icon: TextAlignLeft,
+            current: location.pathname === '/admin/fonts',
+            onItemClick: () => navigate('/admin/fonts'),
         },
         {
             id: 'account-settings',

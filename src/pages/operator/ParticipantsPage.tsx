@@ -11,6 +11,7 @@ import { useSchemeQuery } from '@/hooks/queries/useSchemeQueries'
 import { useProjectQuery } from '@/hooks/queries/useProjectQueries'
 import { useAppSelector } from '@/store/hooks'
 import { useParticipantsState, useParticipantsHotkeys, useMassPrint } from '@/hooks'
+import { useQrScanner } from '@/hooks/useQrScanner'
 import { type Participant } from '@/services/api/participants'
 
 const OperatorParticipantsPage = () => {
@@ -63,6 +64,14 @@ const OperatorParticipantsPage = () => {
         selectedIds: state.selectedIds,
         setSelectedIds: state.setSelectedIds,
         setIsPrinting: state.setIsPrinting,
+    })
+
+    // Хук QR-сканера
+    useQrScanner({
+        projectId,
+        scanAction: projectData?.scanAction,
+        openParticipantModal: state.openParticipantModal,
+        enabled: hasCodeField,
     })
 
     // Хук горячих клавиш (теперь все как у админа)

@@ -49,8 +49,10 @@ function configureAutoUpdater() {
         updateServer = 'https://e8c490b0-8f86-49e6-b849-57f0230dd8a5.selstorage.ru/windows/'
         store.set('updateServer', updateServer)
     }
-    console.log('[Updater] updateServer:', store.get('updateServer'))
+    const channel = store.get('updateChannel') || 'r'
+    console.log('[Updater] updateServer:', updateServer, 'channel:', channel)
     autoUpdater.setFeedURL({ provider: 'generic', url: updateServer })
+    autoUpdater.channel = channel
     autoUpdater.autoDownload = true
     autoUpdater.autoInstallOnAppQuit = true
     autoUpdater.on('checking-for-update', () => {
@@ -70,22 +72,7 @@ function configureAutoUpdater() {
     })
     autoUpdater.on('update-downloaded', (info: any) => {
         mainWindow?.webContents.send('update-status', { status: 'downloaded', version: info.version })
-        if (mainWindow) {
-            import('electron').then(({ dialog }) => {
-                dialog.showMessageBox(mainWindow!, {
-                    type: 'info',
-                    buttons: ['Позже', 'Перезапустить'],
-                    defaultId: 1,
-                    title: 'Обновление готово',
-                    message: `Версия ${info.version} загружена и готова к установке.`,
-                }).then((result) => {
-                    if (result.response === 1) {
-                        isQuitting = true
-                        autoUpdater.quitAndInstall()
-                    }
-                })
-            })
-        }
+        // Нативный диалог убран — управление установкой через UI-модалку
     })
     autoUpdater.on('error', (error: any) => {
         console.log('[Updater] error:', error)

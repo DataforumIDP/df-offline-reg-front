@@ -1,5 +1,6 @@
 import { Select, Button, Checkbox, RadioGroup, TextInput } from '@gravity-ui/uikit'
 import { TrashBin } from '@gravity-ui/icons'
+import { useMemo } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import {
     updateElement,
@@ -10,9 +11,10 @@ import {
     FontStyle,
     QrElement,
 } from '@/store/slices/templateEditorSlice'
+import { useCloudFontsQuery } from '@/hooks/queries/useCloudFontsQueries'
 import styles from './ElementToolbar.module.css'
 
-const FONT_OPTIONS = [
+const STATIC_FONT_OPTIONS = [
     { value: 'InterGF', content: 'InterGF' },
     { value: 'Roboto', content: 'Roboto' },
     { value: 'Segoe UI', content: 'Segoe UI' },
@@ -45,6 +47,15 @@ const FONT_SIZE_OPTIONS = [
 const ElementToolbar = () => {
     const dispatch = useAppDispatch()
     const { elements, selectedElementId } = useAppSelector((state) => state.templateEditor)
+    const { data: cloudFontsData } = useCloudFontsQuery()
+
+    const FONT_OPTIONS = useMemo(() => {
+        const cloud = (cloudFontsData?.fonts || []).map((f) => ({
+            value: f.name,
+            content: `☁ ${f.name}`,
+        }))
+        return [...STATIC_FONT_OPTIONS, ...cloud]
+    }, [cloudFontsData])
 
     const selectedElement = elements.find((el) => el.id === selectedElementId) as
         | TextFieldElement

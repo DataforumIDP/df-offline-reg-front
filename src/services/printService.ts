@@ -289,6 +289,75 @@ const DEFAULT_CYRILLIC_FONT = 'Roboto'
  */
 const loadedFonts: Map<string, ArrayBuffer> = new Map()
 
+// ─── Cloud Fonts Registry ────────────────────────────────────────────────────
+
+import type { CloudFont, CloudFontVariants } from '@/services/api/cloudFonts'
+
+const cloudFontsRegistry = new Map<string, CloudFontVariants>()
+
+/**
+ * Зарегистрировать облачные шрифты (вызывается из useCloudFontsQuery)
+ */
+export function setCloudFonts(fonts: CloudFont[]): void {
+    cloudFontsRegistry.clear()
+    for (const font of fonts) {
+        cloudFontsRegistry.set(font.name, font.variants)
+    }
+}
+
+/**
+ * Получить имена доступных облачных шрифтов
+ */
+export function getCloudFontNames(): string[] {
+    return [...cloudFontsRegistry.keys()]
+}
+
+/**
+ * Предзагрузить шрифты, используемые в template elements (облачные + статические)
+ */
+export async function preloadTemplateFonts(
+    elements: Array<{ type: string; fontFamily?: string }>,
+): Promise<void> {
+    const familiesToLoad = new Set<string>()
+
+    for (const el of elements) {
+        if (el.type === 'text' && el.fontFamily) {
+            familiesToLoad.add(el.fontFamily)
+        }
+    }
+
+    const variants: Array<{ weight: 'normal' | 'bold'; style: 'normal' | 'italic' }> = [
+        { weight: 'normal', style: 'normal' },
+        { weight: 'bold', style: 'normal' },
+        { weight: 'normal', style: 'italic' },
+        { weight: 'bold', style: 'italic' },
+    ]
+
+    const promises: Promise<void>[] = []
+    for (const family of familiesToLoad) {
+        for (const { weight, style } of variants) {
+            promises.push(
+                (async () => {
+                    const key = getFontKey(family, weight, style)
+                    if (loadedFonts.has(key)) return
+                    const { url } = getFontUrl(family, weight, style)
+                    if (!url) return
+                    try {
+                        const buf = await loadFontFromUrl(url)
+                        loadedFonts.set(key, buf)
+                    } catch {
+                        // Игнорируем ошибки предзагрузки
+                    }
+                })(),
+            )
+        }
+    }
+
+    await Promise.allSettled(promises)
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+
 /**
  * Очистить кэш загруженных шрифтов
  */
@@ -457,7 +526,18 @@ function getFontUrl(
     weight: 'normal' | 'bold',
     style: 'normal' | 'italic',
 ): { url: string | null; actualFont: string } {
-    // Сначала проверяем, есть ли шрифт напрямую
+    // 1. Сначала проверяем облачные шрифты (публичные CDN-URL)
+    const cloudVariants = cloudFontsRegistry.get(fontFamily)
+    if (cloudVariants) {
+        let variant: keyof CloudFontVariants = weight as any
+        if (style === 'italic') {
+            variant = weight === 'bold' ? 'bolditalic' : 'italic'
+        }
+        const url = cloudVariants[variant] || cloudVariants['normal'] || null
+        return { url, actualFont: fontFamily }
+    }
+
+    // 2. Статические шрифты
     let fontUrls = FONT_URLS[fontFamily]
     let actualFont = fontFamily
 

@@ -11,6 +11,7 @@ import { useParticipantsQuery } from '@/hooks/queries/useParticipantQueries'
 import { useSchemeQuery } from '@/hooks/queries/useSchemeQueries'
 import { useProjectQuery } from '@/hooks/queries/useProjectQueries'
 import { useParticipantsState, useParticipantsHotkeys, useMassPrint } from '@/hooks'
+import { useQrScanner } from '@/hooks/useQrScanner'
 import { type Participant } from '@/services/api/participants'
 
 const ProjectParticipantsPage = () => {
@@ -58,6 +59,14 @@ const ProjectParticipantsPage = () => {
         selectedIds: state.selectedIds,
         setSelectedIds: state.setSelectedIds,
         setIsPrinting: state.setIsPrinting,
+    })
+
+    // Хук QR-сканера
+    useQrScanner({
+        projectId: projectId || '',
+        scanAction: projectData?.scanAction,
+        openParticipantModal: state.openParticipantModal,
+        enabled: hasCodeField,
     })
 
     // Хук горячих клавиш

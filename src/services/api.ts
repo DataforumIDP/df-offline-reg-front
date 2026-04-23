@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { getActiveServerUrl } from './serverStorage'
 import { dispatchNavigation } from '@/utils/navigation'
+import { getDeviceId } from '@/utils/deviceId'
 
 const API_BASE_URL = getActiveServerUrl()
 
@@ -20,6 +21,7 @@ apiClient.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`
         }
+        config.headers['X-Device-Id'] = getDeviceId()
         return config
     },
     (error) => {

@@ -15,6 +15,14 @@ export interface ProjectStats {
 
 export type ScanMode = 'base' | 'direction' | 'view'
 
+export type ScanActionType = 'none' | 'print' | 'change'
+
+export interface ScanAction {
+    type: ScanActionType
+    fieldKey?: string
+    value?: string | boolean
+}
+
 export interface Project {
     id: number
     title: string
@@ -27,6 +35,7 @@ export interface Project {
     journalEnabled?: boolean
     rulesField?: string | null
     scanMode?: ScanMode
+    scanAction?: ScanAction | null
     stats?: ProjectStats
     createdAt: string
     updatedAt: string

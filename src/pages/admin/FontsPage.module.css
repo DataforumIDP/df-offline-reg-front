@@ -1,0 +1,191 @@
+.section {
+    margin-bottom: 40px;
+}
+
+.sectionTitle {
+    margin-bottom: 8px !important;
+    display: inline-block;
+}
+
+.sectionDesc {
+    margin-bottom: 16px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+/* ─── Cards ─── */
+
+.card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 14px;
+    position: relative;
+}
+
+.cardIconWrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--g-color-base-brand-light);
+    flex-shrink: 0;
+}
+
+.cardStdIcon {
+    width: 20px;
+    height: 20px;
+    color: var(--g-color-base-brand);
+}
+
+.cardCloudIcon {
+    width: 20px;
+    height: 20px;
+    color: var(--g-color-text-info);
+}
+
+.cardBody {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.cardName {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cardLabel {
+    align-self: flex-start;
+}
+
+.cardDelete {
+    flex-shrink: 0;
+}
+
+/* ─── Empty state ─── */
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 48px 24px;
+    border: 1px dashed var(--g-color-line-generic);
+    border-radius: 12px;
+    text-align: center;
+}
+
+.emptyIcon {
+    width: 40px;
+    height: 40px;
+    color: var(--g-color-text-hint);
+    margin-bottom: 4px;
+}
+
+/* ─── Modal ─── */
+
+.modalBody {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modalNameField {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.modalDivider {
+    border-top: 1px solid var(--g-color-line-generic);
+}
+
+.modalHint {
+    margin-top: -8px;
+}
+
+.fileGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* ─── File dropzone ─── */
+
+.fileField {
+    width: 100%;
+}
+
+.fileDropzone {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1.5px dashed var(--g-color-line-generic);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.fileDropzone:hover {
+    border-color: var(--g-color-base-brand);
+    background: var(--g-color-base-brand-light);
+}
+
+.fileDropzoneDone {
+    border-color: var(--g-color-text-positive);
+    background: var(--g-color-base-positive-light);
+    border-style: solid;
+}
+
+.fileDropzoneError {
+    border-color: var(--g-color-text-danger);
+    background: var(--g-color-base-danger-light);
+    border-style: solid;
+}
+
+.fileDropzoneLeft {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+
+.fileIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--g-color-base-misc-light);
+    flex-shrink: 0;
+    color: var(--g-color-text-secondary);
+}
+
+.fileIconDone {
+    background: var(--g-color-base-positive-light);
+    color: var(--g-color-text-positive);
+}
+
+.fileIconError {
+    background: var(--g-color-base-danger-light);
+    color: var(--g-color-text-danger);
+}
+
+.fileLabel {
+    font-weight: 500;
+}

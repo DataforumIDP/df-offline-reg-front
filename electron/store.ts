@@ -9,6 +9,7 @@ export interface StoreData {
     labelHeight: number
     orientation: 'portrait' | 'landscape'
     updateServer: string
+    updateChannel: string
     printServerPort: number
 }
 
@@ -19,6 +20,7 @@ const defaultStoreData: StoreData = {
     labelHeight: 50,
     orientation: 'landscape',
     updateServer: '',
+    updateChannel: 'r',
     printServerPort: 4400,
 }
 

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { Provider } from 'react-redux'
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
 import { ThemeProvider, configure } from '@gravity-ui/uikit'
+import { settings as dateSettings } from '@gravity-ui/date-utils'
 import App from './App'
 import { store } from '@store/store'
 
@@ -14,6 +15,30 @@ import '@styles/globals.css'
 // Настройка языка для Gravity UI
 configure({
     lang: 'ru',
+})
+
+function renderApp() {
+    ReactDOM.createRoot(document.getElementById('root')!).render(
+        <React.StrictMode>
+            <Provider store={store}>
+                <QueryClientProvider client={queryClient}>
+                    <ThemeProvider theme="dark">
+                        <App />
+                    </ThemeProvider>
+                </QueryClientProvider>
+            </Provider>
+        </React.StrictMode>,
+    )
+}
+
+// Загружаем локаль для @gravity-ui/date-utils (нужна для DatePicker)
+// и только после этого рендерим приложение, чтобы избежать гонки
+dateSettings.loadLocale('ru').then(() => {
+    dateSettings.setLocale('ru')
+}).catch(() => {
+    // не удалось загрузить — продолжаем без русской локали
+}).finally(() => {
+    renderApp()
 })
 
 const queryClient = new QueryClient({
@@ -75,15 +100,3 @@ if (typeof window !== 'undefined') {
         }
     }
 }
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
-    <React.StrictMode>
-        <Provider store={store}>
-            <QueryClientProvider client={queryClient}>
-                <ThemeProvider theme="dark">
-                    <App />
-                </ThemeProvider>
-            </QueryClientProvider>
-        </Provider>
-    </React.StrictMode>,
-)

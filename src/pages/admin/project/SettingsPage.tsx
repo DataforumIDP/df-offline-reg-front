@@ -8,6 +8,7 @@ import { useDeleteProjectMutation } from '@/hooks/mutations/useProjectMutations'
 import BasicParametersSection from './sections/BasicParametersSection'
 import ExportImportSection from './sections/ExportImportSection'
 import ProjectSchemeSection from './sections/ProjectSchemeSection'
+import ScanActionSection from './sections/ScanActionSection'
 import styles from './SettingsPage.module.css'
 
 const ProjectSettingsPage = () => {
@@ -82,7 +83,10 @@ const ProjectSettingsPage = () => {
             <div className={styles.grid}>
                 {/* Схема проекта - первая на мобилке */}
                 <div className={styles.schemeColumn}>
-                    <ProjectSchemeSection />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        <ProjectSchemeSection />
+                        {project && <ScanActionSection project={project} />}
+                    </div>
                 </div>
 
                 {/* Основные настройки */}
