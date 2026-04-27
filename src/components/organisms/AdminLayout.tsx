@@ -15,7 +15,6 @@ import {
 import { Button, Icon, Dialog } from '@gravity-ui/uikit'
 import { useState } from 'react'
 import { useLogoutMutation } from '@/hooks'
-import { useProjectQuery } from '@/hooks/queries/useProjectQueries'
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
 import {
     setSidebarCompact,
