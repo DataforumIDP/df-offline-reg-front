@@ -16,6 +16,7 @@ const ExportModal = ({ open, onClose, projectId, projectTitle }: ExportModalProp
     const [search, setSearch] = useState('')
     const [filters, setFilters] = useState<Record<string, string | string[]>>({})
     const [includePrints, setIncludePrints] = useState(false)
+    const [includeFirstPrint, setIncludeFirstPrint] = useState(false)
     const [isExporting, setIsExporting] = useState(false)
 
     // Используем существующий хук для схемы
@@ -50,6 +51,9 @@ const ExportModal = ({ open, onClose, projectId, projectTitle }: ExportModalProp
             if (includePrints) {
                 params.includePrints = true
             }
+            if (includeFirstPrint) {
+                params.includeFirstPrint = true
+            }
 
             const blob = await fetchExportExcel(projectId, params)
             const filename = `participants_${projectTitle}_${new Date().toISOString().split('T')[0]}.xlsx`
@@ -66,6 +70,7 @@ const ExportModal = ({ open, onClose, projectId, projectTitle }: ExportModalProp
         setSearch('')
         setFilters({})
         setIncludePrints(false)
+        setIncludeFirstPrint(false)
     }
 
     return (
@@ -112,6 +117,9 @@ const ExportModal = ({ open, onClose, projectId, projectTitle }: ExportModalProp
                         <div className={styles.printCheckbox}>
                             <Checkbox checked={includePrints} onUpdate={setIncludePrints}>
                                 Добавить количество печатей
+                            </Checkbox>
+                            <Checkbox checked={includeFirstPrint} onUpdate={setIncludeFirstPrint}>
+                                Время первой печати
                             </Checkbox>
                         </div>
 

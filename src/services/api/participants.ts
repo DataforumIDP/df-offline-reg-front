@@ -21,6 +21,7 @@ export interface ParticipantsQuery {
     direction?: 'ASC' | 'DESC'
     filters?: Record<string, string | string[]>
     includePrints?: boolean
+    includeFirstPrint?: boolean
 }
 
 /**

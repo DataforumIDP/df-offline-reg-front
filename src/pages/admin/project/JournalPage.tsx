@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import {
     Text,
     Button,
@@ -8,11 +8,17 @@ import {
     Select,
     Pagination,
     Card,
+    Switch,
     withTableSorting,
+    Popup,
+    Icon,
 } from '@gravity-ui/uikit'
-import { ArrowUturnCcwLeft } from '@gravity-ui/icons'
-import { useParams } from 'react-router-dom'
+import { ArrowUturnCcwLeft, Funnel } from '@gravity-ui/icons'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useSnackbar } from 'notistack'
+import { useProjectQuery } from '@/hooks/queries/useProjectQueries'
+import { useUpdateProjectMutation } from '@/hooks/mutations/useProjectMutations'
+import { useSchemeQuery } from '@/hooks/queries/useSchemeQueries'
 import dayjs from 'dayjs'
 import { PageWrapper, PageHeader, PageHeaderActions, SearchInput } from '@/components/atoms'
 import {
@@ -21,14 +27,86 @@ import {
     useReturnJournalRecordMutation,
 } from '@/hooks/queries/useJournalQueries'
 import { useZonesQuery } from '@/hooks/queries/useZoneQueries'
+import { fetchParticipantById } from '@/services/api/participants'
 import type { JournalRecord } from '@/services/api/journal'
 import styles from './JournalPage.module.css'
 
 const SortableTable = withTableSorting<JournalRecord>(Table)
 
+interface InlineSelectFilterProps {
+    label: string
+    options: { value: string; content: string }[]
+    value: string[]
+    onChange: (v: string[]) => void
+}
+const InlineSelectFilter = ({ label, options, value, onChange }: InlineSelectFilterProps) => {
+    const [open, setOpen] = useState(false)
+    const btnRef = useRef<HTMLButtonElement>(null)
+    const isActive = value.length > 0
+    return (
+        <>
+            <Button
+                ref={btnRef}
+                view="flat"
+                size="xs"
+                onClick={(e) => { e.stopPropagation(); setOpen(true) }}
+                style={{ marginLeft: 4, position: 'relative' }}
+            >
+                <Icon data={Funnel} size={14} />
+                {isActive && (
+                    <span style={{
+                        position: 'absolute', top: 2, right: 2,
+                        width: 6, height: 6,
+                        backgroundColor: 'var(--g-color-base-info)',
+                        borderRadius: '50%',
+                    }} />
+                )}
+            </Button>
+            <Popup open={open} anchorRef={btnRef} onClose={() => setOpen(false)} placement="bottom-start">
+                <div
+                    style={{ padding: 12, minWidth: 180, display: 'flex', flexDirection: 'column', gap: 8 }}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div style={{ fontWeight: 500, marginBottom: 4 }}>Фильтр: {label}</div>
+                    <Select
+                        options={options}
+                        value={value}
+                        onUpdate={onChange}
+                        placeholder="Все"
+                        width="max"
+                        hasClear
+                    />
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                        <Button view="flat" size="s" onClick={(e) => { e.stopPropagation(); onChange([]); setOpen(false) }}>
+                            Сбросить
+                        </Button>
+                        <Button view="action" size="s" onClick={() => setOpen(false)}>
+                            Применить
+                        </Button>
+                    </div>
+                </div>
+            </Popup>
+        </>
+    )
+}
+
 const JournalPage = () => {
     const { id: projectId } = useParams<{ id: string }>()
     const { enqueueSnackbar } = useSnackbar()
+    const navigate = useNavigate()
+
+    const { data: project } = useProjectQuery(Number(projectId))
+    const updateProjectMutation = useUpdateProjectMutation()
+
+    const handleJournalEnabledChange = useCallback(
+        (checked: boolean) => {
+            updateProjectMutation.mutate(
+                { id: Number(projectId), data: { journalEnabled: checked } },
+                { onSuccess: () => enqueueSnackbar(checked ? 'Журнал включён' : 'Журнал отключён', { variant: 'success' }) }
+            )
+        },
+        [projectId, updateProjectMutation, enqueueSnackbar]
+    )
 
     // Фильтры
     const [page, setPage] = useState(1)
@@ -53,19 +131,25 @@ const JournalPage = () => {
         [page, search, isReturnedFilter, zoneFilter]
     )
 
+    const journalEnabled = project?.journalEnabled ?? true
+
     // Запросы данных
     const { data: recordsData, isLoading, isFetching } = useJournalRecordsQuery(
         Number(projectId),
-        queryParams
+        queryParams,
+        journalEnabled
     )
-    const { data: stats } = useJournalStatsQuery(Number(projectId))
+    const { data: stats } = useJournalStatsQuery(Number(projectId), journalEnabled)
     const { data: zones } = useZonesQuery(Number(projectId))
+    const { data: schemeData } = useSchemeQuery(projectId || '')
 
     // Мутация возврата
     const returnMutation = useReturnJournalRecordMutation(Number(projectId))
 
     const records = recordsData?.records || []
     const totalRecords = recordsData?.totalRecords || 0
+
+    const scheme = schemeData?.fields || []
 
     // Опции для селекта статуса
     const statusOptions = [
@@ -112,6 +196,88 @@ const JournalPage = () => {
         setPage(1)
     }, [])
 
+    // Переход на страницу участника
+    const handleRowClick = useCallback(
+        (record: JournalRecord) => {
+            if (!record.participantId) return
+            navigate(
+                `/admin/projects/${projectId}/participants?modalId=${record.participantId}`
+            )
+        },
+        [navigate, projectId]
+    )
+
+    // Ctrl+C — копировать текущие записи таблицы
+    useEffect(() => {
+        const handleKeyDown = async (e: KeyboardEvent) => {
+            if (!e.ctrlKey || e.code !== 'KeyC') return
+            if (window.getSelection()?.toString()) return // есть выделенный текст — не перехватываем
+            if (records.length === 0) return
+
+            e.preventDefault()
+
+            try {
+                // Получаем данные участников для текущих записей
+                const participantIds = records
+                    .filter((r) => r.participantId !== null)
+                    .map((r) => r.participantId as number)
+
+                const uniqueIds = [...new Set(participantIds)]
+                const participantMap = new Map<number, Record<string, unknown>>()
+
+                await Promise.all(
+                    uniqueIds.map(async (pid) => {
+                        try {
+                            const p = await fetchParticipantById(Number(projectId), pid)
+                            participantMap.set(pid, p.data || {})
+                        } catch {
+                            // участник недоступен — пропускаем
+                        }
+                    })
+                )
+
+                const sep = '='.repeat(16)
+                const lines: string[] = []
+
+                records.forEach((record) => {
+                    lines.push(sep)
+                    const statusText = record.isReturned
+                        ? record.manualReturn
+                            ? 'Возвращено (вручную)'
+                            : 'Возвращено'
+                        : 'На руках'
+                    lines.push(`Статус: ${statusText}`)
+                    lines.push(
+                        `Выдано: ${dayjs(record.checkoutAt).format('DD.MM.YYYY HH:mm')}`
+                    )
+                    lines.push(`Зона: ${record.zoneName || '—'}`)
+                    lines.push('Данные пользователя:')
+
+                    if (record.participantId && participantMap.has(record.participantId)) {
+                        const data = participantMap.get(record.participantId)!
+                        scheme.forEach((field) => {
+                            const value = data[field.key]
+                            if (value !== undefined && value !== null && value !== '') {
+                                lines.push(`  ${field.label}: ${value}`)
+                            }
+                        })
+                    } else {
+                        lines.push(`  Код: ${record.userCode}`)
+                    }
+                })
+                lines.push(sep)
+
+                await navigator.clipboard.writeText(lines.join('\n'))
+                enqueueSnackbar('Данные скопированы', { variant: 'success' })
+            } catch {
+                enqueueSnackbar('Ошибка копирования', { variant: 'error' })
+            }
+        }
+
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [records, projectId, scheme, enqueueSnackbar])
+
     // Колонки таблицы
     const columns = useMemo(
         () => [
@@ -119,32 +285,37 @@ const JournalPage = () => {
                 id: 'userCode',
                 name: 'Код',
                 template: (record: JournalRecord) => record.userCode,
-                width: 150,
-            },
-            {
-                id: 'userName',
-                name: 'Имя',
-                template: (record: JournalRecord) => record.userName || '—',
-                width: 200,
+                width: 180,
             },
             {
                 id: 'zoneName',
-                name: 'Зона',
+                name: () => (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span>Зона</span>
+                        {zoneOptions.length > 0 && (
+                            <InlineSelectFilter
+                                label="Зона"
+                                options={zoneOptions}
+                                value={zoneFilter}
+                                onChange={handleZoneChange}
+                            />
+                        )}
+                    </div>
+                ),
                 template: (record: JournalRecord) => record.zoneName || '—',
-                width: 150,
             },
             {
                 id: 'scannerName',
                 name: 'Сканер',
                 template: (record: JournalRecord) => record.scannerName || '—',
-                width: 150,
+                width: 180,
             },
             {
                 id: 'checkoutAt',
                 name: 'Выдано',
                 template: (record: JournalRecord) =>
                     dayjs(record.checkoutAt).format('DD.MM.YYYY HH:mm'),
-                width: 140,
+                width: 150,
             },
             {
                 id: 'checkinAt',
@@ -153,11 +324,21 @@ const JournalPage = () => {
                     record.checkinAt
                         ? dayjs(record.checkinAt).format('DD.MM.YYYY HH:mm')
                         : '—',
-                width: 140,
+                width: 150,
             },
             {
                 id: 'status',
-                name: 'Статус',
+                name: () => (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span>Статус</span>
+                        <InlineSelectFilter
+                            label="Статус"
+                            options={statusOptions}
+                            value={isReturnedFilter}
+                            onChange={handleStatusChange}
+                        />
+                    </div>
+                ),
                 template: (record: JournalRecord) => (
                     <Label theme={record.isReturned ? 'success' : 'warning'}>
                         {record.isReturned
@@ -167,7 +348,7 @@ const JournalPage = () => {
                             : 'На руках'}
                     </Label>
                 ),
-                width: 150,
+                width: 200,
             },
             {
                 id: 'actions',
@@ -192,7 +373,7 @@ const JournalPage = () => {
                 width: 120,
             },
         ],
-        [handleManualReturn, returnMutation.isPending]
+        [handleManualReturn, returnMutation.isPending, zoneOptions, zoneFilter, handleZoneChange, isReturnedFilter, handleStatusChange, statusOptions]
     )
 
     return (
@@ -201,11 +382,26 @@ const JournalPage = () => {
                 <Text variant="display-1">Журнал устройств</Text>
                 <PageHeaderActions>
                     {isFetching && !isLoading && <Loader size="s" />}
+                    <Switch
+                        checked={project?.journalEnabled ?? false}
+                        onUpdate={handleJournalEnabledChange}
+                        disabled={updateProjectMutation.isPending}
+                    >
+                        Включён
+                    </Switch>
                 </PageHeaderActions>
             </PageHeader>
 
+            {!journalEnabled && (
+                <div className={styles.disabledPlaceholder}>
+                    <Text variant="body-2" color="secondary">
+                        Журнал устройств отключён. Включите журнал, чтобы начать отслеживать выдачу и возврат устройств.
+                    </Text>
+                </div>
+            )}
+
             {/* Статистика */}
-            <div className={styles.stats}>
+            {journalEnabled && <div className={styles.stats}>
                 <Card className={styles.statCard}>
                     <Text variant="body-2" color="secondary">
                         Всего записей
@@ -228,38 +424,21 @@ const JournalPage = () => {
                         {stats?.returned || 0}
                     </Text>
                 </Card>
-            </div>
+            </div>}
 
             {/* Фильтры */}
-            <div className={styles.filters}>
+            {journalEnabled && <div className={styles.filters}>
                 <SearchInput
                     value={search}
                     onUpdate={handleSearchChange}
-                    placeholder="Поиск по коду или имени..."
+                    placeholder="Поиск по коду..."
+                    fullWidth
                     debounceMs={400}
                 />
-                <Select
-                    placeholder="Статус"
-                    options={statusOptions}
-                    value={isReturnedFilter}
-                    onUpdate={handleStatusChange}
-                    width={150}
-                    hasClear
-                />
-                {zoneOptions.length > 0 && (
-                    <Select
-                        placeholder="Зона"
-                        options={zoneOptions}
-                        value={zoneFilter}
-                        onUpdate={handleZoneChange}
-                        width={200}
-                        hasClear
-                    />
-                )}
-            </div>
+            </div>}
 
             {/* Таблица */}
-            {isLoading ? (
+            {journalEnabled && (isLoading ? (
                 <div className={styles.loaderContainer}>
                     <Loader size="l" />
                 </div>
@@ -275,9 +454,11 @@ const JournalPage = () => {
                 <>
                     <div className={styles.tableContainer}>
                         <SortableTable
+                            className={styles.table}
                             data={records}
                             columns={columns}
                             getRowId={(record) => String(record.id)}
+                            onRowClick={(record) => handleRowClick(record)}
                         />
                     </div>
 
@@ -294,7 +475,7 @@ const JournalPage = () => {
                         />
                     </div>
                 </>
-            )}
+            ))}
         </PageWrapper>
     )
 }

@@ -34,9 +34,6 @@ const AdminLayout = () => {
     const location = useLocation()
     const logoutMutation = useLogoutMutation()
 
-    // Получаем данные проекта для проверки journalEnabled
-    const { data: project } = useProjectQuery(projectId ? Number(projectId) : 0)
-
     // Определяем, находимся ли мы на странице проекта
     const isProjectPage = location.pathname.includes('/admin/projects/') && projectId
 
@@ -72,17 +69,12 @@ const AdminLayout = () => {
             icon: LayoutCells,
             onItemClick: () => navigate(`/admin/projects/${projectId}/zones`),
         },
-        // Журнал показываем только если включён в настройках проекта
-        ...(project?.journalEnabled
-            ? [
-                  {
-                      id: 'journal',
-                      title: 'Журнал',
-                      icon: ClipboardList,
-                      onItemClick: () => navigate(`/admin/projects/${projectId}/journal`),
-                  },
-              ]
-            : []),
+        {
+            id: 'journal',
+            title: 'Журнал',
+            icon: ClipboardList,
+            onItemClick: () => navigate(`/admin/projects/${projectId}/journal`),
+        },
         {
             id: 'settings',
             title: 'Настройки',

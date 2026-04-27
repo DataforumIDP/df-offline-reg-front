@@ -38,7 +38,6 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
     const [description, setDescription] = useState('')
     const [isOperatorEditable, setIsOperatorEditable] = useState(false)
     const [colorRow, setColorRow] = useState(false)
-    const [journalEnabled, setJournalEnabled] = useState(false)
     const [dateStart, setDateStart] = useState<Date | null>(null)
     const [dateEnd, setDateEnd] = useState<Date | null>(null)
 
@@ -53,7 +52,6 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
         setDescription(project.description || '')
         setIsOperatorEditable(project.isOperatorEditable ?? false)
         setColorRow(project.colorRow ?? false)
-        setJournalEnabled(project.journalEnabled ?? false)
         setDateStart(new Date(project.dateStart))
         setDateEnd(new Date(project.dateEnd))
     }, [project])
@@ -108,22 +106,6 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
             setColorRow(checked)
             updateMutation.mutate(
                 { id: project.id, data: { colorRow: checked } },
-                {
-                    onSuccess: () => {
-                        enqueueSnackbar('Сохранено', { variant: 'success' })
-                    },
-                },
-            )
-        },
-        [project.id, updateMutation, enqueueSnackbar],
-    )
-
-    // Обновление режима журнала устройств
-    const handleJournalEnabledChange = useCallback(
-        (checked: boolean) => {
-            setJournalEnabled(checked)
-            updateMutation.mutate(
-                { id: project.id, data: { journalEnabled: checked } },
                 {
                     onSuccess: () => {
                         enqueueSnackbar('Сохранено', { variant: 'success' })
@@ -257,15 +239,6 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
                 <div style={{ marginTop: '8px' }}>
                     <Checkbox checked={colorRow} onUpdate={handleColorRowChange} size="l">
                         Красить всю строку участника по цвету типа (вместо только ячейки типа)
-                    </Checkbox>
-                </div>
-                <div style={{ marginTop: '8px' }}>
-                    <Checkbox
-                        checked={journalEnabled}
-                        onUpdate={handleJournalEnabledChange}
-                        size="l"
-                    >
-                        Включить журнал устройств (выдача и возврат оборудования)
                     </Checkbox>
                 </div>
             </div>

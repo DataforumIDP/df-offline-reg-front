@@ -54,7 +54,7 @@ export const useReturnJournalRecordMutation = (projectId: number) => {
         mutationFn: (recordId: number) => returnJournalRecord(projectId, recordId),
         onSuccess: () => {
             // Инвалидируем записи и статистику журнала
-            queryClient.invalidateQueries({ queryKey: journalKeys.records(projectId) })
+            queryClient.invalidateQueries({ queryKey: ['journal', 'records', projectId] })
             queryClient.invalidateQueries({ queryKey: journalKeys.stats(projectId) })
         },
     })
