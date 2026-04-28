@@ -1,6 +1,6 @@
 {
   "name": "registration.front",
-  "version": "1.1.8-r",
+  "version": "1.1.9-r",
   "type": "module",
   "author": {
     "name": "Dataforum",
@@ -37,6 +37,7 @@
     "@gravity-ui/icons": "^2.16.0",
     "@gravity-ui/navigation": "^4.0.8",
     "@gravity-ui/uikit": "^7.29.0",
+    "@monaco-editor/react": "^4.7.0",
     "@mui/material": "^7.3.7",
     "@mui/x-date-pickers": "^8.27.0",
     "@reduxjs/toolkit": "^1.9.7",

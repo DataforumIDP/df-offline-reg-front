@@ -7,6 +7,7 @@ import { uploadImageWithMini } from '@/services/api/files'
 import { fetchPrintParticipant } from '@/services/api/participants'
 import { useAppSelector } from '@/store/hooks'
 import { previewBadgePdf, PrintTemplate } from '@/services/printService'
+import { UserRole } from '@/types/auth'
 import { SelectWithOther, PhoneInput } from '@/components/atoms'
 
 export interface CreateParticipantModalProps {
@@ -14,6 +15,7 @@ export interface CreateParticipantModalProps {
     onClose: () => void
     projectId: string
     scheme: SchemeField[]
+    prefillData?: Record<string, any>
 }
 
 // Стилизованный инпут для изображения с загрузкой на сервер
@@ -157,10 +159,13 @@ export const CreateParticipantModal = ({
     onClose,
     projectId,
     scheme,
+    prefillData,
 }: CreateParticipantModalProps) => {
     const { enqueueSnackbar } = useSnackbar()
     const createMutation = useCreateParticipantMutation(Number(projectId))
+    const user = useAppSelector((state) => state.auth.user)
     const templateEditor = useAppSelector((state) => state.templateEditor)
+    const isAdmin = user?.role === UserRole.ADMIN
 
     // Состояние формы - динамически формируется из схемы
     const [formData, setFormData] = useState<Record<string, any>>({})
@@ -191,10 +196,18 @@ export const CreateParticipantModal = ({
                         initialData[field.key] = ''
                 }
             })
+            // Применяем предзаполнение если передано
+            if (prefillData) {
+                Object.keys(prefillData).forEach((key) => {
+                    if (key in initialData) {
+                        initialData[key] = prefillData[key]
+                    }
+                })
+            }
             setFormData(initialData)
             setErrors({})
         }
-    }, [open, scheme])
+    }, [open, scheme, prefillData])
 
     // Очистка формы
     const resetForm = useCallback(() => {
@@ -349,6 +362,11 @@ export const CreateParticipantModal = ({
             return null
         }
 
+        // Скрытые поля не отображаются операторам
+        if (field.config.isHidden && !isAdmin) {
+            return null
+        }
+
         const value = formData[field.key]
         const error = errors[field.key]
 
@@ -389,6 +407,7 @@ export const CreateParticipantModal = ({
 
             case 'list':
                 const items = field.config.listSettings?.items || []
+                const visibleItems = isAdmin ? items : items.filter((i) => !i.isHidden)
                 const isMultiple = field.config.listSettings?.multiple || false
 
                 return (
@@ -404,7 +423,7 @@ export const CreateParticipantModal = ({
                             {field.label}
                         </label>
                         <SelectWithOther
-                            items={items}
+                            items={visibleItems}
                             value={isMultiple ? (Array.isArray(value) ? value : []) : value || ''}
                             multiple={isMultiple}
                             onUpdate={(selected) => updateField(field.key, selected)}
@@ -482,6 +501,11 @@ export const CreateParticipantModal = ({
 
     const hasMultipleColumns = scheme.length > 8
 
+    // Разделяем поля на обычные и чекбоксы
+    const visibleScheme = isAdmin ? scheme : scheme.filter((f) => !f.config.isHidden)
+    const nonBoolFields = visibleScheme.filter((f) => f.config.type !== 'bool' && f.config.type !== 'id')
+    const boolFields = visibleScheme.filter((f) => f.config.type === 'bool')
+
     return (
         <Dialog
             open={open}
@@ -502,7 +526,20 @@ export const CreateParticipantModal = ({
                             : 'min(400px, calc(100vw - 64px))',
                     }}
                 >
-                    {scheme.map(renderField)}
+                    {nonBoolFields.map(renderField)}
+                    {boolFields.length > 0 && (
+                        <div
+                            style={{
+                                gridColumn: hasMultipleColumns ? '1 / -1' : undefined,
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: '16px',
+                                alignItems: 'center',
+                            }}
+                        >
+                            {boolFields.map(renderField)}
+                        </div>
+                    )}
                 </div>
             </Dialog.Body>
             <Dialog.Footer>

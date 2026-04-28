@@ -69,7 +69,7 @@ const OperatorParticipantsPage = () => {
     // Хук QR-сканера
     useQrScanner({
         projectId,
-        scanAction: projectData?.scanAction,
+        scanActionRules: projectData?.scanActionRules,
         openParticipantModal: state.openParticipantModal,
         enabled: hasCodeField,
     })

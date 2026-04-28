@@ -64,7 +64,7 @@ const ProjectParticipantsPage = () => {
     // Хук QR-сканера
     useQrScanner({
         projectId: projectId || '',
-        scanAction: projectData?.scanAction,
+        scanActionRules: projectData?.scanActionRules,
         openParticipantModal: state.openParticipantModal,
         enabled: hasCodeField,
     })

@@ -33,11 +33,7 @@ export function formatPhone(
         const parsed = parsePhoneNumber(phoneWithPlus, defaultCountry)
 
         if (parsed && isValidPhoneNumber(phoneWithPlus, defaultCountry)) {
-            // NATIONAL формат: (952) 484-80-41
-            // INTERNATIONAL формат: +7 952 484 80 41
-            // Используем formatNational для локального формата с добавлением кода страны
-            const national = parsed.formatNational()
-            return `+${parsed.countryCallingCode} ${national}`
+            return parsed.formatInternational()
         }
 
         // Если невалидный номер — пробуем хотя бы частичное форматирование

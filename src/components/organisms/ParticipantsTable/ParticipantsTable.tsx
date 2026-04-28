@@ -15,6 +15,8 @@ import type { Participant } from '@/services/api/participants'
 import { ColumnFilter } from '@/components/molecules'
 import { getMiniUrl } from '@/services/api/files'
 import { formatPhone } from '@/utils/phoneUtils'
+import { useAppSelector } from '@/store/hooks'
+import { UserRole } from '@/types/auth'
 import styles from './ParticipantsTable.module.css'
 
 // Тип для фильтров
@@ -158,6 +160,9 @@ export const ParticipantsTable = ({
     onFiltersChange,
     colorRow = false,
 }: ParticipantsTableProps) => {
+    const user = useAppSelector((state) => state.auth.user)
+    const isAdmin = user?.role === UserRole.ADMIN
+
     // Обработчик изменения фильтра
     const handleFilterChange = useCallback(
         (key: string, value: string | string[] | undefined) => {
@@ -228,7 +233,8 @@ export const ParticipantsTable = ({
 
     // Формируем столбцы из схемы (без ID)
     const columns: TableColumnConfig<TableDataItem>[] = useMemo(() => {
-        const schemeColumns: TableColumnConfig<TableDataItem>[] = scheme.map((field) => {
+        const visibleScheme = isAdmin ? scheme : scheme.filter((f) => !f.config.isHidden)
+        const schemeColumns: TableColumnConfig<TableDataItem>[] = visibleScheme.map((field) => {
             // Проверяем, можно ли фильтровать это поле (не фильтруем изображения и bool)
             const isFilterable = field.config.type !== 'img' && field.config.type !== 'bool'
             // Это поле определяющее цвет строки?
@@ -338,7 +344,7 @@ export const ParticipantsTable = ({
         }
 
         return [...schemeColumns, printCountColumn]
-    }, [scheme, filters, handleFilterChange, colorRow, colorField, rowColorMap])
+    }, [scheme, filters, handleFilterChange, colorRow, colorField, rowColorMap, isAdmin])
 
     // Данные таблицы
     const tableData = useMemo(() => {
@@ -434,6 +440,8 @@ export const ParticipantsTable = ({
                                 { value: '30', content: '30' },
                                 { value: '50', content: '50' },
                                 { value: '100', content: '100' },
+                                { value: '250', content: '250' },
+                                { value: '500', content: '500' },
                             ]}
                             width={120}
                             size="m"

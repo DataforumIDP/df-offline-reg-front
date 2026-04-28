@@ -13,9 +13,10 @@ export interface SchemeField {
         maxLength?: number
         isMark?: boolean // только для bool — поле-отметка для режима выдачи сканера
         isPhone?: boolean // только для text — поле содержит номер телефона
+        isHidden?: boolean // true = поле скрыто от операторов (только для admin)
         listSettings?: {
             multiple: boolean
-            items: Array<{ value: string; color?: string }>
+            items: Array<{ value: string; color?: string; isHidden?: boolean }>
         }
     }
 }

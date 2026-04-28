@@ -6,6 +6,8 @@ export interface Webhook {
     slug: string
     name: string
     isActive: boolean
+    preScript: string | null
+    postScript: string | null
     createdAt: string
     updatedAt: string
 }
@@ -20,6 +22,8 @@ export interface CreateWebhookDTO {
 export interface UpdateWebhookDTO {
     name?: string
     isActive?: boolean
+    preScript?: string | null
+    postScript?: string | null
 }
 
 export interface WebhookLog {

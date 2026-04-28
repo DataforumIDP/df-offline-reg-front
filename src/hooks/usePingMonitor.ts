@@ -154,12 +154,12 @@ const usePingMonitor = ({
     try {
       console.log('🔄 Проверка сервера...', new Date().toLocaleTimeString());
       
-      const response = await fetch(url, {
-        method: 'HEAD',
+      const pingUrl = url.replace(/\/$/, '') + '/ping';
+      const response = await fetch(pingUrl, {
+        method: 'GET',
         signal: abortControllerRef.current.signal,
         cache: 'no-cache',
         mode: 'cors',
-        headers: { 'Content-Type': 'application/json' },
       });
 
       clearTimeout(timeoutId);

@@ -23,6 +23,13 @@ export interface ScanAction {
     value?: string | boolean
 }
 
+export interface ScanActionRule {
+    prefix: string
+    type: ScanActionType
+    fieldKey?: string
+    value?: string | boolean
+}
+
 export interface Project {
     id: number
     title: string
@@ -36,6 +43,7 @@ export interface Project {
     rulesField?: string | null
     scanMode?: ScanMode
     scanAction?: ScanAction | null
+    scanActionRules?: ScanActionRule[]
     stats?: ProjectStats
     createdAt: string
     updatedAt: string

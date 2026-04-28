@@ -11,7 +11,7 @@ interface CreateSchemeFieldPayload {
         maxLength?: number
         listSettings?: {
             multiple: boolean
-            items: Array<{ value: string; color?: string }>
+            items: Array<{ value: string; color?: string; isHidden?: boolean }>
         }
     }
 }
@@ -24,9 +24,12 @@ interface UpdateSchemeFieldPayload {
         type?: 'text' | 'list' | 'bool' | 'id' | 'img' | 'code'
         uniq?: boolean
         maxLength?: number
+        isMark?: boolean
+        isPhone?: boolean
+        isHidden?: boolean
         listSettings?: {
             multiple: boolean
-            items: Array<{ value: string; color?: string }>
+            items: Array<{ value: string; color?: string; isHidden?: boolean }>
         }
     }
 }

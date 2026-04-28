@@ -13,7 +13,7 @@ import {
     fetchPrintParticipant,
     type Participant,
 } from '@/services/api/participants'
-import { type ScanAction } from '@/services/api/projects'
+import { type ScanActionRule } from '@/services/api/projects'
 
 // Карта замены кириллических символов на латинские (раскладка ЙЦУКЕН -> QWERTY)
 const CYRILLIC_TO_LATIN: Record<string, string> = {
@@ -38,13 +38,11 @@ function convertCyrillicToLatin(input: string): string {
         .join('')
 }
 
-const CODE_PREFIX = 'code_'
-// Максимальное время между нажатиями, в пределах которого считаем что это один ввод от сканера
 const SCANNER_TIMEOUT_MS = 500
 
 export interface UseQrScannerOptions {
     projectId: string
-    scanAction: ScanAction | null | undefined
+    scanActionRules: ScanActionRule[] | null | undefined
     // Открыть модалку участника по ID
     openParticipantModal: (id: number) => void
     // false — хук не регистрирует слушатель (например, нет поля code)
@@ -59,14 +57,14 @@ export interface UseQrScannerOptions {
  * 2. Если активный элемент — текстовый инпут/textarea/contenteditable → игнорируем.
  * 3. Если между нажатиями прошло > SCANNER_TIMEOUT_MS — сбрасываем буфер (новый ввод).
  * 4. Enter завершает ввод немедленно.
- * 5. Если буфер начинается с "code_" (после транслитерации) — выполняем scanAction.
- * 6. Иначе (случайный ввод) — сбрасываем тихо.
+ * 5. Проверяет совпадение префиксов из scanActionRules — выполняет соответствующее действие.
+ * 6. Если ни один префикс не совпал — сбрасывает тихо.
  *
  * Требует, чтобы на странице уже работал useMassPrint (он инициализирует templateEditor в Redux).
  */
 export const useQrScanner = ({
     projectId,
-    scanAction,
+    scanActionRules,
     openParticipantModal,
     enabled = true,
 }: UseQrScannerOptions) => {
@@ -83,15 +81,18 @@ export const useQrScanner = ({
         async (rawCode: string) => {
             const code = convertCyrillicToLatin(rawCode.trim())
 
-            if (!code.startsWith(CODE_PREFIX)) {
+            // Нет правил — ничего не делаем
+            if (!scanActionRules || scanActionRules.length === 0) {
                 return
             }
 
-            if (!scanAction || scanAction.type === 'none') {
+            // Ищем правило с совпадающим префиксом
+            const rule = scanActionRules.find((r) => r.prefix && code.startsWith(r.prefix))
+            if (!rule || rule.type === 'none') {
                 return
             }
 
-            const bareCode = code.slice(CODE_PREFIX.length)
+            const bareCode = code.slice(rule.prefix.length)
 
             let participant: Participant
             try {
@@ -105,7 +106,7 @@ export const useQrScanner = ({
                 return
             }
 
-            if (scanAction.type === 'print') {
+            if (rule.type === 'print') {
                 // Сначала открываем карточку для сверки
                 openParticipantModal(participant.id)
 
@@ -134,10 +135,10 @@ export const useQrScanner = ({
                 return
             }
 
-            if (scanAction.type === 'change' && scanAction.fieldKey) {
+            if (rule.type === 'change' && rule.fieldKey) {
                 const updatedData = {
                     ...participant.data,
-                    [scanAction.fieldKey]: scanAction.value,
+                    [rule.fieldKey]: rule.value,
                 }
 
                 try {
@@ -148,7 +149,7 @@ export const useQrScanner = ({
                 }
             }
         },
-        [projectId, scanAction, openParticipantModal, templateEditor, enqueueSnackbar],
+        [projectId, scanActionRules, openParticipantModal, templateEditor, enqueueSnackbar],
     )
 
     // ── Слушатель клавиатуры ─────────────────────────────────────────────────

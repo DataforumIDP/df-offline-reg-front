@@ -1,10 +1,11 @@
-import { Button, TextInput, Icon, DropdownMenu } from '@gravity-ui/uikit'
+import { Button, TextInput, Icon, DropdownMenu, Checkbox } from '@gravity-ui/uikit'
 import { Plus, Ellipsis } from '@gravity-ui/icons'
 
 interface ListItem {
     id: string
     value: string
     color: string
+    isHidden?: boolean
 }
 
 interface ListItemsInputProps {
@@ -17,10 +18,10 @@ interface ListItemsInputProps {
 const ListItemsInput = ({ items, onItemsChange, error, errorMessage }: ListItemsInputProps) => {
     const addItem = () => {
         const newId = Math.random().toString(36).substr(2, 9)
-        onItemsChange([...items, { id: newId, value: '', color: '#4a90e2' }])
+        onItemsChange([...items, { id: newId, value: '', color: '#4a90e2', isHidden: false }])
     }
 
-    const updateItem = (id: string, field: 'value' | 'color', newValue: string) => {
+    const updateItem = (id: string, field: 'value' | 'color' | 'isHidden', newValue: string | boolean) => {
         onItemsChange(items.map((item) => (item.id === id ? { ...item, [field]: newValue } : item)))
     }
 
@@ -68,6 +69,13 @@ const ListItemsInput = ({ items, onItemsChange, error, errorMessage }: ListItems
                                     padding: '0',
                                 }}
                             />
+                            <Checkbox
+                                checked={!!item.isHidden}
+                                onUpdate={(checked) => updateItem(item.id, 'isHidden', checked)}
+                                title="Скрыто от операторов"
+                            >
+                                Скрытое
+                            </Checkbox>
                             <DropdownMenu
                                 items={[
                                     {

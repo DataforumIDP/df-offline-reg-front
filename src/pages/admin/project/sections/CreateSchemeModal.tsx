@@ -8,6 +8,7 @@ interface ListItem {
     id: string
     value: string
     color: string
+    isHidden?: boolean
 }
 
 interface CreateSchemeModalProps {
@@ -33,6 +34,7 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
         boolDefault: 'none' as 'none' | 'true' | 'false',
         random: false,
         isPhone: false, // для text — поле телефона
+        isHidden: false,
     })
 
     const [errors, setErrors] = useState<Record<string, string>>({})
@@ -51,6 +53,7 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
             boolDefault: 'none',
             random: false,
             isPhone: false,
+            isHidden: false,
         })
         setErrors({})
         onClose()
@@ -96,6 +99,7 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
                 items: formData.listItems.map((item) => ({
                     value: item.value,
                     color: item.color,
+                    isHidden: item.isHidden || false,
                 })),
             }
         }
@@ -131,6 +135,9 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
         if (formData.type === 'code') {
             config.random = formData.random
         }
+
+        // isHidden flag
+        config.isHidden = formData.isHidden
 
         createMutation.mutate(
             {
@@ -407,6 +414,14 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
                             Генерировать случайное значение
                         </Checkbox>
                     )}
+
+                    {/* Скрытое поле — только для admin */}
+                    <Checkbox
+                        checked={formData.isHidden}
+                        onUpdate={(checked) => setFormData({ ...formData, isHidden: checked })}
+                    >
+                        Скрытое поле (только для админа)
+                    </Checkbox>
                 </div>
             </Dialog.Body>
             <Dialog.Footer

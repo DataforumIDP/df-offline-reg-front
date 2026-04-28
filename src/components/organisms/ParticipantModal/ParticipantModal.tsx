@@ -333,6 +333,9 @@ export const ParticipantModal = ({
 
     // Рендер поля в зависимости от типа
     const renderField = (field: SchemeField) => {
+        // Скрытые поля не отображаются операторам
+        if (field.config.isHidden && !isAdmin) return null
+
         if (field.config.type === 'id') {
             // Показываем ID как readonly
             return (
@@ -382,6 +385,7 @@ export const ParticipantModal = ({
 
             case 'list':
                 const items = field.config.listSettings?.items || []
+                const visibleItems = isAdmin ? items : items.filter((i) => !i.isHidden)
                 const isMultiple = field.config.listSettings?.multiple || false
 
                 return (
@@ -397,7 +401,7 @@ export const ParticipantModal = ({
                             {field.label}
                         </label>
                         <SelectWithOther
-                            items={items}
+                            items={visibleItems}
                             value={isMultiple ? (Array.isArray(value) ? value : []) : value || ''}
                             multiple={isMultiple}
                             disabled={!canEdit}
@@ -495,6 +499,11 @@ export const ParticipantModal = ({
     const isLoading = participantLoading
     const hasMultipleColumns = scheme.length > 8
 
+    // Разделяем поля на обычные и чекбоксы
+    const visibleScheme = isAdmin ? scheme : scheme.filter((f) => !f.config.isHidden)
+    const nonBoolFields = visibleScheme.filter((f) => f.config.type !== 'bool')
+    const boolFields = visibleScheme.filter((f) => f.config.type === 'bool')
+
     return (
         <>
             <Dialog
@@ -550,7 +559,20 @@ export const ParticipantModal = ({
                                     size="l"
                                 />
                             </div>
-                            {scheme.map(renderField)}
+                            {nonBoolFields.map(renderField)}
+                            {boolFields.length > 0 && (
+                                <div
+                                    style={{
+                                        gridColumn: hasMultipleColumns ? '1 / -1' : undefined,
+                                        display: 'flex',
+                                        flexWrap: 'wrap',
+                                        gap: '16px',
+                                        alignItems: 'center',
+                                    }}
+                                >
+                                    {boolFields.map(renderField)}
+                                </div>
+                            )}
                         </div>
                     )}
                 </Dialog.Body>

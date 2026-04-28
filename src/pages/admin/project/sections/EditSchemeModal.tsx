@@ -9,6 +9,7 @@ interface ListItem {
     id: string
     value: string
     color: string
+    isHidden?: boolean
 }
 
 interface EditSchemeModalProps {
@@ -41,6 +42,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
     const [scannerEditable, setScannerEditable] = useState(false)
     const [isMark, setIsMark] = useState(false)
     const [isPhone, setIsPhone] = useState(false)
+    const [isHidden, setIsHidden] = useState(false)
 
     // Функция для перезапуска генерации (отключает random, затем включает обратно)
     const handleRestartGeneration = async () => {
@@ -114,6 +116,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
                 id: `${field.id}_${index}`,
                 value: item.value,
                 color: item.color || '#4a90e2',
+                isHidden: item.isHidden || false,
             }))
             setListItems(items)
             setListMultiple(field.config.listSettings.multiple || false)
@@ -126,6 +129,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
         setScannerEditable(field.scannerEditable || false)
         setIsMark(field.config?.isMark || false)
         setIsPhone(field.config?.isPhone || false)
+        setIsHidden(field.config?.isHidden || false)
     }, [field, open])
 
     const handleClose = () => {
@@ -144,6 +148,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
         setScannerEditable(false)
         setIsMark(false)
         setIsPhone(false)
+        setIsHidden(false)
         onClose()
     }
 
@@ -189,6 +194,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
                 items: listItems.map((item) => ({
                     value: item.value,
                     color: item.color,
+                    isHidden: item.isHidden || false,
                 })),
             }
         }
@@ -228,6 +234,9 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
         if (typeValue === 'bool') {
             config.isMark = isMark
         }
+
+        // isHidden flag
+        config.isHidden = isHidden
 
         // Если ключ изменился — спрашиваем подтверждение, что данные участников будут мигрированы
         if (field.key !== keyValue) {
@@ -489,6 +498,14 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
                             Поле отметки (режим выдачи сканера)
                         </Checkbox>
                     )}
+
+                    {/* Скрытое поле - доступно только админу */}
+                    <Checkbox
+                        checked={isHidden}
+                        onUpdate={(checked) => setIsHidden(checked)}
+                    >
+                        Скрытое поле (только для админа)
+                    </Checkbox>
                 </div>
             </Dialog.Body>
             <Dialog.Footer
