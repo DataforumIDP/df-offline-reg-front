@@ -99,4 +99,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getUpdateServer: (): Promise<string> => ipcRenderer.invoke('get-update-server'),
     getUpdateChannel: (): Promise<string> => ipcRenderer.invoke('get-update-channel'),
     setUpdateChannel: (channel: string): Promise<boolean> => ipcRenderer.invoke('set-update-channel', channel),
+
+    // Network discovery
+    scanNetwork: (): Promise<Array<{ url: string; name: string }>> => ipcRenderer.invoke('scan-network'),
 })

@@ -2,6 +2,8 @@ import { ipcMain, IpcMainInvokeEvent, dialog, shell } from 'electron'
 import * as path from 'path'
 import * as os from 'os'
 import * as fs from 'fs'
+import * as net from 'net'
+import * as http from 'http'
 import { SimpleStore } from './store.js'
 import { printPdfGhostscript } from './printJob.js'
 import { PrintServer } from './printServer.js'
@@ -103,6 +105,73 @@ export function setupIPC(store: SimpleStore, printServer: PrintServer, mainWindo
         store.set('updateServer', url)
         autoUpdater.setFeedURL({ provider: 'generic', url })
         return true
+    })
+
+    // ── Поиск серверов в локальной сети ──────────────────────────────────────
+
+    ipcMain.handle('scan-network', async () => {
+        const port = 3030
+
+        // Определяем локальные подсети
+        const nets = os.networkInterfaces()
+        const subnets: string[] = []
+        for (const interfaces of Object.values(nets)) {
+            for (const iface of (interfaces || [])) {
+                if (iface.family === 'IPv4' && !iface.internal) {
+                    const parts = iface.address.split('.')
+                    subnets.push(`${parts[0]}.${parts[1]}.${parts[2]}.`)
+                }
+            }
+        }
+
+        const uniqueSubnets = [...new Set(subnets)]
+        console.log('[scan-network] подсети:', uniqueSubnets)
+
+        // TCP-проверка: открыт ли порт
+        const checkTCP = (host: string): Promise<boolean> =>
+            new Promise((resolve) => {
+                const socket = net.createConnection({ host, port, timeout: 400 })
+                socket.once('connect', () => { socket.destroy(); resolve(true) })
+                socket.once('error', () => resolve(false))
+                socket.once('timeout', () => { socket.destroy(); resolve(false) })
+            })
+
+        // HTTP-проверка: отвечает ли /ping как rega-сервер
+        const checkHttp = (host: string): Promise<boolean> =>
+            new Promise((resolve) => {
+                const req = http.get(`http://${host}:${port}/ping`, { timeout: 600 }, (res) => {
+                    let data = ''
+                    res.on('data', (chunk: Buffer) => { data += chunk.toString() })
+                    res.on('end', () => {
+                        try { resolve(JSON.parse(data)?.status === 'ok') } catch { resolve(false) }
+                    })
+                })
+                req.once('error', () => resolve(false))
+                req.once('timeout', () => { req.destroy(); resolve(false) })
+            })
+
+        const found: Array<{ url: string; name: string }> = []
+
+        for (const subnet of uniqueSubnets) {
+            const checks = Array.from({ length: 254 }, (_, i) => {
+                const ip = `${subnet}${i + 1}`
+                return checkTCP(ip)
+                    .then((open) => {
+                        if (!open) return
+                        return checkHttp(ip).then((isRega) => {
+                            if (isRega) {
+                                console.log('[scan-network] найден:', ip)
+                                found.push({ url: `http://${ip}:${port}`, name: `Rega (${ip})` })
+                            }
+                        })
+                    })
+                    .catch((err) => console.warn('[scan-network] ошибка для', ip, err))
+            })
+            await Promise.allSettled(checks)
+        }
+
+        console.log('[scan-network] итого найдено:', found)
+        return found
     })
 
     // Read font file from app resources (for jsPDF in renderer)

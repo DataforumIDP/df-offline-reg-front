@@ -66,6 +66,9 @@ export interface ElectronAPI {
     getUpdateServer: () => Promise<string>
     getUpdateChannel: () => Promise<string>
     setUpdateChannel: (channel: string) => Promise<boolean>
+
+    // Network discovery
+    scanNetwork: () => Promise<Array<{ url: string; name: string }>>
 }
 
 declare global {
