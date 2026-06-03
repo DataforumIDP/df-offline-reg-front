@@ -33,6 +33,8 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
         defaultValue: '',
         boolDefault: 'none' as 'none' | 'true' | 'false',
         random: false,
+        codeLength: '20',
+        codeChars: 'abcdefghijklmnopqrstuvwxyz0123456789',
         isPhone: false, // для text — поле телефона
         isHidden: false,
     })
@@ -52,6 +54,8 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
             defaultValue: '',
             boolDefault: 'none',
             random: false,
+            codeLength: '20',
+            codeChars: 'abcdefghijklmnopqrstuvwxyz0123456789',
             isPhone: false,
             isHidden: false,
         })
@@ -134,6 +138,19 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
         // random flag for code type
         if (formData.type === 'code') {
             config.random = formData.random
+            if (formData.random) {
+                const len = Number(formData.codeLength)
+                if (!Number.isInteger(len) || len < 1 || len > 200) {
+                    setErrors({ ...newErrors, codeLength: 'Длина должна быть целым числом от 1 до 200' })
+                    return
+                }
+                if (!formData.codeChars || formData.codeChars.length < 1) {
+                    setErrors({ ...newErrors, codeChars: 'Набор символов не может быть пустым' })
+                    return
+                }
+                config.codeLength = len
+                config.codeChars = formData.codeChars
+            }
         }
 
         // isHidden flag
@@ -413,6 +430,66 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
                         >
                             Генерировать случайное значение
                         </Checkbox>
+                    )}
+
+                    {/* Параметры генерации кода */}
+                    {formData.type === 'code' && formData.random && (
+                        <>
+                            <div>
+                                <label
+                                    style={{
+                                        display: 'block',
+                                        marginBottom: '4px',
+                                        fontSize: '12px',
+                                        color: 'var(--g-color-text-secondary)',
+                                    }}
+                                >
+                                    Длина кода
+                                </label>
+                                <TextInput
+                                    type="number"
+                                    value={formData.codeLength}
+                                    onUpdate={(v: string) => {
+                                        setFormData({ ...formData, codeLength: v })
+                                        setErrors({ ...errors, codeLength: '' })
+                                    }}
+                                    error={!!errors.codeLength}
+                                    size="l"
+                                />
+                                {errors.codeLength && (
+                                    <Text variant="caption-2" color="danger" style={{ marginTop: '4px', display: 'block' }}>
+                                        {errors.codeLength}
+                                    </Text>
+                                )}
+                            </div>
+                            <div>
+                                <label
+                                    style={{
+                                        display: 'block',
+                                        marginBottom: '4px',
+                                        fontSize: '12px',
+                                        color: 'var(--g-color-text-secondary)',
+                                    }}
+                                >
+                                    Символы для генерации
+                                </label>
+                                <TextInput
+                                    placeholder="Например: 123456789"
+                                    value={formData.codeChars}
+                                    onUpdate={(v: string) => {
+                                        setFormData({ ...formData, codeChars: v })
+                                        setErrors({ ...errors, codeChars: '' })
+                                    }}
+                                    error={!!errors.codeChars}
+                                    size="l"
+                                />
+                                {errors.codeChars && (
+                                    <Text variant="caption-2" color="danger" style={{ marginTop: '4px', display: 'block' }}>
+                                        {errors.codeChars}
+                                    </Text>
+                                )}
+                            </div>
+                        </>
                     )}
 
                     {/* Скрытое поле — только для admin */}

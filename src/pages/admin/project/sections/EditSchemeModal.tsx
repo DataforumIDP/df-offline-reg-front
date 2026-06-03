@@ -38,6 +38,8 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
     const [defaultValue, setDefaultValue] = useState<string>('')
     const [boolDefault, setBoolDefault] = useState<'none' | 'true' | 'false'>('none')
     const [random, setRandom] = useState(false)
+    const [codeLength, setCodeLength] = useState('20')
+    const [codeChars, setCodeChars] = useState('abcdefghijklmnopqrstuvwxyz0123456789')
     const [isRestarting, setIsRestarting] = useState(false)
     const [scannerEditable, setScannerEditable] = useState(false)
     const [isMark, setIsMark] = useState(false)
@@ -126,6 +128,16 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
         }
 
         setRandom(field.config?.random || false)
+        setCodeLength(
+            field.config?.codeLength !== undefined && field.config?.codeLength !== null
+                ? String(field.config.codeLength)
+                : '20',
+        )
+        setCodeChars(
+            field.config?.codeChars !== undefined && field.config?.codeChars !== null
+                ? String(field.config.codeChars)
+                : 'abcdefghijklmnopqrstuvwxyz0123456789',
+        )
         setScannerEditable(field.scannerEditable || false)
         setIsMark(field.config?.isMark || false)
         setIsPhone(field.config?.isPhone || false)
@@ -145,6 +157,8 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
         setDefaultValue('')
         setBoolDefault('none')
         setRandom(false)
+        setCodeLength('20')
+        setCodeChars('abcdefghijklmnopqrstuvwxyz0123456789')
         setScannerEditable(false)
         setIsMark(false)
         setIsPhone(false)
@@ -228,6 +242,19 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
         // random flag for code type
         if (typeValue === 'code') {
             config.random = random
+            if (random) {
+                const len = Number(codeLength)
+                if (!Number.isInteger(len) || len < 1 || len > 200) {
+                    setErrors({ ...newErrors, codeLength: 'Длина должна быть целым числом от 1 до 200' })
+                    return
+                }
+                if (!codeChars || codeChars.length < 1) {
+                    setErrors({ ...newErrors, codeChars: 'Набор символов не может быть пустым' })
+                    return
+                }
+                config.codeLength = len
+                config.codeChars = codeChars
+            }
         }
 
         // isMark flag for bool type
@@ -477,6 +504,66 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
                                 </Button>
                             )}
                         </div>
+                    )}
+
+                    {/* Параметры генерации кода */}
+                    {typeValue === 'code' && random && (
+                        <>
+                            <div>
+                                <label
+                                    style={{
+                                        display: 'block',
+                                        marginBottom: '4px',
+                                        fontSize: '12px',
+                                        color: 'var(--g-color-text-secondary)',
+                                    }}
+                                >
+                                    Длина кода
+                                </label>
+                                <TextInput
+                                    type="number"
+                                    value={codeLength}
+                                    onUpdate={(v: string) => {
+                                        setCodeLength(v)
+                                        setErrors({ ...errors, codeLength: '' })
+                                    }}
+                                    error={!!errors.codeLength}
+                                    size="l"
+                                />
+                                {errors.codeLength && (
+                                    <div style={{ color: 'var(--g-color-danger)', marginTop: 6 }}>
+                                        {errors.codeLength}
+                                    </div>
+                                )}
+                            </div>
+                            <div>
+                                <label
+                                    style={{
+                                        display: 'block',
+                                        marginBottom: '4px',
+                                        fontSize: '12px',
+                                        color: 'var(--g-color-text-secondary)',
+                                    }}
+                                >
+                                    Символы для генерации
+                                </label>
+                                <TextInput
+                                    placeholder="Например: 123456789"
+                                    value={codeChars}
+                                    onUpdate={(v: string) => {
+                                        setCodeChars(v)
+                                        setErrors({ ...errors, codeChars: '' })
+                                    }}
+                                    error={!!errors.codeChars}
+                                    size="l"
+                                />
+                                {errors.codeChars && (
+                                    <div style={{ color: 'var(--g-color-danger)', marginTop: 6 }}>
+                                        {errors.codeChars}
+                                    </div>
+                                )}
+                            </div>
+                        </>
                     )}
 
                     {/* Редактируемо в сканере - только для bool */}

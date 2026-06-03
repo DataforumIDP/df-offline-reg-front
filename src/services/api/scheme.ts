@@ -12,6 +12,9 @@ export interface ProjectSchemeField {
         optional?: boolean
         isMark?: boolean
         maxLength?: number
+        random?: boolean
+        codeLength?: number
+        codeChars?: string
         listSettings?: {
             items: { value: string; color: string }[]
             multiple?: boolean

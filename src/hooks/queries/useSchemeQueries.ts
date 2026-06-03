@@ -14,6 +14,9 @@ export interface SchemeField {
         isMark?: boolean // только для bool — поле-отметка для режима выдачи сканера
         isPhone?: boolean // только для text — поле содержит номер телефона
         isHidden?: boolean // true = поле скрыто от операторов (только для admin)
+        random?: boolean // только для code — генерировать случайное значение
+        codeLength?: number // только для code+random — длина генерируемого кода
+        codeChars?: string // только для code+random — символы для генерации
         listSettings?: {
             multiple: boolean
             items: Array<{ value: string; color?: string; isHidden?: boolean }>
