@@ -18,10 +18,12 @@ import ProjectStatsPage from '@pages/admin/project/StatsPage'
 import ProjectParticipantsPage from '@pages/admin/project/ParticipantsPage'
 import ProjectTemplatesPage from '@pages/admin/project/TemplatesPage'
 import ProjectHooksPage from '@pages/admin/project/HooksPage'
+import ProjectScriptsPage from '@pages/admin/project/ScriptsPage'
 import ProjectZonesPage from '@pages/admin/project/ZonesPage'
 import ProjectJournalPage from '@pages/admin/project/JournalPage'
 import AccountSettingsPage from '@pages/admin/AccountSettingsPage'
 import FontsPage from '@pages/admin/FontsPage'
+import EmailAccountsPage from '@pages/admin/EmailAccountsPage'
 
 // Страницы оператора
 import OperatorLoginPage from '@pages/operator/LoginPage'
@@ -54,6 +56,9 @@ const AppRouter = () => {
                     {/* Шрифты */}
                     <Route path="/admin/fonts" element={<FontsPage />} />
 
+                    {/* Email аккаунты */}
+                    <Route path="/admin/email-accounts" element={<EmailAccountsPage />} />
+
                     {/* Страницы проекта */}
                     <Route path="/admin/projects/:id/settings" element={<ProjectSettingsPage />} />
                     <Route path="/admin/projects/:id/stats" element={<ProjectStatsPage />} />
@@ -66,6 +71,7 @@ const AppRouter = () => {
                         element={<ProjectTemplatesPage />}
                     />
                     <Route path="/admin/projects/:id/hooks" element={<ProjectHooksPage />} />
+                    <Route path="/admin/projects/:id/scripts" element={<ProjectScriptsPage />} />
                     <Route path="/admin/projects/:id/zones" element={<ProjectZonesPage />} />
                     <Route path="/admin/projects/:id/journal" element={<ProjectJournalPage />} />
                 </Route>

@@ -11,6 +11,8 @@ import {
     Bars,
     ListCheck as ClipboardList,
     TextAlignLeft,
+    Envelope as Mail,
+    Code,
 } from '@gravity-ui/icons'
 import { Button, Icon, Dialog } from '@gravity-ui/uikit'
 import { useState } from 'react'
@@ -63,6 +65,12 @@ const AdminLayout = () => {
             onItemClick: () => navigate(`/admin/projects/${projectId}/hooks`),
         },
         {
+            id: 'scripts',
+            title: 'Скрипты',
+            icon: Code,
+            onItemClick: () => navigate(`/admin/projects/${projectId}/scripts`),
+        },
+        {
             id: 'zones',
             title: 'Зоны',
             icon: LayoutCells,
@@ -104,6 +112,13 @@ const AdminLayout = () => {
             icon: Gear,
             current: location.pathname === '/admin/settings',
             onItemClick: () => navigate('/admin/settings'),
+        },
+        {
+            id: 'email-accounts',
+            title: 'Email аккаунты',
+            icon: Mail,
+            current: location.pathname === '/admin/email-accounts',
+            onItemClick: () => navigate('/admin/email-accounts'),
         },
     ]
 

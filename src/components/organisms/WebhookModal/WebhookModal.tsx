@@ -12,7 +12,6 @@ import { useWebhookLogsQuery } from '@/hooks/queries/useWebhookQueries'
 import { useSchemeQuery } from '@/hooks/queries/useSchemeQueries'
 import { getActiveServerUrl } from '@/services/serverStorage'
 import { CreateParticipantModal } from '@/components/organisms/CreateParticipantModal'
-import { ScriptEditor } from '@/components/atoms'
 
 interface WebhookModalProps {
     open: boolean
@@ -22,7 +21,7 @@ interface WebhookModalProps {
 }
 
 type LogFilter = 'all' | 'success' | 'error'
-type FormTab = 'settings' | 'pre-script' | 'post-script' | 'logs'
+type FormTab = 'settings' | 'logs'
 
 function isLogSuccess(log: WebhookLog): boolean {
     return (
@@ -61,8 +60,6 @@ export const WebhookModal = ({ open, onClose, projectId, webhook }: WebhookModal
     const [name, setName] = useState('')
     const [slug, setSlug] = useState('')
     const [isActive, setIsActive] = useState(true)
-    const [preScript, setPreScript] = useState<string | null>(null)
-    const [postScript, setPostScript] = useState<string | null>(null)
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [deleteConfirm, setDeleteConfirm] = useState(false)
     const [formTab, setFormTab] = useState<FormTab>('settings')
@@ -113,14 +110,10 @@ export const WebhookModal = ({ open, onClose, projectId, webhook }: WebhookModal
                 setName(webhook.name)
                 setSlug(webhook.slug)
                 setIsActive(webhook.isActive)
-                setPreScript(webhook.preScript ?? null)
-                setPostScript(webhook.postScript ?? null)
             } else {
                 setName('')
                 setSlug('')
                 setIsActive(true)
-                setPreScript(null)
-                setPostScript(null)
             }
             setErrors({})
             setDeleteConfirm(false)
@@ -135,8 +128,6 @@ export const WebhookModal = ({ open, onClose, projectId, webhook }: WebhookModal
         setName('')
         setSlug('')
         setIsActive(true)
-        setPreScript(null)
-        setPostScript(null)
         setErrors({})
         setDeleteConfirm(false)
         setFormTab('settings')
@@ -178,7 +169,7 @@ export const WebhookModal = ({ open, onClose, projectId, webhook }: WebhookModal
             if (isEditMode && webhook) {
                 await updateMutation.mutateAsync({
                     slug: webhook.slug,
-                    data: { name, isActive, preScript, postScript },
+                    data: { name, isActive },
                 })
                 enqueueSnackbar('Вебхук обновлён', { variant: 'success' })
             } else {
@@ -242,20 +233,14 @@ export const WebhookModal = ({ open, onClose, projectId, webhook }: WebhookModal
                         {/* Вкладки (только в режиме редактирования) */}
                         {isEditMode && (
                             <div style={{ display: 'flex', gap: '4px', borderBottom: '1px solid var(--g-color-line-generic)', paddingBottom: '8px' }}>
-                                {(['settings', 'pre-script', 'post-script', 'logs'] as FormTab[]).map((tab) => (
+                                {(['settings', 'logs'] as FormTab[]).map((tab) => (
                                     <Button
                                         key={tab}
                                         view={formTab === tab ? 'normal' : 'flat'}
                                         size="s"
                                         onClick={() => setFormTab(tab)}
                                     >
-                                        {tab === 'settings' ? 'Настройки'
-                                            : tab === 'pre-script' ? 'Прескрипт'
-                                            : tab === 'post-script' ? 'Постскрипт'
-                                            : 'Логи'}
-                                        {(tab === 'pre-script' && preScript) || (tab === 'post-script' && postScript)
-                                            ? <span style={{ marginLeft: '4px', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--g-color-text-positive)', display: 'inline-block', verticalAlign: 'middle' }} />
-                                            : null}
+                                        {tab === 'settings' ? 'Настройки' : 'Логи'}
                                         {tab === 'logs' && errorCount > 0
                                             ? <span style={{ marginLeft: '4px', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--g-color-text-danger)', display: 'inline-block', verticalAlign: 'middle' }} />
                                             : null}
@@ -408,28 +393,6 @@ export const WebhookModal = ({ open, onClose, projectId, webhook }: WebhookModal
                             </div>
                         )}
                             </>
-                        )}
-
-                        {/* ── Вкладка: Прескрипт ── */}
-                        {formTab === 'pre-script' && isEditMode && (
-                            <ScriptEditor
-                                value={preScript}
-                                onChange={setPreScript}
-                                label="Прескрипт"
-                                description="Выполняется до валидации. Может трансформировать сырые данные или выбросить исключение для отказа с ошибкой."
-                                scriptType="pre"
-                            />
-                        )}
-
-                        {/* ── Вкладка: Постскрипт ── */}
-                        {formTab === 'post-script' && isEditMode && (
-                            <ScriptEditor
-                                value={postScript}
-                                onChange={setPostScript}
-                                label="Постскрипт"
-                                description="Выполняется после сохранения участника. Возвращённый объект обновит данные участника."
-                                scriptType="post"
-                            />
                         )}
 
                     {/* ── Вкладка: Логи ── */}

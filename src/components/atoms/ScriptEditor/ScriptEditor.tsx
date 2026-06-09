@@ -24,17 +24,35 @@ interface AxiosInstance {
     put<T = any>(url: string, data?: any, config?: Record<string, any>): Promise<AxiosResponse<T>>
     delete<T = any>(url: string, config?: Record<string, any>): Promise<AxiosResponse<T>>
 }
+interface MailOptions {
+    /** slug email-аккаунта */
+    slug: string
+    /** Получатель(и) */
+    mail: string | string[]
+    /** HTML или ссылка на HTML-файл */
+    html: string
+    /** Тема письма */
+    theme: string
+    /** Параметры для подстановки: { "%name%": "Иван" } */
+    params?: Record<string, string>
+}
 interface Utils {
     /** HTTP-клиент — поддерживает get / post / put / delete */
     axios: AxiosInstance
     /** Транслитерация русского текста в латиницу */
     translitRuToEn(str: string): string
+    /** Отправить письмо через сохранённый email-аккаунт */
+    mail(opts: MailOptions): Promise<{ ok: boolean; recipients: number }>
+    /** Лог в серверную консоль */
+    log(message: string, meta?: any): Promise<{ ok: boolean }>
+    /** Источник регистрации: 'webhook' | 'excel' | 'form' */
+    origin: 'webhook' | 'excel' | 'form'
 }
 /** Данные, которые пришли в теле запроса от пользователя (сырые, до валидации). */
 interface RequestData {
     /** Сырые данные из тела запроса вебхука */
     user: Record<string, any>
-    /** Набор утилит : axios, translitRuToEn */
+    /** Набор утилит : axios, translitRuToEn, mail, origin */
     utils: Utils
 }
 `
@@ -51,17 +69,35 @@ interface AxiosInstance {
     put<T = any>(url: string, data?: any, config?: Record<string, any>): Promise<AxiosResponse<T>>
     delete<T = any>(url: string, config?: Record<string, any>): Promise<AxiosResponse<T>>
 }
+interface MailOptions {
+    /** slug email-аккаунта */
+    slug: string
+    /** Получатель(и) */
+    mail: string | string[]
+    /** HTML или ссылка на HTML-файл */
+    html: string
+    /** Тема письма */
+    theme: string
+    /** Параметры для подстановки: { "%name%": "Иван" } */
+    params?: Record<string, string>
+}
 interface Utils {
     /** HTTP-клиент — поддерживает get / post / put / delete */
     axios: AxiosInstance
     /** Транслитерация русского текста в латиницу */
     translitRuToEn(str: string): string
+    /** Отправить письмо через сохранённый email-аккаунт */
+    mail(opts: MailOptions): Promise<{ ok: boolean; recipients: number }>
+    /** Лог в серверную консоль */
+    log(message: string, meta?: any): Promise<{ ok: boolean }>
+    /** Источник регистрации: 'webhook' | 'excel' | 'form' */
+    origin: 'webhook' | 'excel' | 'form'
 }
 /** Данные участника после сохранения в базе данных. */
 interface RequestData {
     /** Поля участника, сохранённые в БД (прошедшие валидацию) */
     user: Record<string, any>
-    /** Набор утилит : axios, translitRuToEn */
+    /** Набор утилит : axios, translitRuToEn, mail, origin */
     utils: Utils
 }
 `
@@ -236,7 +272,7 @@ export const ScriptEditor = ({
         />
     ) : (
         <Editor
-            height="220px"
+            height="520px"
             language="typescript"
             theme="space-ocean"
             path={editorPath}
