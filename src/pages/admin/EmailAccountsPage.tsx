@@ -165,7 +165,7 @@ const AccountFormDialog = ({ open, onClose, account }: AccountFormDialogProps) =
     const isSmtp = form.provider === 'smtp'
 
     return (
-        <Dialog open={open} onClose={onClose} onTransitionEnter={handleOpen}>
+        <Dialog open={open} onClose={onClose} onTransitionIn={handleOpen}>
             <Dialog.Header caption={account ? 'Редактировать аккаунт' : 'Добавить email-аккаунт'} />
             <Dialog.Body>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', minWidth: 380 }}>
@@ -395,14 +395,22 @@ const ViewDialog = ({ account, onClose, onEdit }: ViewDialogProps) => {
                         ? { view: 'outlined-danger' as const, loading: deleteMutation.isPending }
                         : { view: 'outlined' as const }
                 }
-                renderButtonsStart={() =>
-                    !confirmDelete ? (
-                        <Button view="outlined-danger" onClick={() => setConfirmDelete(true)}>
-                            <TrashBin />
-                            Удалить
-                        </Button>
-                    ) : null
-                }
+                renderButtons={(buttonApply, buttonCancel) => (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                        {!confirmDelete ? (
+                            <Button view="outlined-danger" onClick={() => setConfirmDelete(true)}>
+                                <TrashBin />
+                                Удалить
+                            </Button>
+                        ) : (
+                            <div />
+                        )}
+                        <div style={{ display: 'flex', gap: 8 }}>
+                            {buttonCancel}
+                            {buttonApply}
+                        </div>
+                    </div>
+                )}
             />
         </Dialog>
     )
@@ -434,7 +442,8 @@ const EmailAccountsPage = () => {
 
     return (
         <PageWrapper>
-            <PageHeader title="Email аккаунты">
+            <PageHeader>
+                <Text variant="display-1">Email аккаунты</Text>
                 <PageHeaderActions>
                     <Button view="action" size="l" onClick={() => setCreateOpen(true)}>
                         <Plus />
