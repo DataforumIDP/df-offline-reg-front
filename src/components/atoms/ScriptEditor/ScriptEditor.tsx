@@ -24,6 +24,14 @@ interface AxiosInstance {
     put<T = any>(url: string, data?: any, config?: Record<string, any>): Promise<AxiosResponse<T>>
     delete<T = any>(url: string, config?: Record<string, any>): Promise<AxiosResponse<T>>
 }
+interface AttachmentOption {
+    /** Имя файла во вложении, включая расширение */
+    filename: string
+    /** Прямая ссылка на файл; будет скачан и приложен к письму */
+    url?: string
+    /** Готовый base64 без префикса data:... */
+    base64?: string
+}
 interface MailOptions {
     /** slug email-аккаунта */
     slug: string
@@ -35,6 +43,8 @@ interface MailOptions {
     theme: string
     /** Параметры для подстановки: { "%name%": "Иван" } */
     params?: Record<string, string>
+    /** Вложения; для RuSender будут перекодированы в base64 */
+    attachments?: AttachmentOption[]
 }
 interface Utils {
     /** HTTP-клиент — поддерживает get / post / put / delete */
@@ -69,6 +79,14 @@ interface AxiosInstance {
     put<T = any>(url: string, data?: any, config?: Record<string, any>): Promise<AxiosResponse<T>>
     delete<T = any>(url: string, config?: Record<string, any>): Promise<AxiosResponse<T>>
 }
+interface AttachmentOption {
+    /** Имя файла во вложении, включая расширение */
+    filename: string
+    /** Прямая ссылка на файл; будет скачан и приложен к письму */
+    url?: string
+    /** Готовый base64 без префикса data:... */
+    base64?: string
+}
 interface MailOptions {
     /** slug email-аккаунта */
     slug: string
@@ -80,6 +98,8 @@ interface MailOptions {
     theme: string
     /** Параметры для подстановки: { "%name%": "Иван" } */
     params?: Record<string, string>
+    /** Вложения; для RuSender будут перекодированы в base64 */
+    attachments?: AttachmentOption[]
 }
 interface Utils {
     /** HTTP-клиент — поддерживает get / post / put / delete */
