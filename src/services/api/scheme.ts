@@ -10,6 +10,7 @@ export interface ProjectSchemeField {
         type: 'text' | 'list' | 'bool' | 'id' | 'img' | 'code'
         uniq: boolean
         optional?: boolean
+        showInScanner?: boolean
         isMark?: boolean
         maxLength?: number
         random?: boolean

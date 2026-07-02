@@ -37,6 +37,7 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
         codeChars: 'abcdefghijklmnopqrstuvwxyz0123456789',
         isPhone: false, // для text — поле телефона
         isHidden: false,
+        showInScanner: false,
     })
 
     const [errors, setErrors] = useState<Record<string, string>>({})
@@ -58,6 +59,7 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
             codeChars: 'abcdefghijklmnopqrstuvwxyz0123456789',
             isPhone: false,
             isHidden: false,
+            showInScanner: false,
         })
         setErrors({})
         onClose()
@@ -88,6 +90,7 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
             type: formData.type,
             uniq: formData.uniq,
             optional: formData.optional,
+            showInScanner: formData.showInScanner,
         }
 
         if (formData.type === 'text') {
@@ -498,6 +501,13 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
                         onUpdate={(checked) => setFormData({ ...formData, isHidden: checked })}
                     >
                         Скрытое поле (только для админа)
+                    </Checkbox>
+
+                    <Checkbox
+                        checked={formData.showInScanner}
+                        onUpdate={(checked) => setFormData({ ...formData, showInScanner: checked })}
+                    >
+                        Отображать в сканере
                     </Checkbox>
                 </div>
             </Dialog.Body>

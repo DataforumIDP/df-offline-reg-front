@@ -10,6 +10,7 @@ export interface SchemeField {
         type: 'text' | 'list' | 'bool' | 'id' | 'img' | 'code'
         uniq: boolean
         optional: boolean // true = необязательное, false = обязательное
+        showInScanner?: boolean // true = отображать поле в сканере
         maxLength?: number
         isMark?: boolean // только для bool — поле-отметка для режима выдачи сканера
         isPhone?: boolean // только для text — поле содержит номер телефона

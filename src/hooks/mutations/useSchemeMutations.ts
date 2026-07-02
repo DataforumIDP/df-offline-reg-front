@@ -8,6 +8,7 @@ interface CreateSchemeFieldPayload {
     config: {
         type: 'text' | 'list' | 'bool' | 'id' | 'img' | 'code'
         uniq: boolean
+        showInScanner?: boolean
         maxLength?: number
         listSettings?: {
             multiple: boolean
@@ -23,6 +24,7 @@ interface UpdateSchemeFieldPayload {
     config: {
         type?: 'text' | 'list' | 'bool' | 'id' | 'img' | 'code'
         uniq?: boolean
+        showInScanner?: boolean
         maxLength?: number
         isMark?: boolean
         isPhone?: boolean

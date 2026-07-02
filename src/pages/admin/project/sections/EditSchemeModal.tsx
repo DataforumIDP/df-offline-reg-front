@@ -45,6 +45,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
     const [isMark, setIsMark] = useState(false)
     const [isPhone, setIsPhone] = useState(false)
     const [isHidden, setIsHidden] = useState(false)
+    const [showInScanner, setShowInScanner] = useState(false)
 
     // Функция для перезапуска генерации (отключает random, затем включает обратно)
     const handleRestartGeneration = async () => {
@@ -142,6 +143,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
         setIsMark(field.config?.isMark || false)
         setIsPhone(field.config?.isPhone || false)
         setIsHidden(field.config?.isHidden || false)
+        setShowInScanner(field.config?.showInScanner || false)
     }, [field, open])
 
     const handleClose = () => {
@@ -163,6 +165,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
         setIsMark(false)
         setIsPhone(false)
         setIsHidden(false)
+        setShowInScanner(false)
         onClose()
     }
 
@@ -191,6 +194,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
             type: typeValue,
             uniq,
             optional,
+            showInScanner,
         }
 
         if (typeValue === 'text' && maxLength) {
@@ -592,6 +596,13 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
                         onUpdate={(checked) => setIsHidden(checked)}
                     >
                         Скрытое поле (только для админа)
+                    </Checkbox>
+
+                    <Checkbox
+                        checked={showInScanner}
+                        onUpdate={(checked) => setShowInScanner(checked)}
+                    >
+                        Отображать в сканере
                     </Checkbox>
                 </div>
             </Dialog.Body>
