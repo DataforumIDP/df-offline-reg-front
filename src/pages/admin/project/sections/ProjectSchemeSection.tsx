@@ -127,9 +127,19 @@ const ProjectSchemeSection = () => {
                                                 Телефон
                                             </Label>
                                         )}
+                                        {field.config.isHidden && (
+                                            <Label theme="warning" size="s">
+                                                Для админа
+                                            </Label>
+                                        )}
+                                        {field.config.showInScanner && (
+                                            <Label theme="success" size="s">
+                                                В сканере
+                                            </Label>
+                                        )}
                                         {field.scannerEditable && (
                                             <Label theme="utility" size="s">
-                                                В сканере
+                                                Ред. в сканере
                                             </Label>
                                         )}
                                     </div>
