@@ -235,8 +235,8 @@ export const ParticipantsTable = ({
     const columns: TableColumnConfig<TableDataItem>[] = useMemo(() => {
         const visibleScheme = isAdmin ? scheme : scheme.filter((f) => !f.config.isHidden)
         const schemeColumns: TableColumnConfig<TableDataItem>[] = visibleScheme.map((field) => {
-            // Проверяем, можно ли фильтровать это поле (не фильтруем изображения и bool)
-            const isFilterable = field.config.type !== 'img' && field.config.type !== 'bool'
+            // Проверяем, можно ли фильтровать это поле (не фильтруем изображения)
+            const isFilterable = field.config.type !== 'img'
             // Это поле определяющее цвет строки?
             const isColorField = colorRow && colorField?.key === field.key
 

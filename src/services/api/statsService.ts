@@ -5,7 +5,7 @@ export interface LogRecord {
     projectId: number
     participantId: number | null
     action: 'CREATE' | 'UPDATE' | 'DELETE' | 'PRINT'
-    actor: 'USER' | 'WEBHOOK' | 'AUTO'
+    actor: 'USER' | 'WEBHOOK' | 'AUTO' | 'SCANNER'
     userId: number | null
     user?: {
         id: number
@@ -39,7 +39,7 @@ export interface LogsQuery {
     page?: number
     limit?: number
     action?: 'CREATE' | 'UPDATE' | 'DELETE' | 'PRINT'
-    actor?: 'USER' | 'WEBHOOK' | 'AUTO'
+    actor?: 'USER' | 'WEBHOOK' | 'AUTO' | 'SCANNER'
     search?: string
     participantId?: number
     userId?: number

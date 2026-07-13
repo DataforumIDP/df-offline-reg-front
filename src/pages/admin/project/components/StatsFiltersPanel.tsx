@@ -39,9 +39,7 @@ export const StatsFiltersPanel = ({
     ).length
     const totalActive = activeDateCount + activeFieldCount
 
-    const filterableFields = scheme.filter(
-        (f) => f.config.type !== 'img' && f.config.type !== 'bool',
-    )
+    const filterableFields = scheme.filter((f) => f.config.type !== 'img')
 
     const handleFieldChange = useCallback(
         (key: string, value: string | string[] | undefined) => {
@@ -130,8 +128,39 @@ export const StatsFiltersPanel = ({
                             {filterableFields.map((field) => {
                                 const value = filters[field.key]
                                 const isListType = field.config.type === 'list'
+                                const isBoolType = field.config.type === 'bool'
                                 const listItems = field.config.listSettings?.items || []
                                 const isMultiple = field.config.listSettings?.multiple || false
+
+                                if (isBoolType) {
+                                    return (
+                                        <div key={field.key}>
+                                            <Text
+                                                variant="body-1"
+                                                color="secondary"
+                                                style={{ marginBottom: 4, display: 'block' }}
+                                            >
+                                                {field.label}
+                                            </Text>
+                                            <Select
+                                                value={
+                                                    typeof value === 'string' && value
+                                                        ? [value]
+                                                        : []
+                                                }
+                                                options={[
+                                                    { value: 'true', content: 'Да' },
+                                                    { value: 'false', content: 'Нет' },
+                                                ]}
+                                                onUpdate={(vals) =>
+                                                    handleFieldChange(field.key, vals[0] || undefined)
+                                                }
+                                                placeholder="Все значения"
+                                                width="max"
+                                            />
+                                        </div>
+                                    )
+                                }
 
                                 if (isListType) {
                                     return (

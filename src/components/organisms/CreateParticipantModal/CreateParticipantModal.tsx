@@ -399,7 +399,6 @@ export const CreateParticipantModal = ({
                         checked={!!value}
                         onUpdate={(checked) => updateField(field.key, checked)}
                         size="l"
-                        disabled={!!field.config?.isMark}
                     >
                         {field.label}
                     </Checkbox>

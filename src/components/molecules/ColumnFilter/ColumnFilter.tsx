@@ -53,6 +53,7 @@ export const ColumnFilter = ({ field, value, onChange }: ColumnFilterProps) => {
     )
 
     const isListType = field.config.type === 'list'
+    const isBoolType = field.config.type === 'bool'
     const listItems = field.config.listSettings?.items || []
     const isMultiple = field.config.listSettings?.multiple || false
 
@@ -61,6 +62,18 @@ export const ColumnFilter = ({ field, value, onChange }: ColumnFilterProps) => {
         value: item.value,
         content: item.value,
     }))
+
+    const boolOptions = [
+        { value: 'true', content: 'Да' },
+        { value: 'false', content: 'Нет' },
+    ]
+
+    const handleBoolChange = useCallback(
+        (newValues: string[]) => {
+            onChange(field.key, newValues[0] || undefined)
+        },
+        [field.key, onChange],
+    )
 
     return (
         <>
@@ -109,6 +122,14 @@ export const ColumnFilter = ({ field, value, onChange }: ColumnFilterProps) => {
                             placeholder="Выберите значения"
                             width="max"
                             filterable
+                        />
+                    ) : isBoolType ? (
+                        <Select
+                            value={typeof value === 'string' && value ? [value] : []}
+                            options={boolOptions}
+                            onUpdate={handleBoolChange}
+                            placeholder="Любое значение"
+                            width="max"
                         />
                     ) : (
                         <TextInput

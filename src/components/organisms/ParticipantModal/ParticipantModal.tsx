@@ -377,7 +377,7 @@ export const ParticipantModal = ({
                         checked={!!value}
                         onUpdate={(checked) => updateField(field.key, checked)}
                         size="l"
-                        disabled={field.config?.isMark ? !isAdmin : !canEdit}
+                        disabled={!canEdit}
                     >
                         {field.label}
                     </Checkbox>

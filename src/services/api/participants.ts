@@ -165,6 +165,8 @@ export const fetchImportExcel = (projectId: number, file: File): Promise<ImportE
     return apiClient
         .post<ImportExcelResult>(`/projects/${projectId}/participants/excel`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
+            // Импорт больших файлов (десятки тысяч строк) может занимать больше 10 секунд
+            timeout: 300000,
         })
         .then((res) => res.data)
 }
@@ -184,6 +186,8 @@ export const fetchExportExcel = (projectId: number, params?: ParticipantsQuery):
         .get(`/projects/${projectId}/participants/export`, {
             params: queryParams,
             responseType: 'blob',
+            // Экспорт большой базы участников может занимать больше 10 секунд
+            timeout: 300000,
         })
         .then((res) => res.data)
 }
@@ -257,6 +261,8 @@ export const fetchExportScans = async (
 ): Promise<Blob> => {
     const response = await apiClient.post(`/projects/${projectId}/scans/excel`, params, {
         responseType: 'blob',
+        // Экспорт статистики сканирований может занимать больше 10 секунд
+        timeout: 300000,
     })
     return response.data
 }

@@ -22,9 +22,9 @@ const ExportModal = ({ open, onClose, projectId, projectTitle }: ExportModalProp
     // Используем существующий хук для схемы
     const { data: schemeData, isLoading: isLoadingScheme } = useSchemeQuery(String(projectId))
 
-    // Фильтруемые поля - list и text (кроме id, img, code)
+    // Фильтруемые поля - list, text и bool (кроме id, img, code)
     const filterableFields =
-        schemeData?.fields?.filter((field) => ['list', 'text'].includes(field.config.type)) || []
+        schemeData?.fields?.filter((field) => ['list', 'text', 'bool'].includes(field.config.type)) || []
 
     const handleFilterChange = (key: string, value: string | string[]) => {
         setFilters((prev) => {
@@ -214,6 +214,26 @@ const FilterField = ({ field, value, onChange }: FilterFieldProps) => {
                     value={value ? [String(value)] : []}
                     onUpdate={(vals) => onChange(vals[0] || '')}
                     options={[{ value: '', content: 'Все' }, ...selectOptions]}
+                    size="m"
+                    width="max"
+                />
+            </div>
+        )
+    }
+
+    // Для логических полей (например, поле-отметка сканера)
+    if (config.type === 'bool') {
+        return (
+            <div className={styles.filterField}>
+                <Text variant="body-2">{field.label}</Text>
+                <Select
+                    value={typeof value === 'string' && value ? [value] : []}
+                    onUpdate={(vals) => onChange(vals[0] || '')}
+                    options={[
+                        { value: '', content: 'Все' },
+                        { value: 'true', content: 'Да' },
+                        { value: 'false', content: 'Нет' },
+                    ]}
                     size="m"
                     width="max"
                 />
