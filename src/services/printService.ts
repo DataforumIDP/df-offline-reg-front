@@ -376,30 +376,62 @@ export function clearFontCache(): void {
 /**
  * Проверить доступность всех шрифтов (для диагностики)
  */
-export async function checkFontsAvailability(): Promise<
-    { font: string; variant: string; url: string; ok: boolean; error?: string }[]
-> {
-    const results: { font: string; variant: string; url: string; ok: boolean; error?: string }[] = []
+export type FontCheckResult = { font: string; variant: string; url: string; ok: boolean; error?: string }
+export type FontCheckItem = { font: string; variant: string; url: string; cloud: boolean }
+
+/**
+ * Получить список всех шрифтов (статические + облачные), которые будут проверены
+ * функцией checkFontsAvailability. Используется UI для отрисовки строк-плейсхолдеров
+ * (со спиннером) ещё до завершения самой проверки.
+ */
+export function getFontCheckList(): FontCheckItem[] {
+    const items: FontCheckItem[] = []
     for (const [fontName, variants] of Object.entries(FONT_URLS)) {
         for (const [variant, url] of Object.entries(variants)) {
-            try {
-                const buf = await loadFontFromUrl(url)
-                results.push({ font: fontName, variant, url, ok: buf.byteLength > 1000 })
-            } catch (e: any) {
-                results.push({ font: fontName, variant, url, ok: false, error: e.message })
-            }
+            items.push({ font: fontName, variant, url, cloud: false })
+        }
+    }
+    for (const [fontName, variants] of cloudFontsRegistry.entries()) {
+        for (const [variant, url] of Object.entries(variants)) {
+            items.push({ font: `☁ ${fontName}`, variant, url, cloud: true })
+        }
+    }
+    return items
+}
+
+/**
+ * Проверить доступность всех шрифтов (для диагностики)
+ * onProgress вызывается сразу после проверки каждого конкретного шрифта/варианта,
+ * чтобы UI мог показывать результаты по мере готовности (а не ждать полного завершения,
+ * что особенно важно для облачных шрифтов — их ещё нужно скачать).
+ */
+export async function checkFontsAvailability(
+    onProgress?: (result: FontCheckResult) => void,
+): Promise<FontCheckResult[]> {
+    const results: FontCheckResult[] = []
+
+    const checkOne = async (font: string, variant: string, url: string) => {
+        let result: FontCheckResult
+        try {
+            const buf = await loadFontFromUrl(url)
+            result = { font, variant, url, ok: buf.byteLength > 1000 }
+        } catch (e: any) {
+            result = { font, variant, url, ok: false, error: e.message }
+        }
+        results.push(result)
+        onProgress?.(result)
+    }
+
+    for (const [fontName, variants] of Object.entries(FONT_URLS)) {
+        for (const [variant, url] of Object.entries(variants)) {
+            await checkOne(fontName, variant, url)
         }
     }
 
     // Облачные шрифты (регистрируются через setCloudFonts из useCloudFontsQuery)
     for (const [fontName, variants] of cloudFontsRegistry.entries()) {
         for (const [variant, url] of Object.entries(variants)) {
-            try {
-                const buf = await loadFontFromUrl(url)
-                results.push({ font: `☁ ${fontName}`, variant, url, ok: buf.byteLength > 1000 })
-            } catch (e: any) {
-                results.push({ font: `☁ ${fontName}`, variant, url, ok: false, error: e.message })
-            }
+            await checkOne(`☁ ${fontName}`, variant, url)
         }
     }
 

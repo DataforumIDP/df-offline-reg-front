@@ -50,6 +50,10 @@ function getCachedFontPath(url: string): string {
 /** Скачать файл по http(s) URL с поддержкой редиректов */
 function downloadFile(url: string, destPath: string): Promise<void> {
     return new Promise((resolve, reject) => {
+        // Уникальное имя temp-файла на каждую попытку скачивания, чтобы параллельные
+        // загрузки одного и того же URL (из разных вкладок процесса) не писали в один файл
+        // и не «отбирали» друг у друга .tmp при переименовании.
+        const tempPath = `${destPath}.${process.pid}-${crypto.randomBytes(6).toString('hex')}.tmp`
         const doRequest = (targetUrl: string, redirectsLeft: number) => {
             const client = targetUrl.startsWith('https://') ? https : http
             client
@@ -73,12 +77,22 @@ function downloadFile(url: string, destPath: string): Promise<void> {
                         reject(new Error(`Failed to download font: HTTP ${res.statusCode}`))
                         return
                     }
-                    const tempPath = `${destPath}.tmp`
                     const fileStream = fs.createWriteStream(tempPath)
                     res.pipe(fileStream)
                     fileStream.on('finish', () => {
                         fileStream.close(() => {
-                            fs.renameSync(tempPath, destPath)
+                            try {
+                                fs.renameSync(tempPath, destPath)
+                            } catch (err: any) {
+                                // Кто-то другой уже успел скачать и положить файл в кэш — это не ошибка
+                                if (fs.existsSync(destPath)) {
+                                    fs.unlink(tempPath, () => {})
+                                } else {
+                                    fs.unlink(tempPath, () => {})
+                                    reject(err)
+                                    return
+                                }
+                            }
                             resolve()
                         })
                     })
@@ -91,6 +105,28 @@ function downloadFile(url: string, destPath: string): Promise<void> {
         }
         doRequest(url, 5)
     })
+}
+
+/**
+ * Скачивания одного и того же облачного шрифта, идущие параллельно (например,
+ * предзагрузка при старте и одновременная печать), переиспользуют один и тот же промис,
+ * вместо того чтобы скачивать файл повторно и гоняться за одним и тем же .tmp.
+ */
+const inflightFontDownloads = new Map<string, Promise<void>>()
+
+async function ensureCloudFontCached(url: string): Promise<string> {
+    const cachePath = getCachedFontPath(url)
+    if (fs.existsSync(cachePath)) return cachePath
+
+    let promise = inflightFontDownloads.get(url)
+    if (!promise) {
+        promise = downloadFile(url, cachePath).finally(() => {
+            inflightFontDownloads.delete(url)
+        })
+        inflightFontDownloads.set(url, promise)
+    }
+    await promise
+    return cachePath
 }
 
 export function setupIPC(store: SimpleStore, printServer: PrintServer, mainWindow: Electron.BrowserWindow) {
@@ -262,10 +298,7 @@ export function setupIPC(store: SimpleStore, printServer: PrintServer, mainWindo
     // и кэшируется локально (в main-процессе, без CORS-ограничений браузера).
     ipcMain.handle('read-font-file', async (_event: IpcMainInvokeEvent, urlOrPath: string) => {
         if (/^https?:\/\//i.test(urlOrPath)) {
-            const cachePath = getCachedFontPath(urlOrPath)
-            if (!fs.existsSync(cachePath)) {
-                await downloadFile(urlOrPath, cachePath)
-            }
+            const cachePath = await ensureCloudFontCached(urlOrPath)
             const buffer = fs.readFileSync(cachePath)
             if (buffer.byteLength < 1000) {
                 fs.unlink(cachePath, () => {})
@@ -290,18 +323,16 @@ export function setupIPC(store: SimpleStore, printServer: PrintServer, mainWindo
     // Предзагрузка облачных шрифтов в локальный кэш (вызывается при старте приложения,
     // после получения списка облачных шрифтов с сервера)
     ipcMain.handle('cache-cloud-fonts', async (_event: IpcMainInvokeEvent, urls: string[]) => {
-        const results: { url: string; ok: boolean; error?: string }[] = []
-        for (const url of urls) {
-            try {
-                const cachePath = getCachedFontPath(url)
-                if (!fs.existsSync(cachePath)) {
-                    await downloadFile(url, cachePath)
+        const results = await Promise.all(
+            urls.map(async (url) => {
+                try {
+                    await ensureCloudFontCached(url)
+                    return { url, ok: true }
+                } catch (e: any) {
+                    return { url, ok: false, error: e.message }
                 }
-                results.push({ url, ok: true })
-            } catch (e: any) {
-                results.push({ url, ok: false, error: e.message })
-            }
-        }
+            }),
+        )
         return results
     })
 }

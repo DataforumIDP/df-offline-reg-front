@@ -1,21 +1,23 @@
 import { useState, useEffect } from 'react'
-import { Text, TextInput, Button, RadioGroup, Alert, Select } from '@gravity-ui/uikit'
+import { Text, TextInput, Button, RadioGroup, Alert, Select, Spin } from '@gravity-ui/uikit'
 import { Printer, CircleCheck, CircleXmark } from '@gravity-ui/icons'
 import { useElectronPrint } from '@/hooks/useElectron'
-import { checkFontsAvailability } from '@/services/printService'
+import { checkFontsAvailability, getFontCheckList, FontCheckResult } from '@/services/printService'
+import { useCloudFontsQuery } from '@/hooks/queries/useCloudFontsQueries'
 import styles from './PrintSettings.module.css'
 
-type FontCheckResult = { font: string; variant: string; url: string; ok: boolean; error?: string }
+type FontRow = { font: string; variant: string; url: string; status: 'pending' | 'ok' | 'error'; error?: string }
 
 export const PrintSettings = () => {
     const electron = useElectronPrint()
+    const { isLoading: cloudFontsLoading } = useCloudFontsQuery()
     const [selectedPrinter, setSelectedPrinter] = useState('')
     const [labelWidth, setLabelWidth] = useState('70')
     const [labelHeight, setLabelHeight] = useState('50')
     const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('landscape')
     const [saved, setSaved] = useState(false)
     const [saving, setSaving] = useState(false)
-    const [fontResults, setFontResults] = useState<FontCheckResult[] | null>(null)
+    const [fontRows, setFontRows] = useState<FontRow[] | null>(null)
     const [fontsLoading, setFontsLoading] = useState(false)
 
     useEffect(() => {
@@ -149,14 +151,51 @@ export const PrintSettings = () => {
                 <Text variant="subheader-2" className={styles.sectionTitle}>
                     Шрифты для печати
                 </Text>
+                {cloudFontsLoading && (
+                    <div className={styles.statusBar} style={{ padding: '6px 12px' }}>
+                        <Spin size="xs" />
+                        <Text variant="body-2" color="secondary">
+                            Загрузка списка облачных шрифтов...
+                        </Text>
+                    </div>
+                )}
                 <Button
                     view="outlined"
                     size="m"
                     onClick={async () => {
                         setFontsLoading(true)
+                        // Сразу показываем все ожидаемые строки со спиннером — облачные шрифты
+                        // ещё нужно скачать, это может занять некоторое время
+                        setFontRows(
+                            getFontCheckList().map((item) => ({
+                                font: item.font,
+                                variant: item.variant,
+                                url: item.url,
+                                status: 'pending',
+                            })),
+                        )
                         try {
-                            const results = await checkFontsAvailability()
-                            setFontResults(results)
+                            await checkFontsAvailability((result: FontCheckResult) => {
+                                setFontRows((prev) => {
+                                    const rows = prev ? [...prev] : []
+                                    const idx = rows.findIndex(
+                                        (r) => r.font === result.font && r.variant === result.variant,
+                                    )
+                                    const updated: FontRow = {
+                                        font: result.font,
+                                        variant: result.variant,
+                                        url: result.url,
+                                        status: result.ok ? 'ok' : 'error',
+                                        error: result.error,
+                                    }
+                                    if (idx >= 0) {
+                                        rows[idx] = updated
+                                    } else {
+                                        rows.push(updated)
+                                    }
+                                    return rows
+                                })
+                            })
                         } catch (e) {
                             console.error('Font check failed:', e)
                         } finally {
@@ -164,22 +203,25 @@ export const PrintSettings = () => {
                         }
                     }}
                     loading={fontsLoading}
+                    disabled={cloudFontsLoading}
                 >
                     Проверить шрифты
                 </Button>
-                {fontResults && (
+                {fontRows && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        {fontResults.map((r, i) => (
+                        {fontRows.map((r, i) => (
                             <div key={i} className={styles.statusBar} style={{ padding: '6px 12px' }}>
-                                {r.ok ? (
+                                {r.status === 'pending' && <Spin size="xs" />}
+                                {r.status === 'ok' && (
                                     <CircleCheck className={styles.statusIconOk} style={{ width: 16, height: 16 }} />
-                                ) : (
+                                )}
+                                {r.status === 'error' && (
                                     <CircleXmark className={styles.statusIconError} style={{ width: 16, height: 16 }} />
                                 )}
                                 <Text variant="body-1">
                                     {r.font} ({r.variant})
                                 </Text>
-                                {!r.ok && r.error && (
+                                {r.status === 'error' && r.error && (
                                     <Text variant="caption-2" color="danger" style={{ marginLeft: 'auto' }}>
                                         {r.error}
                                     </Text>
