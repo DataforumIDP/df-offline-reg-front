@@ -4,6 +4,8 @@ import * as os from 'os'
 import * as fs from 'fs'
 import * as net from 'net'
 import * as http from 'http'
+import * as https from 'https'
+import * as crypto from 'crypto'
 import { SimpleStore } from './store.js'
 import { printPdfGhostscript } from './printJob.js'
 import { PrintServer } from './printServer.js'
@@ -11,6 +13,86 @@ import updaterPkg from 'electron-updater'
 const { autoUpdater } = (updaterPkg as any) || updaterPkg
 
 import { app } from 'electron'
+
+// ── Шрифты ───────────────────────────────────────────────────────────────────
+
+/**
+ * Путь к статическому шрифту, поставляемому вместе с приложением.
+ * В dev-режиме источник — front/public (Vite ещё не собирал dist).
+ * В собранном приложении electron-builder копирует public/fonts в resources/fonts
+ * (см. extraResources в build_win.cjs), поэтому ищем там, а не в dist/.
+ */
+function getStaticFontPath(normalized: string): string {
+    return app.isPackaged
+        ? path.join(process.resourcesPath, normalized)
+        : path.join(app.getAppPath(), 'public', normalized)
+}
+
+/** Директория локального кэша скачанных облачных шрифтов */
+function getFontCacheDir(): string {
+    const dir = path.join(app.getPath('userData'), 'font-cache')
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+    return dir
+}
+
+/** Путь в локальном кэше для облачного шрифта по его URL */
+function getCachedFontPath(url: string): string {
+    const hash = crypto.createHash('sha1').update(url).digest('hex')
+    let ext = '.ttf'
+    try {
+        ext = path.extname(new URL(url).pathname) || '.ttf'
+    } catch {
+        // оставляем .ttf по умолчанию, если URL не парсится
+    }
+    return path.join(getFontCacheDir(), `${hash}${ext}`)
+}
+
+/** Скачать файл по http(s) URL с поддержкой редиректов */
+function downloadFile(url: string, destPath: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+        const doRequest = (targetUrl: string, redirectsLeft: number) => {
+            const client = targetUrl.startsWith('https://') ? https : http
+            client
+                .get(targetUrl, (res) => {
+                    if (
+                        res.statusCode &&
+                        res.statusCode >= 300 &&
+                        res.statusCode < 400 &&
+                        res.headers.location
+                    ) {
+                        res.resume()
+                        if (redirectsLeft <= 0) {
+                            reject(new Error('Too many redirects while downloading font'))
+                            return
+                        }
+                        doRequest(new URL(res.headers.location, targetUrl).toString(), redirectsLeft - 1)
+                        return
+                    }
+                    if (res.statusCode !== 200) {
+                        res.resume()
+                        reject(new Error(`Failed to download font: HTTP ${res.statusCode}`))
+                        return
+                    }
+                    const tempPath = `${destPath}.tmp`
+                    const fileStream = fs.createWriteStream(tempPath)
+                    res.pipe(fileStream)
+                    fileStream.on('finish', () => {
+                        fileStream.close(() => {
+                            fs.renameSync(tempPath, destPath)
+                            resolve()
+                        })
+                    })
+                    fileStream.on('error', (err) => {
+                        fs.unlink(tempPath, () => {})
+                        reject(err)
+                    })
+                })
+                .on('error', reject)
+        }
+        doRequest(url, 5)
+    })
+}
+
 export function setupIPC(store: SimpleStore, printServer: PrintServer, mainWindow: Electron.BrowserWindow) {
     ipcMain.handle('get-printers', async () => {
         try {
@@ -174,19 +256,52 @@ export function setupIPC(store: SimpleStore, printServer: PrintServer, mainWindo
         return found
     })
 
-    // Read font file from app resources (for jsPDF in renderer)
-    ipcMain.handle('read-font-file', async (_event: IpcMainInvokeEvent, relativePath: string) => {
+    // Read font file for jsPDF in renderer.
+    // Принимает либо относительный путь статического шрифта ('fonts/Roboto/...'),
+    // либо полный http(s) URL облачного шрифта — в этом случае он скачивается
+    // и кэшируется локально (в main-процессе, без CORS-ограничений браузера).
+    ipcMain.handle('read-font-file', async (_event: IpcMainInvokeEvent, urlOrPath: string) => {
+        if (/^https?:\/\//i.test(urlOrPath)) {
+            const cachePath = getCachedFontPath(urlOrPath)
+            if (!fs.existsSync(cachePath)) {
+                await downloadFile(urlOrPath, cachePath)
+            }
+            const buffer = fs.readFileSync(cachePath)
+            if (buffer.byteLength < 1000) {
+                fs.unlink(cachePath, () => {})
+                throw new Error('Downloaded font file too small, possibly corrupt')
+            }
+            return buffer.toString('base64')
+        }
+
         // Sanitize path to prevent directory traversal
-        const normalized = path.normalize(relativePath).replace(/\\/g, '/')
-        if (normalized.includes('..') || path.isAbsolute(relativePath)) {
+        const normalized = path.normalize(urlOrPath).replace(/\\/g, '/')
+        if (normalized.includes('..') || path.isAbsolute(urlOrPath)) {
             throw new Error('Invalid font path')
         }
-        // Fonts are in dist/ (copied from public/ by Vite)
-        const fontPath = path.join(app.getAppPath(), 'dist', normalized)
+        const fontPath = getStaticFontPath(normalized)
         if (!fs.existsSync(fontPath)) {
             throw new Error(`Font not found: ${normalized}`)
         }
         const buffer = fs.readFileSync(fontPath)
         return buffer.toString('base64')
+    })
+
+    // Предзагрузка облачных шрифтов в локальный кэш (вызывается при старте приложения,
+    // после получения списка облачных шрифтов с сервера)
+    ipcMain.handle('cache-cloud-fonts', async (_event: IpcMainInvokeEvent, urls: string[]) => {
+        const results: { url: string; ok: boolean; error?: string }[] = []
+        for (const url of urls) {
+            try {
+                const cachePath = getCachedFontPath(url)
+                if (!fs.existsSync(cachePath)) {
+                    await downloadFile(url, cachePath)
+                }
+                results.push({ url, ok: true })
+            } catch (e: any) {
+                results.push({ url, ok: false, error: e.message })
+            }
+        }
+        return results
     })
 }

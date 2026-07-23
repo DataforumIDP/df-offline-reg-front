@@ -81,8 +81,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     toggleFullscreen: () => ipcRenderer.send('window-toggle-fullscreen'),
 
     // Font loading for jsPDF (renderer can't fetch file:// fonts)
-    readFontFile: (relativePath: string): Promise<string> =>
-        ipcRenderer.invoke('read-font-file', relativePath),
+    readFontFile: (urlOrPath: string): Promise<string> =>
+        ipcRenderer.invoke('read-font-file', urlOrPath),
+    // Предзагрузить и закэшировать облачные шрифты локально
+    cacheCloudFonts: (urls: string[]): Promise<Array<{ url: string; ok: boolean; error?: string }>> =>
+        ipcRenderer.invoke('cache-cloud-fonts', urls),
 
     // Updates
     checkForUpdates: (): Promise<{ checking: boolean; error?: string }> =>

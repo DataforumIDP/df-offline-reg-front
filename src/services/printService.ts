@@ -280,6 +280,13 @@ export interface PrintOptions {
 const MM_TO_PT = 72 / 25.4 // ≈ 2.834645669
 
 /**
+ * Отступ от края страницы для текстовых полей на всю ширину (в мм).
+ * Используется и при позиционировании текста, и при расчёте доступной ширины
+ * для адаптивного размера/переноса строк, чтобы значения не расходились.
+ */
+const H_MARGIN_MM = 2
+
+/**
  * Шрифт по умолчанию для fallback (поддерживает кириллицу)
  */
 const DEFAULT_CYRILLIC_FONT = 'Roboto'
@@ -383,6 +390,19 @@ export async function checkFontsAvailability(): Promise<
             }
         }
     }
+
+    // Облачные шрифты (регистрируются через setCloudFonts из useCloudFontsQuery)
+    for (const [fontName, variants] of cloudFontsRegistry.entries()) {
+        for (const [variant, url] of Object.entries(variants)) {
+            try {
+                const buf = await loadFontFromUrl(url)
+                results.push({ font: `☁ ${fontName}`, variant, url, ok: buf.byteLength > 1000 })
+            } catch (e: any) {
+                results.push({ font: `☁ ${fontName}`, variant, url, ok: false, error: e.message })
+            }
+        }
+    }
+
     return results
 }
 
@@ -477,17 +497,21 @@ function getFontKey(
 
 /**
  * Загрузить шрифт по URL
- * В Electron: читаем файл через IPC (fetch не работает с file://)
+ * В Electron: читаем файл через IPC (main-процесс сам скачивает и кэширует облачные шрифты
+ * локально — это работает и для статических, и для облачных http(s) URL, в обход возможных
+ * ограничений CORS/file:// в renderer'е)
  * В Web: обычный fetch
  */
 async function loadFontFromUrl(url: string): Promise<ArrayBuffer> {
-    // Electron: загрузка через IPC из файловой системы
+    // Electron: загрузка через IPC (локальный файл или облачный URL — main-процесс сам разберётся)
     if (typeof window !== 'undefined' && (window as any).electronAPI?.readFontFile) {
         try {
+            const isRemoteUrl = /^https?:\/\//i.test(url)
             // url вида '/fonts/Roboto/Roboto-Regular.ttf' -> 'fonts/Roboto/Roboto-Regular.ttf'
-            const relativePath = url.startsWith('/') ? url.slice(1) : url
-            console.log(`Loading font via IPC: ${relativePath}`)
-            const base64 = await (window as any).electronAPI.readFontFile(relativePath)
+            // облачные (http/https) URL передаём как есть
+            const target = isRemoteUrl ? url : url.startsWith('/') ? url.slice(1) : url
+            console.log(`Loading font via IPC: ${target}`)
+            const base64 = await (window as any).electronAPI.readFontFile(target)
             const binary = atob(base64)
             const bytes = new Uint8Array(binary.length)
             for (let i = 0; i < binary.length; i++) {
@@ -501,7 +525,7 @@ async function loadFontFromUrl(url: string): Promise<ArrayBuffer> {
         }
     }
 
-    // Web: обычный fetch
+    // Web (и облачные шрифты в Electron): обычный fetch
     console.log(`Loading font from: ${url}`)
     const response = await fetch(url, {
         cache: 'force-cache',
@@ -660,6 +684,11 @@ function measureTextWidth(doc: jsPDF, text: string, fontSize: number): number {
 
 /**
  * Вписать текст в заданную ширину (адаптивный размер)
+ *
+ * Небольшой запас (SAFETY_FACTOR) компенсирует погрешности измерения ширины у некоторых
+ * встраиваемых TTF-шрифтов (кернинг/округление метрик), из-за которых текст мог оставаться
+ * чуть шире доступной области даже после уменьшения размера. Шаг уменьшения сделан более
+ * мелким (0.2pt), чтобы размер не «перескакивал» через подходящее значение.
  */
 function fitTextToWidth(
     doc: jsPDF,
@@ -668,17 +697,19 @@ function fitTextToWidth(
     maxWidth: number,
     minFontSize: number = 6,
 ): number {
+    const SAFETY_FACTOR = 0.985
+    const targetWidth = maxWidth * SAFETY_FACTOR
     let fontSize = maxFontSize
 
     while (fontSize > minFontSize) {
         doc.setFontSize(fontSize)
         const textWidth = measureTextWidth(doc, text, fontSize)
 
-        if (textWidth <= maxWidth) {
+        if (textWidth <= targetWidth) {
             return fontSize
         }
 
-        fontSize -= 0.5
+        fontSize -= 0.2
     }
 
     return minFontSize
@@ -741,8 +772,11 @@ async function renderTextElement(
     // Размер шрифта (уже в pt)
     let fontSize = element.fontSize
 
-    // Ширина элемента
-    const elementWidth = element.fullWidth ? pageWidth : element.width
+    // Ширина элемента. Для fullWidth-элементов учитываем те же отступы от края (по 2мм
+    // с каждой стороны), что используются при позиционировании ниже (x = 2 / pageWidth - 2) —
+    // иначе адаптивный размер и перенос строк рассчитываются по большей ширине, чем реально
+    // доступна на странице, и текст всё равно вылезает за видимую область.
+    const elementWidth = element.fullWidth ? pageWidth - H_MARGIN_MM * 2 : element.width
 
     // Адаптивный размер шрифта (только если не многострочный режим)
     if (element.adaptive && !element.multiline) {

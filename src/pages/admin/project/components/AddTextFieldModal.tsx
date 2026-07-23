@@ -27,27 +27,6 @@ const STATIC_FONT_OPTIONS = [
     // { value: 'Tahoma', content: 'Tahoma' },
 ]
 
-const FONT_SIZE_OPTIONS = [
-    { value: '8', content: '8' },
-    { value: '10', content: '10' },
-    { value: '12', content: '12' },
-    { value: '14', content: '14' },
-    { value: '16', content: '16' },
-    { value: '18', content: '18' },
-    { value: '20', content: '20' },
-    { value: '24', content: '24' },
-    { value: '28', content: '28' },
-    { value: '32', content: '32' },
-    { value: '36', content: '36' },
-    { value: '40', content: '40' },
-    { value: '48', content: '48' },
-    { value: '56', content: '56' },
-    { value: '64', content: '64' },
-    { value: '72', content: '72' },
-    { value: '80', content: '80' },
-    { value: '96', content: '96' },
-]
-
 const AddTextFieldModal = ({ open, onClose }: AddTextFieldModalProps) => {
     const { id: projectId } = useParams()
     const dispatch = useAppDispatch()
@@ -167,11 +146,15 @@ const AddTextFieldModal = ({ open, onClose }: AddTextFieldModalProps) => {
                         </div>
                         <div className={styles.field}>
                             <Text variant="body-2">Размер (pt)</Text>
-                            <Select
-                                value={[fontSize]}
-                                onUpdate={(values) => setFontSize(values[0])}
-                                options={FONT_SIZE_OPTIONS}
-                                width="max"
+                            <TextInput
+                                value={fontSize}
+                                onUpdate={(value) => {
+                                    // Разрешаем ввод любого положительного числа (в т.ч. нестандартных размеров)
+                                    if (value === '' || /^\d{0,3}$/.test(value)) {
+                                        setFontSize(value)
+                                    }
+                                }}
+                                type="number"
                             />
                         </div>
                     </div>

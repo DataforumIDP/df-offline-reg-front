@@ -48,7 +48,10 @@ export interface ElectronAPI {
     checkGhostscript: () => Promise<GhostscriptInfo>
 
     // Font loading (for jsPDF in renderer)
-    readFontFile: (relativePath: string) => Promise<string>
+    // urlOrPath: либо относительный путь встроенного шрифта ('fonts/..'), либо полный http(s) URL облачного шрифта
+    readFontFile: (urlOrPath: string) => Promise<string>
+    // Предзагрузить и закэшировать список облачных шрифтов локально (вызывается при старте приложения)
+    cacheCloudFonts: (urls: string[]) => Promise<Array<{ url: string; ok: boolean; error?: string }>>
 
     // App info
     getAppInfo: () => Promise<AppInfo>
