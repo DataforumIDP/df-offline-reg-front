@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Text, TextInput, Button, RadioGroup, Alert, Select, Spin } from '@gravity-ui/uikit'
 import { Printer, CircleCheck, CircleXmark } from '@gravity-ui/icons'
 import { useElectronPrint } from '@/hooks/useElectron'
@@ -7,6 +7,14 @@ import { useCloudFontsQuery } from '@/hooks/queries/useCloudFontsQueries'
 import styles from './PrintSettings.module.css'
 
 type FontRow = { font: string; variant: string; url: string; status: 'pending' | 'ok' | 'error'; error?: string }
+
+type FontGroup = {
+    font: string
+    total: number
+    ok: number
+    pending: number
+    errors: { variant: string; error?: string }[]
+}
 
 export const PrintSettings = () => {
     const electron = useElectronPrint()
@@ -19,6 +27,25 @@ export const PrintSettings = () => {
     const [saving, setSaving] = useState(false)
     const [fontRows, setFontRows] = useState<FontRow[] | null>(null)
     const [fontsLoading, setFontsLoading] = useState(false)
+
+    // Группируем результаты по названию шрифта, чтобы показывать агрегат вида "Montserrat 4/4"
+    // вместо длинного списка отдельных вариаций (normal/bold/italic/bolditalic)
+    const fontGroups = useMemo<FontGroup[]>(() => {
+        if (!fontRows) return []
+        const map = new Map<string, FontGroup>()
+        for (const r of fontRows) {
+            let group = map.get(r.font)
+            if (!group) {
+                group = { font: r.font, total: 0, ok: 0, pending: 0, errors: [] }
+                map.set(r.font, group)
+            }
+            group.total += 1
+            if (r.status === 'ok') group.ok += 1
+            else if (r.status === 'pending') group.pending += 1
+            else group.errors.push({ variant: r.variant, error: r.error })
+        }
+        return [...map.values()]
+    }, [fontRows])
 
     useEffect(() => {
         if (electron.settings) {
@@ -209,25 +236,48 @@ export const PrintSettings = () => {
                 </Button>
                 {fontRows && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        {fontRows.map((r, i) => (
-                            <div key={i} className={styles.statusBar} style={{ padding: '6px 12px' }}>
-                                {r.status === 'pending' && <Spin size="xs" />}
-                                {r.status === 'ok' && (
-                                    <CircleCheck className={styles.statusIconOk} style={{ width: 16, height: 16 }} />
-                                )}
-                                {r.status === 'error' && (
-                                    <CircleXmark className={styles.statusIconError} style={{ width: 16, height: 16 }} />
-                                )}
-                                <Text variant="body-1">
-                                    {r.font} ({r.variant})
-                                </Text>
-                                {r.status === 'error' && r.error && (
-                                    <Text variant="caption-2" color="danger" style={{ marginLeft: 'auto' }}>
-                                        {r.error}
-                                    </Text>
-                                )}
-                            </div>
-                        ))}
+                        {fontGroups.map((g) => {
+                            const isPending = g.pending > 0
+                            const isFullOk = !isPending && g.ok === g.total
+                            return (
+                                <div key={g.font}>
+                                    <div className={styles.statusBar} style={{ padding: '6px 12px' }}>
+                                        {isPending ? (
+                                            <Spin size="xs" />
+                                        ) : isFullOk ? (
+                                            <CircleCheck
+                                                className={styles.statusIconOk}
+                                                style={{ width: 16, height: 16 }}
+                                            />
+                                        ) : (
+                                            <CircleXmark
+                                                className={styles.statusIconError}
+                                                style={{ width: 16, height: 16 }}
+                                            />
+                                        )}
+                                        <Text variant="body-1">
+                                            {g.font} {g.ok}/{g.total}
+                                        </Text>
+                                    </div>
+                                    {!isPending && g.errors.length > 0 && (
+                                        <div
+                                            style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: 2,
+                                                padding: '2px 12px 4px 36px',
+                                            }}
+                                        >
+                                            {g.errors.map((e, i) => (
+                                                <Text key={i} variant="caption-2" color="danger">
+                                                    {e.variant}: {e.error || 'ошибка'}
+                                                </Text>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })}
                     </div>
                 )}
             </div>
