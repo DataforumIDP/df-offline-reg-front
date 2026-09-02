@@ -1,4 +1,4 @@
-import { Text, Card, Label, Checkbox } from '@gravity-ui/uikit'
+import { Text, Card, Label, Checkbox, TextInput } from '@gravity-ui/uikit'
 import { FormInput } from '@/components/molecules'
 import { DateField } from '@/components/atoms'
 import { useState, useEffect, useCallback } from 'react'
@@ -6,6 +6,7 @@ import { useSnackbar } from 'notistack'
 import { useUpdateProjectMutation } from '@/hooks/mutations/useProjectMutations'
 import { useDebounce } from '@/hooks'
 import { Project } from '@/services/api/projects'
+import { MAX_REPEAT_PRINT_COUNT, normalizePrintCopies } from '@/utils/projectPrintSettings'
 
 // Определяем статус проекта (прошедший, идущий, будущий)
 const getProjectStatus = (
@@ -38,6 +39,8 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
     const [description, setDescription] = useState('')
     const [isOperatorEditable, setIsOperatorEditable] = useState(false)
     const [colorRow, setColorRow] = useState(false)
+    const [repeatPrintEnabled, setRepeatPrintEnabled] = useState(false)
+    const [repeatPrintCount, setRepeatPrintCount] = useState(1)
     const [dateStart, setDateStart] = useState<Date | null>(null)
     const [dateEnd, setDateEnd] = useState<Date | null>(null)
 
@@ -52,6 +55,8 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
         setDescription(project.description || '')
         setIsOperatorEditable(project.isOperatorEditable ?? false)
         setColorRow(project.colorRow ?? false)
+        setRepeatPrintEnabled(project.repeatPrintEnabled ?? false)
+        setRepeatPrintCount(normalizePrintCopies(project.repeatPrintCount))
         setDateStart(new Date(project.dateStart))
         setDateEnd(new Date(project.dateEnd))
     }, [project])
@@ -106,6 +111,42 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
             setColorRow(checked)
             updateMutation.mutate(
                 { id: project.id, data: { colorRow: checked } },
+                {
+                    onSuccess: () => {
+                        enqueueSnackbar('Сохранено', { variant: 'success' })
+                    },
+                },
+            )
+        },
+        [project.id, updateMutation, enqueueSnackbar],
+    )
+
+    // Обновление многоразовой печати
+    const handleRepeatPrintEnabledChange = useCallback(
+        (checked: boolean) => {
+            const nextCount = checked && repeatPrintCount < 2 ? 2 : repeatPrintCount
+
+            setRepeatPrintEnabled(checked)
+            setRepeatPrintCount(nextCount)
+            updateMutation.mutate(
+                { id: project.id, data: { repeatPrintEnabled: checked, repeatPrintCount: nextCount } },
+                {
+                    onSuccess: () => {
+                        enqueueSnackbar('Сохранено', { variant: 'success' })
+                    },
+                },
+            )
+        },
+        [project.id, repeatPrintCount, updateMutation, enqueueSnackbar],
+    )
+
+    const handleRepeatPrintCountChange = useCallback(
+        (value: string) => {
+            const nextCount = normalizePrintCopies(value)
+
+            setRepeatPrintCount(nextCount)
+            updateMutation.mutate(
+                { id: project.id, data: { repeatPrintCount: nextCount } },
                 {
                     onSuccess: () => {
                         enqueueSnackbar('Сохранено', { variant: 'success' })
@@ -241,6 +282,29 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
                         Красить всю строку участника по цвету типа (вместо только ячейки типа)
                     </Checkbox>
                 </div>
+                <div style={{ marginTop: '8px' }}>
+                    <Checkbox
+                        checked={repeatPrintEnabled}
+                        onUpdate={handleRepeatPrintEnabledChange}
+                        size="l"
+                    >
+                        Многоразовая печать
+                    </Checkbox>
+                </div>
+                {repeatPrintEnabled && (
+                    <div style={{ maxWidth: '240px' }}>
+                        <TextInput
+                            label="Количество раз"
+                            value={String(repeatPrintCount)}
+                            onUpdate={handleRepeatPrintCountChange}
+                            type="number"
+                            size="l"
+                        />
+                        <Text variant="caption-2" color="secondary">
+                            Максимум {MAX_REPEAT_PRINT_COUNT}
+                        </Text>
+                    </div>
+                )}
             </div>
         </Card>
     )

@@ -13,6 +13,7 @@ import { useProjectQuery } from '@/hooks/queries/useProjectQueries'
 import { useParticipantsState, useParticipantsHotkeys, useMassPrint } from '@/hooks'
 import { useQrScanner } from '@/hooks/useQrScanner'
 import { type Participant } from '@/services/api/participants'
+import { getProjectPrintCopies } from '@/utils/projectPrintSettings'
 
 const ProjectParticipantsPage = () => {
     const { id: projectId } = useParams<{ id: string }>()
@@ -46,6 +47,7 @@ const ProjectParticipantsPage = () => {
     const totalRecords = participantsData?.totalRecords || 0
     const totalPages = participantsData?.totalPages || 1
     const recordsPerPageResp = participantsData?.recordsPerPage || state.recordsPerPage
+    const printCopies = getProjectPrintCopies(projectData)
 
     // Проверяем наличие полей типа code в схеме
     const hasCodeField = useMemo(() => {
@@ -57,6 +59,7 @@ const ProjectParticipantsPage = () => {
         projectId: projectId || '',
         participants,
         selectedIds: state.selectedIds,
+        printCopies,
         setSelectedIds: state.setSelectedIds,
         setIsPrinting: state.setIsPrinting,
     })
@@ -65,6 +68,7 @@ const ProjectParticipantsPage = () => {
     useQrScanner({
         projectId: projectId || '',
         scanActionRules: projectData?.scanActionRules,
+        printCopies,
         openParticipantModal: state.openParticipantModal,
         enabled: hasCodeField,
     })
@@ -198,6 +202,7 @@ const ProjectParticipantsPage = () => {
                 onClose={() => state.setCreateModalOpen(false)}
                 projectId={projectId || ''}
                 scheme={scheme}
+                printCopies={printCopies}
             />
 
             <SearchByCodeModal

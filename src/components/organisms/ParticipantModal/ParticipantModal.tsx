@@ -17,6 +17,7 @@ import {
 import { useAppSelector } from '@/store/hooks'
 import { previewBadgePdf, PrintTemplate } from '@/services/printService'
 import { fetchPrintParticipant } from '@/services/api/participants'
+import { getProjectPrintCopies } from '@/utils/projectPrintSettings'
 import { UserRole } from '@/types/auth'
 import { ConfirmDeleteModal } from './ConfirmDeleteModal'
 import { SelectWithOther, PhoneInput } from '@/components/atoms'
@@ -234,7 +235,7 @@ export const ParticipantModal = ({
                 elements: elements,
             }
 
-            await previewBadgePdf(template, participant.data)
+            await previewBadgePdf(template, participant.data, getProjectPrintCopies(project))
 
             // Отправляем запрос о печати на сервер
             await fetchPrintParticipant(Number(projectId), participant.id)
@@ -244,7 +245,7 @@ export const ParticipantModal = ({
         } finally {
             setIsPrinting(false)
         }
-    }, [participant, templateEditor, enqueueSnackbar])
+    }, [participant, project, templateEditor, enqueueSnackbar, projectId])
 
     const handleSubmit = useCallback(async () => {
         if (!participantId) {

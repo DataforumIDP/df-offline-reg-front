@@ -39,6 +39,8 @@ export interface Project {
     dateEnd: string
     isOperatorEditable?: boolean
     colorRow?: boolean
+    repeatPrintEnabled?: boolean
+    repeatPrintCount?: number
     journalEnabled?: boolean
     rulesField?: string | null
     scanMode?: ScanMode

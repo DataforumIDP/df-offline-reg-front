@@ -10,8 +10,10 @@ import {
 } from '@/hooks/mutations/useWebhookMutations'
 import { useWebhookLogsQuery } from '@/hooks/queries/useWebhookQueries'
 import { useSchemeQuery } from '@/hooks/queries/useSchemeQueries'
+import { useProjectQuery } from '@/hooks/queries/useProjectQueries'
 import { getActiveServerUrl } from '@/services/serverStorage'
 import { CreateParticipantModal } from '@/components/organisms/CreateParticipantModal'
+import { getProjectPrintCopies } from '@/utils/projectPrintSettings'
 
 interface WebhookModalProps {
     open: boolean
@@ -75,6 +77,7 @@ export const WebhookModal = ({ open, onClose, projectId, webhook }: WebhookModal
     )
 
     const { data: schemeData } = useSchemeQuery(String(projectId))
+    const { data: projectData } = useProjectQuery(projectId)
 
     const filteredLogs = useMemo(() => {
         if (!allLogs) return []
@@ -596,6 +599,7 @@ export const WebhookModal = ({ open, onClose, projectId, webhook }: WebhookModal
                 onClose={() => setCreateFromLog(null)}
                 projectId={String(projectId)}
                 scheme={schemeData.fields}
+                printCopies={getProjectPrintCopies(projectData)}
                 prefillData={createFromLog.requestBody ?? undefined}
             />
         )}

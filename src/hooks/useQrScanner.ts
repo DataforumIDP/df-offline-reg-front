@@ -43,6 +43,7 @@ const SCANNER_TIMEOUT_MS = 500
 export interface UseQrScannerOptions {
     projectId: string
     scanActionRules: ScanActionRule[] | null | undefined
+    printCopies?: number
     // Открыть модалку участника по ID
     openParticipantModal: (id: number) => void
     // false — хук не регистрирует слушатель (например, нет поля code)
@@ -65,6 +66,7 @@ export interface UseQrScannerOptions {
 export const useQrScanner = ({
     projectId,
     scanActionRules,
+    printCopies = 1,
     openParticipantModal,
     enabled = true,
 }: UseQrScannerOptions) => {
@@ -125,7 +127,7 @@ export const useQrScanner = ({
                     const blob = await generateMultipleBadgesPdf(template, [
                         participant.data as PrintData,
                     ])
-                    await printOrSend(blob)
+                    await printOrSend(blob, printCopies)
                     await fetchPrintParticipant(Number(projectId), participant.id).catch(() => {})
                     enqueueSnackbar('Бейдж отправлен на печать', { variant: 'success' })
                 } catch {
@@ -149,7 +151,7 @@ export const useQrScanner = ({
                 }
             }
         },
-        [projectId, scanActionRules, openParticipantModal, templateEditor, enqueueSnackbar],
+        [projectId, scanActionRules, printCopies, openParticipantModal, templateEditor, enqueueSnackbar],
     )
 
     // ── Слушатель клавиатуры ─────────────────────────────────────────────────

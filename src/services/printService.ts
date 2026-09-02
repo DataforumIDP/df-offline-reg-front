@@ -109,9 +109,10 @@ export async function printMultipleBadgesByTemplateId(
 export async function previewBadgeByTemplateId(
     templateId: number,
     data: PrintData,
+    copies: number = 1,
 ): Promise<{ mode: 'web' | 'server' | 'electron'; message: string }> {
     const blob = await printBadgeByTemplateId(templateId, data)
-    return printOrSend(blob)
+    return printOrSend(blob, copies)
 }
 
 /**
@@ -985,9 +986,10 @@ export async function generateMultipleBadgesPdf(
 export async function previewBadgePdf(
     template: PrintTemplate,
     data: PrintData,
+    copies: number = 1,
 ): Promise<{ mode: 'web' | 'server' | 'electron'; message: string }> {
     const blob = await generateBadgePdf(template, data)
-    return printOrSend(blob)
+    return printOrSend(blob, copies)
 }
 
 /**

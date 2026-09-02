@@ -15,6 +15,7 @@ export interface CreateParticipantModalProps {
     onClose: () => void
     projectId: string
     scheme: SchemeField[]
+    printCopies?: number
     prefillData?: Record<string, any>
 }
 
@@ -159,6 +160,7 @@ export const CreateParticipantModal = ({
     onClose,
     projectId,
     scheme,
+    printCopies = 1,
     prefillData,
 }: CreateParticipantModalProps) => {
     const { enqueueSnackbar } = useSnackbar()
@@ -258,7 +260,7 @@ export const CreateParticipantModal = ({
                     elements: elements,
                 }
 
-                await previewBadgePdf(template, participantData)
+                await previewBadgePdf(template, participantData, printCopies)
 
                 // Отправляем запрос о печати на сервер
                 await fetchPrintParticipant(Number(projectId), participantId)
@@ -267,7 +269,7 @@ export const CreateParticipantModal = ({
                 enqueueSnackbar('Ошибка при генерации PDF', { variant: 'error' })
             }
         },
-        [templateEditor, projectId, enqueueSnackbar],
+        [templateEditor, projectId, printCopies, enqueueSnackbar],
     )
 
     const handleSubmit = useCallback(async () => {

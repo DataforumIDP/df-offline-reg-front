@@ -21,6 +21,7 @@ interface UseMassPrintOptions {
     projectId: string
     participants: Participant[]
     selectedIds: string[]
+    printCopies?: number
     setSelectedIds: (ids: string[]) => void
     setIsPrinting: (printing: boolean) => void
 }
@@ -32,6 +33,7 @@ export const useMassPrint = ({
     projectId,
     participants,
     selectedIds,
+    printCopies = 1,
     setSelectedIds,
     setIsPrinting,
 }: UseMassPrintOptions) => {
@@ -102,7 +104,7 @@ export const useMassPrint = ({
             const blob = await generateMultipleBadgesPdf(template, dataList)
 
             // Печатаем или открываем в зависимости от настроек
-            const result = await printOrSend(blob)
+            const result = await printOrSend(blob, printCopies)
 
             // Отправляем запросы о печати для каждого участника
             await Promise.all(
@@ -134,6 +136,7 @@ export const useMassPrint = ({
         templateEditor,
         enqueueSnackbar,
         projectId,
+        printCopies,
         setSelectedIds,
         setIsPrinting,
     ])

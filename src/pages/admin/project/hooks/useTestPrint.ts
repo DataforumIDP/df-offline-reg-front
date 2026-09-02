@@ -2,13 +2,16 @@ import { useCallback } from 'react'
 import { useSnackbar } from 'notistack'
 import { useAppSelector } from '@/store/hooks'
 import { useParticipantsQuery } from '@/hooks/queries/useParticipantQueries'
+import { useProjectQuery } from '@/hooks/queries/useProjectQueries'
 import { previewBadgePdf, PrintTemplate } from '@/services/printService'
+import { getProjectPrintCopies } from '@/utils/projectPrintSettings'
 
 export const useTestPrint = (projectId: number | undefined) => {
     const { enqueueSnackbar } = useSnackbar()
 
     const { canvas, elements } = useAppSelector((state) => state.templateEditor)
     const { widthMm: canvasWidthMm, heightMm: canvasHeightMm } = canvas
+    const { data: project } = useProjectQuery(projectId)
 
     // Запрос участников для пробной печати
     const { data: participantsData } = useParticipantsQuery(Number(projectId), {
@@ -41,7 +44,7 @@ export const useTestPrint = (projectId: number | undefined) => {
         }
 
         try {
-            await previewBadgePdf(template, participant.data)
+            await previewBadgePdf(template, participant.data, getProjectPrintCopies(project))
         } catch (err) {
             console.error('Preview error:', err)
             enqueueSnackbar(
@@ -49,7 +52,7 @@ export const useTestPrint = (projectId: number | undefined) => {
                 { variant: 'error' },
             )
         }
-    }, [participantsData, elements, canvasWidthMm, canvasHeightMm, enqueueSnackbar])
+    }, [participantsData, elements, canvasWidthMm, canvasHeightMm, project, enqueueSnackbar])
 
     return { handleTestPrint }
 }
