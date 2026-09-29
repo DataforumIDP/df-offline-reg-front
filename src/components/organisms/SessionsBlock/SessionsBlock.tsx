@@ -71,6 +71,25 @@ export const SessionsBlock = () => {
 
     return (
         <div className={styles.container}>
+            <div className={styles.actions}>
+                <Button view="outlined" size="m" onClick={() => setQrModalOpen(true)}>
+                    <Icon data={QrCode} />
+                    Сканировать QR
+                </Button>
+
+                {otherSessionsCount > 0 && (
+                    <Button
+                        view="outlined-danger"
+                        size="m"
+                        className={styles.terminateAllBtn}
+                        onClick={handleTerminateAll}
+                        loading={terminateAllMutation.isPending}
+                    >
+                        Завершить все другие ({otherSessionsCount})
+                    </Button>
+                )}
+            </div>
+
             {sessions.length === 0 ? (
                 <div className={styles.emptyState}>
                     <Text variant="body-2" color="secondary">
@@ -118,25 +137,6 @@ export const SessionsBlock = () => {
                     ))}
                 </div>
             )}
-
-            <div className={styles.actions}>
-                <Button view="outlined" size="m" onClick={() => setQrModalOpen(true)}>
-                    <Icon data={QrCode} />
-                    Сканировать QR
-                </Button>
-
-                {otherSessionsCount > 0 && (
-                    <Button
-                        view="outlined-danger"
-                        size="m"
-                        className={styles.terminateAllBtn}
-                        onClick={handleTerminateAll}
-                        loading={terminateAllMutation.isPending}
-                    >
-                        Завершить все другие ({otherSessionsCount})
-                    </Button>
-                )}
-            </div>
 
             <Modal open={qrModalOpen} onClose={() => setQrModalOpen(false)}>
                 <QrScanner
