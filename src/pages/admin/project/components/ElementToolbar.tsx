@@ -12,6 +12,8 @@ import {
     QrElement,
 } from '@/store/slices/templateEditorSlice'
 import { useCloudFontsQuery } from '@/hooks/queries/useCloudFontsQueries'
+import { useWindowsFontsQuery } from '@/hooks/queries/useWindowsFontsQuery'
+import { isElectron } from '@/hooks/useElectron'
 import styles from './ElementToolbar.module.css'
 
 const STATIC_FONT_OPTIONS = [
@@ -27,14 +29,21 @@ const ElementToolbar = () => {
     const dispatch = useAppDispatch()
     const { elements, selectedElementId } = useAppSelector((state) => state.templateEditor)
     const { data: cloudFontsData } = useCloudFontsQuery()
+    const { data: windowsFonts = [] } = useWindowsFontsQuery()
 
     const FONT_OPTIONS = useMemo(() => {
         const cloud = (cloudFontsData?.fonts || []).map((f) => ({
             value: f.name,
             content: `☁ ${f.name}`,
         }))
-        return [...STATIC_FONT_OPTIONS, ...cloud]
-    }, [cloudFontsData])
+        const local = isElectron()
+            ? windowsFonts.map((name) => ({
+                  value: `local::${name}`,
+                  content: `${name} (Windows)`,
+              }))
+            : []
+        return [...STATIC_FONT_OPTIONS, ...cloud, ...local]
+    }, [cloudFontsData, windowsFonts])
 
     const selectedElement = elements.find((el) => el.id === selectedElementId) as
         | TextFieldElement

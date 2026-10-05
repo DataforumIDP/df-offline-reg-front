@@ -50,8 +50,14 @@ export interface ElectronAPI {
     // Font loading (for jsPDF in renderer)
     // urlOrPath: либо относительный путь встроенного шрифта ('fonts/..'), либо полный http(s) URL облачного шрифта
     readFontFile: (urlOrPath: string) => Promise<string>
+    getWindowsFonts: () => Promise<string[]>
+    readWindowsFontFile: (
+        family: string,
+        variant: 'normal' | 'bold' | 'italic' | 'bolditalic',
+    ) => Promise<string>
     // Предзагрузить и закэшировать список облачных шрифтов локально (вызывается при старте приложения)
     cacheCloudFonts: (urls: string[]) => Promise<Array<{ url: string; ok: boolean; error?: string }>>
+    clearAppCaches: () => Promise<void>
 
     // App info
     getAppInfo: () => Promise<AppInfo>

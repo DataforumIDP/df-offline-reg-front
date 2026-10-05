@@ -1,6 +1,7 @@
 ﻿'use client'
 
-import { useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+import dayjs from 'dayjs'
 import { Text, Card, Skeleton, Alert } from '@gravity-ui/uikit'
 import { useParams } from 'react-router-dom'
 import ChartKit, { settings } from '@gravity-ui/chartkit'
@@ -28,6 +29,7 @@ const ProjectStatsPage = () => {
         dateEnd,
         setDateStart,
         setDateEnd,
+        setDateRange,
         fieldFilters,
         setFieldFilters,
         resetFilters,
@@ -44,6 +46,38 @@ const ProjectStatsPage = () => {
         chartData,
         userStats,
     } = useStatsData(projectId, dateParams, fieldFilters)
+
+    const handleChartRangeSelect = useCallback(
+        (from: number, to: number) => {
+            if (!Number.isFinite(from) || !Number.isFinite(to)) {
+                return
+            }
+            setDateRange(dayjs(Math.min(from, to)), dayjs(Math.max(from, to)))
+        },
+        [setDateRange],
+    )
+
+    const interactiveChartData = useMemo(() => {
+        if (!chartData) {
+            return null
+        }
+
+        const hooks = chartData.libraryConfig.hooks
+        return {
+            ...chartData,
+            libraryConfig: {
+                ...chartData.libraryConfig,
+                hooks: {
+                    ...hooks,
+                    onSelect: [
+                        ...(hooks?.onSelect ?? []),
+                        ({ from, to }: { from: number; to: number }) =>
+                            handleChartRangeSelect(from, to),
+                    ],
+                },
+            },
+        }
+    }, [chartData, handleChartRangeSelect])
 
     return (
         <PageWrapper>
@@ -75,9 +109,9 @@ const ProjectStatsPage = () => {
             <Card className={styles.chartCard}>
                 {logsLoading ? (
                     <Skeleton />
-                ) : chartData ? (
+                ) : interactiveChartData ? (
                     <div className={styles.chart}>
-                        <ChartKit type="yagr" data={chartData} />
+                        <ChartKit type="yagr" data={interactiveChartData} />
                     </div>
                 ) : (
                     <Text color="secondary">Нет данных для отображения графика</Text>

@@ -5,6 +5,8 @@ import { useSchemeQuery, SchemeField } from '@/hooks/queries/useSchemeQueries'
 import { useAppDispatch } from '@/store/hooks'
 import { addTextField, TextAlign, FontWeight, FontStyle } from '@/store/slices/templateEditorSlice'
 import { useCloudFontsQuery } from '@/hooks/queries/useCloudFontsQueries'
+import { useWindowsFontsQuery } from '@/hooks/queries/useWindowsFontsQuery'
+import { isElectron } from '@/hooks/useElectron'
 import styles from './AddTextFieldModal.module.css'
 
 interface AddTextFieldModalProps {
@@ -32,14 +34,21 @@ const AddTextFieldModal = ({ open, onClose }: AddTextFieldModalProps) => {
     const dispatch = useAppDispatch()
     const { data: scheme } = useSchemeQuery(projectId || '')
     const { data: cloudFontsData } = useCloudFontsQuery()
+    const { data: windowsFonts = [] } = useWindowsFontsQuery()
 
     const FONT_OPTIONS = useMemo(() => {
         const cloud = (cloudFontsData?.fonts || []).map((f) => ({
             value: f.name,
             content: `☁ ${f.name}`,
         }))
-        return [...STATIC_FONT_OPTIONS, ...cloud]
-    }, [cloudFontsData])
+        const local = isElectron()
+            ? windowsFonts.map((name) => ({
+                  value: `local::${name}`,
+                  content: `${name} (Windows)`,
+              }))
+            : []
+        return [...STATIC_FONT_OPTIONS, ...cloud, ...local]
+    }, [cloudFontsData, windowsFonts])
 
     // Состояние формы
     const [selectedFieldKey, setSelectedFieldKey] = useState<string | undefined>(undefined)

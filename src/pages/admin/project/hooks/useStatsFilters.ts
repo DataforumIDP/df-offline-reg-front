@@ -60,6 +60,14 @@ export const useStatsFilters = (): StatsFiltersValue => {
         (v: Dayjs | null) => updateUrl({ dateEnd: v ? v.toISOString() : null }),
         [updateUrl],
     )
+    const setDateRange = useCallback(
+        (start: Dayjs | null, end: Dayjs | null) =>
+            updateUrl({
+                dateStart: start ? start.toISOString() : null,
+                dateEnd: end ? end.toISOString() : null,
+            }),
+        [updateUrl],
+    )
     const setFieldFilters = useCallback(
         (f: FiltersState) => {
             setFieldFiltersState(f)
@@ -86,6 +94,7 @@ export const useStatsFilters = (): StatsFiltersValue => {
         dateEnd,
         setDateStart,
         setDateEnd,
+        setDateRange,
         fieldFilters,
         setFieldFilters,
         resetFilters,

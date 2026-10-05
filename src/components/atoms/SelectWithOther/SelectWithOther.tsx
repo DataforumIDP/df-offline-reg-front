@@ -1,4 +1,4 @@
-import { Select, TextInput } from '@gravity-ui/uikit'
+import { Select, TextInput, type SelectOption } from '@gravity-ui/uikit'
 import { useState, useEffect, useMemo } from 'react'
 
 interface ListItem {
@@ -45,7 +45,9 @@ const SelectWithOther = ({
 
     // Определяем, является ли текущее значение "другим" (не из списка)
     const isOtherValue = useMemo(() => {
-        if (!hasOther) return false
+        if (!hasOther) {
+            return false
+        }
         if (multiple) {
             const arr = Array.isArray(value) ? value : []
             return arr.some((v) => !knownValues.has(v))
@@ -79,9 +81,27 @@ const SelectWithOther = ({
 
     // Формируем опции для Select
     const options = useMemo(() => {
-        const opts = regularItems.map((item) => ({
+        const opts: SelectOption[] = regularItems.map((item) => ({
             value: item.value,
-            content: item.value,
+            text: item.value,
+            content: (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    {item.color && (
+                        <span
+                            aria-hidden="true"
+                            style={{
+                                width: '12px',
+                                height: '12px',
+                                flex: '0 0 12px',
+                                borderRadius: '50%',
+                                backgroundColor: item.color,
+                                border: '1px solid var(--g-color-line-generic)',
+                            }}
+                        />
+                    )}
+                    <span>{item.value}</span>
+                </span>
+            ),
         }))
 
         if (hasOther) {

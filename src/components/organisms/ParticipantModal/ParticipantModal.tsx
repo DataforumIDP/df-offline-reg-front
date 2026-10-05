@@ -15,12 +15,14 @@ import {
     useDeleteParticipantMutation,
 } from '@/hooks/mutations/useParticipantMutations'
 import { useAppSelector } from '@/store/hooks'
-import { previewBadgePdf, PrintTemplate } from '@/services/printService'
+import { previewBadgePdf, PrintData, PrintTemplate } from '@/services/printService'
 import { fetchPrintParticipant } from '@/services/api/participants'
 import { getProjectPrintCopies } from '@/utils/projectPrintSettings'
 import { UserRole } from '@/types/auth'
 import { ConfirmDeleteModal } from './ConfirmDeleteModal'
 import { SelectWithOther, PhoneInput } from '@/components/atoms'
+
+const PRINT_AFTER_SAVE_STORAGE_KEY = 'rega_edit_participant_print_after_save'
 
 export interface ParticipantModalProps {
     open: boolean
@@ -176,6 +178,14 @@ export const ParticipantModal = ({
 
     // Состояние печати
     const [isPrinting, setIsPrinting] = useState(false)
+    const [printAfterSave, setPrintAfterSave] = useState(() => {
+        try {
+            const stored = localStorage.getItem(PRINT_AFTER_SAVE_STORAGE_KEY)
+            return stored === null ? true : stored === 'true'
+        } catch {
+            return true
+        }
+    })
 
     // Состояние формы
     const [formData, setFormData] = useState<Record<string, any>>({})
@@ -214,38 +224,51 @@ export const ParticipantModal = ({
         onClose()
     }, [onClose])
 
-    const handlePrint = useCallback(async () => {
-        if (!participant) {
-            return
-        }
-
-        const { canvas, elements } = templateEditor
-
-        if (elements.length === 0) {
-            enqueueSnackbar('Добавьте элементы в шаблон печати', { variant: 'warning' })
-            return
-        }
-
-        setIsPrinting(true)
-
-        try {
-            const template: PrintTemplate = {
-                widthMm: canvas.widthMm,
-                heightMm: canvas.heightMm,
-                elements: elements,
+    const handlePrint = useCallback(
+        async (data?: PrintData, targetParticipantId?: number) => {
+            if (!participant) {
+                return
             }
 
-            await previewBadgePdf(template, participant.data, getProjectPrintCopies(project))
+            const { canvas, elements } = templateEditor
 
-            // Отправляем запрос о печати на сервер
-            await fetchPrintParticipant(Number(projectId), participant.id)
-        } catch (err) {
-            console.error('Print error:', err)
-            enqueueSnackbar('Ошибка при генерации PDF', { variant: 'error' })
-        } finally {
-            setIsPrinting(false)
-        }
-    }, [participant, project, templateEditor, enqueueSnackbar, projectId])
+            if (elements.length === 0) {
+                enqueueSnackbar('Добавьте элементы в шаблон печати', { variant: 'warning' })
+                return
+            }
+
+            setIsPrinting(true)
+
+            try {
+                const template: PrintTemplate = {
+                    widthMm: canvas.widthMm,
+                    heightMm: canvas.heightMm,
+                    elements: elements,
+                }
+
+                await previewBadgePdf(
+                    template,
+                    data ?? participant.data,
+                    getProjectPrintCopies(project),
+                )
+
+                // Отправляем запрос о печати на сервер
+                await fetchPrintParticipant(
+                    Number(projectId),
+                    targetParticipantId ?? participant.id,
+                )
+            } catch (err) {
+                console.error('Print error:', err)
+                enqueueSnackbar(
+                    err instanceof Error ? err.message : 'Ошибка при генерации PDF',
+                    { variant: 'error' },
+                )
+            } finally {
+                setIsPrinting(false)
+            }
+        },
+        [participant, project, templateEditor, enqueueSnackbar, projectId],
+    )
 
     const handleSubmit = useCallback(async () => {
         if (!participantId) {
@@ -275,40 +298,49 @@ export const ParticipantModal = ({
             return
         }
 
-        updateMutation.mutate(
-            { participantId, data: formData },
-            {
-                onSuccess: () => {
-                    enqueueSnackbar('Участник обновлён', { variant: 'success' })
-                    handleClose()
-                },
-                onError: (error: any) => {
-                    // Обработка ошибок валидации с сервера
-                    const serverErrors = error?.response?.data?.errors
-                    if (serverErrors && typeof serverErrors === 'object') {
-                        const fieldErrors: Record<string, string> = {}
-                        const fieldKeys = scheme.map((f) => f.key)
+        try {
+            const updatedParticipant = await updateMutation.mutateAsync({
+                participantId,
+                data: formData,
+            })
+            enqueueSnackbar('Участник обновлён', { variant: 'success' })
 
-                        Object.entries(serverErrors).forEach(([key, message]) => {
-                            if (fieldKeys.includes(key)) {
-                                // Ошибка привязана к полю
-                                fieldErrors[key] = String(message)
-                            } else {
-                                // Ошибка не привязана к полю - показываем как toast
-                                enqueueSnackbar(String(message), { variant: 'error' })
-                            }
-                        })
+            if (printAfterSave) {
+                await handlePrint(updatedParticipant.data, updatedParticipant.id)
+            }
 
-                        if (Object.keys(fieldErrors).length > 0) {
-                            setErrors((prev) => ({ ...prev, ...fieldErrors }))
-                        }
+            handleClose()
+        } catch (error: any) {
+            const serverErrors = error?.response?.data?.errors
+            if (serverErrors && typeof serverErrors === 'object') {
+                const fieldErrors: Record<string, string> = {}
+                const fieldKeys = scheme.map((f) => f.key)
+
+                Object.entries(serverErrors).forEach(([key, message]) => {
+                    if (fieldKeys.includes(key)) {
+                        fieldErrors[key] = String(message)
                     } else {
-                        enqueueSnackbar('Ошибка при обновлении участника', { variant: 'error' })
+                        enqueueSnackbar(String(message), { variant: 'error' })
                     }
-                },
-            },
-        )
-    }, [participantId, scheme, formData, updateMutation, handleClose, enqueueSnackbar])
+                })
+
+                if (Object.keys(fieldErrors).length > 0) {
+                    setErrors((prev) => ({ ...prev, ...fieldErrors }))
+                }
+            } else {
+                enqueueSnackbar('Ошибка при обновлении участника', { variant: 'error' })
+            }
+        }
+    }, [participantId, scheme, formData, updateMutation, handleClose, enqueueSnackbar, printAfterSave, handlePrint])
+
+    const handlePrintAfterSaveChange = useCallback((checked: boolean) => {
+        setPrintAfterSave(checked)
+        try {
+            localStorage.setItem(PRINT_AFTER_SAVE_STORAGE_KEY, String(checked))
+        } catch {
+            // Preference remains available for the current session if storage is blocked.
+        }
+    }, [])
 
     const handleDelete = useCallback(() => {
         if (!participantId) {
@@ -579,10 +611,31 @@ export const ParticipantModal = ({
                 </Dialog.Body>
                 <Dialog.Footer>
                     <div
-                        style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '12px',
+                            width: '100%',
+                        }}
                     >
-                        <div>
-                            {isAdmin && (
+                        {canEdit && (
+                            <Checkbox
+                                checked={printAfterSave}
+                                onUpdate={handlePrintAfterSaveChange}
+                                size="m"
+                            >
+                                Сохранить и печатать
+                            </Checkbox>
+                        )}
+                        <div
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                width: '100%',
+                            }}
+                        >
+                            {isAdmin ? (
                                 <Button
                                     view="flat-danger"
                                     size="l"
@@ -594,33 +647,33 @@ export const ParticipantModal = ({
                                     </Button.Icon>
                                     Удалить
                                 </Button>
-                            )}
-                        </div>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            <Button view="flat" size="l" onClick={handleClose}>
-                                Отмена
-                            </Button>
-                            <Button
-                                view="outlined"
-                                size="l"
-                                onClick={handlePrint}
-                                loading={isPrinting}
-                            >
-                                <Button.Icon>
-                                    <Printer />
-                                </Button.Icon>
-                                Печать
-                            </Button>
-                            {canEdit && (
-                                <Button
-                                    view="action"
-                                    size="l"
-                                    onClick={handleSubmit}
-                                    loading={updateMutation.isPending}
-                                >
-                                    Сохранить
+                            ) : <span />}
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <Button view="flat" size="l" onClick={handleClose}>
+                                    Отмена
                                 </Button>
-                            )}
+                                <Button
+                                    view="outlined"
+                                    size="l"
+                                    onClick={() => handlePrint()}
+                                    loading={isPrinting}
+                                >
+                                    <Button.Icon>
+                                        <Printer />
+                                    </Button.Icon>
+                                    Печать
+                                </Button>
+                                {canEdit && (
+                                    <Button
+                                        view="action"
+                                        size="l"
+                                        onClick={handleSubmit}
+                                        loading={updateMutation.isPending || isPrinting}
+                                    >
+                                        Сохранить
+                                    </Button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </Dialog.Footer>

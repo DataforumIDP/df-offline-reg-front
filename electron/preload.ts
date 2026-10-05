@@ -83,9 +83,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // Font loading for jsPDF (renderer can't fetch file:// fonts)
     readFontFile: (urlOrPath: string): Promise<string> =>
         ipcRenderer.invoke('read-font-file', urlOrPath),
+    getWindowsFonts: (): Promise<string[]> => ipcRenderer.invoke('get-windows-fonts'),
+    readWindowsFontFile: (
+        family: string,
+        variant: 'normal' | 'bold' | 'italic' | 'bolditalic',
+    ): Promise<string> => ipcRenderer.invoke('read-windows-font-file', family, variant),
     // Предзагрузить и закэшировать облачные шрифты локально
     cacheCloudFonts: (urls: string[]): Promise<Array<{ url: string; ok: boolean; error?: string }>> =>
         ipcRenderer.invoke('cache-cloud-fonts', urls),
+    clearAppCaches: (): Promise<void> => ipcRenderer.invoke('clear-app-caches'),
 
     // Updates
     checkForUpdates: (): Promise<{ checking: boolean; error?: string }> =>

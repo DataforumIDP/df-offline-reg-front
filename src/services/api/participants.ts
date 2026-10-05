@@ -86,6 +86,17 @@ export const fetchDeleteParticipant = (projectId: number, participantId: number)
 }
 
 /**
+ * Массово удалить участников проекта
+ */
+export const fetchDeleteParticipants = (
+    projectId: number,
+    participantIds: number[],
+): Promise<{ success: boolean; deleted: number; message: string }> =>
+    apiClient
+        .post(`/projects/${projectId}/participants/bulk-delete`, { participantIds })
+        .then((res) => res.data)
+
+/**
  * Отметить печать участника
  */
 export const fetchPrintParticipant = (projectId: number, participantId: number): Promise<any> => {

@@ -6,13 +6,14 @@ import * as net from 'net'
 import * as http from 'http'
 import * as https from 'https'
 import * as crypto from 'crypto'
+import { execFile } from 'child_process'
 import { SimpleStore } from './store.js'
 import { printPdfGhostscript } from './printJob.js'
 import { PrintServer } from './printServer.js'
 import updaterPkg from 'electron-updater'
 const { autoUpdater } = (updaterPkg as any) || updaterPkg
 
-import { app } from 'electron'
+import { app, session } from 'electron'
 
 // ── Шрифты ───────────────────────────────────────────────────────────────────
 
@@ -113,6 +114,116 @@ function downloadFile(url: string, destPath: string): Promise<void> {
  * вместо того чтобы скачивать файл повторно и гоняться за одним и тем же .tmp.
  */
 const inflightFontDownloads = new Map<string, Promise<void>>()
+
+type WindowsFontVariant = 'normal' | 'bold' | 'italic' | 'bolditalic'
+type WindowsFontFiles = Partial<Record<WindowsFontVariant, string>>
+
+let windowsFontIndexPromise: Promise<Map<string, WindowsFontFiles>> | undefined
+
+function getWindowsFontIndex(): Promise<Map<string, WindowsFontFiles>> {
+    if (process.platform !== 'win32') {
+        return Promise.resolve(new Map())
+    }
+
+    if (!windowsFontIndexPromise) {
+        const script = [
+            "$ErrorActionPreference = 'Stop'",
+            '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8',
+            'Add-Type -AssemblyName System.Drawing',
+            '$families = (New-Object System.Drawing.Text.InstalledFontCollection).Families | ForEach-Object { $_.Name }',
+            "$fontFiles = foreach ($key in @('HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts', 'HKCU:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts')) {",
+            '  if (Test-Path $key) {',
+            '    $item = Get-ItemProperty -Path $key',
+            "    foreach ($property in $item.PSObject.Properties | Where-Object { $_.MemberType -eq 'NoteProperty' -and $_.Name -notlike 'PS*' }) {",
+            '      [PSCustomObject]@{ name = $property.Name; file = [string]$property.Value }',
+            '    }',
+            '  }',
+            '}',
+            '[PSCustomObject]@{ families = @($families); files = @($fontFiles) } | ConvertTo-Json -Depth 4 -Compress',
+        ].join('; ')
+
+        windowsFontIndexPromise = new Promise<Map<string, WindowsFontFiles>>((resolve, reject) => {
+            execFile(
+                'powershell.exe',
+                ['-NoProfile', '-NonInteractive', '-Command', script],
+                { encoding: 'utf8', timeout: 15000, maxBuffer: 10 * 1024 * 1024 },
+                (error, stdout) => {
+                    if (error) {
+                        windowsFontIndexPromise = undefined
+                        reject(new Error(`Не удалось получить список шрифтов Windows: ${error.message}`))
+                        return
+                    }
+
+                    try {
+                        const result = JSON.parse(stdout) as {
+                            families: string[]
+                            files: Array<{ name: string; file: string }>
+                        }
+                        const registryFiles = new Map<string, WindowsFontFiles>()
+                        const families = [...result.families].sort((a, b) => b.length - a.length)
+                        const styleSuffixes: Array<[WindowsFontVariant, string]> = [
+                            ['bolditalic', ' Bold Italic'],
+                            ['bold', ' Bold'],
+                            ['italic', ' Italic'],
+                            ['normal', ''],
+                        ]
+
+                        for (const entry of result.files) {
+                            const label = entry.name.replace(/\s+\([^)]*\)\s*$/, '').trim()
+                            const family = families.find((candidate) =>
+                                styleSuffixes.some(
+                                    ([, suffix]) =>
+                                        label.localeCompare(`${candidate}${suffix}`, undefined, {
+                                            sensitivity: 'accent',
+                                        }) === 0,
+                                ),
+                            )
+                            if (!family) continue
+
+                            const suffix = label.slice(family.length)
+                            const variant = styleSuffixes.find(([, style]) => style === suffix)?.[0]
+                            if (!variant || !entry.file) continue
+
+                            const fontDirectories = [
+                                path.join(process.env.WINDIR || 'C:\\Windows', 'Fonts'),
+                                path.join(
+                                    app.getPath('home'),
+                                    'AppData',
+                                    'Local',
+                                    'Microsoft',
+                                    'Windows',
+                                    'Fonts',
+                                ),
+                            ]
+                            const candidates = path.isAbsolute(entry.file)
+                                ? [entry.file]
+                                : fontDirectories.map((directory) =>
+                                      path.join(directory, path.basename(entry.file)),
+                                  )
+                            const filePath = candidates.find((candidate) => fs.existsSync(candidate))
+                            if (filePath) {
+                                const files = registryFiles.get(family) ?? {}
+                                files[variant] = filePath
+                                registryFiles.set(family, files)
+                            }
+                        }
+
+                        resolve(registryFiles)
+                    } catch (parseError) {
+                        windowsFontIndexPromise = undefined
+                        reject(
+                            new Error(
+                                `Не удалось обработать список шрифтов Windows: ${String(parseError)}`,
+                            ),
+                        )
+                    }
+                },
+            )
+        })
+    }
+
+    return windowsFontIndexPromise
+}
 
 async function ensureCloudFontCached(url: string): Promise<string> {
     const cachePath = getCachedFontPath(url)
@@ -320,6 +431,44 @@ export function setupIPC(store: SimpleStore, printServer: PrintServer, mainWindo
         return buffer.toString('base64')
     })
 
+    ipcMain.handle('get-windows-fonts', async () => {
+        const fontIndex = await getWindowsFontIndex()
+        return [...fontIndex.entries()]
+            .filter(([, variants]) => Boolean(variants.normal))
+            .map(([family]) => family)
+            .sort((a, b) => a.localeCompare(b))
+    })
+
+    ipcMain.handle(
+        'read-windows-font-file',
+        async (
+            _event: IpcMainInvokeEvent,
+            family: string,
+            variant: WindowsFontVariant,
+        ) => {
+            const fontIndex = await getWindowsFontIndex()
+            const variants = fontIndex.get(family)
+            const fontPath =
+                variants?.[variant] ??
+                (variant === 'bolditalic'
+                    ? variants?.bold ?? variants?.italic ?? variants?.normal
+                    : variant === 'bold' || variant === 'italic'
+                      ? variants?.normal
+                      : undefined)
+            if (!fontPath) {
+                throw new Error(
+                    `Шрифт Windows "${family}" (${variant}) не установлен или его файл недоступен`,
+                )
+            }
+
+            const buffer = await fs.promises.readFile(fontPath)
+            if (buffer.byteLength < 1000) {
+                throw new Error(`Файл шрифта Windows "${family}" повреждён или пуст`)
+            }
+            return buffer.toString('base64')
+        },
+    )
+
     // Предзагрузка облачных шрифтов в локальный кэш (вызывается при старте приложения,
     // после получения списка облачных шрифтов с сервера)
     ipcMain.handle('cache-cloud-fonts', async (_event: IpcMainInvokeEvent, urls: string[]) => {
@@ -334,5 +483,17 @@ export function setupIPC(store: SimpleStore, printServer: PrintServer, mainWindo
             }),
         )
         return results
+    })
+
+    ipcMain.handle('clear-app-caches', async () => {
+        await Promise.allSettled([...inflightFontDownloads.values()])
+        const fontCacheDir = getFontCacheDir()
+        const cachedFiles = await fs.promises.readdir(fontCacheDir)
+        await Promise.all(
+            cachedFiles.map((file) =>
+                fs.promises.rm(path.join(fontCacheDir, file), { force: true, recursive: true }),
+            ),
+        )
+        await session.defaultSession.clearCache()
     })
 }

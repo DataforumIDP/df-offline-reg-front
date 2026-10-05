@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useSnackbar } from 'notistack'
 import { saveAs } from 'file-saver'
+import { useSchemeQuery } from '@/hooks/queries/useSchemeQueries'
 import {
     fetchExcelTemplate,
     fetchImportExcel,
@@ -16,6 +17,7 @@ import { useProjectQuery } from '@/hooks/queries/useProjectQueries'
 import ExportModal from '@/components/organisms/ExportModal'
 import ExportScansModal from '@/components/organisms/ExportScansModal'
 import ClearConfirmModal from '@/components/organisms/ClearConfirmModal'
+import ImportReviewModal from './ImportReviewModal'
 import styles from './ExportImportSection.module.css'
 
 const ExportImportSection = () => {
@@ -27,6 +29,7 @@ const ExportImportSection = () => {
 
     // Получаем данные проекта
     const { data: project } = useProjectQuery(id!)
+    const { data: scheme } = useSchemeQuery(id || '')
 
     // Состояния загрузки
     const [isDownloadingTemplate, setIsDownloadingTemplate] = useState(false)
@@ -35,6 +38,7 @@ const ExportImportSection = () => {
     const [isClearingPrints, setIsClearingPrints] = useState(false)
     const [isClearingScannerLogs, setIsClearingScannerLogs] = useState(false)
     const [isDragging, setIsDragging] = useState(false)
+    const [reviewFile, setReviewFile] = useState<File | null>(null)
 
     // Состояния модалок
     const [isExportModalOpen, setIsExportModalOpen] = useState(false)
@@ -59,13 +63,17 @@ const ExportImportSection = () => {
         }
     }
 
-    // Обработка загрузки файла
-    const handleFileUpload = async (file: File) => {
-        if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+    // Выбор файла запускает проверку случайной записи до импорта.
+    const handleFileUpload = useCallback((file: File) => {
+        if (!/\.(xlsx|xls)$/i.test(file.name)) {
             enqueueSnackbar('Поддерживаются только Excel файлы (.xlsx, .xls)', { variant: 'error' })
             return
         }
 
+        setReviewFile(file)
+    }, [enqueueSnackbar])
+
+    const handleImportFile = async (file: File) => {
         setIsUploading(true)
         try {
             const result: ImportExcelResult = await fetchImportExcel(projectIdNum, file)
@@ -75,6 +83,10 @@ const ExportImportSection = () => {
                     variant: 'success',
                 })
                 queryClient.invalidateQueries({ queryKey: ['participants', projectIdNum] })
+                setReviewFile(null)
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = ''
+                }
             } else if (result.errors && result.errors.length > 0) {
                 // Показываем первые 3 ошибки
                 const errorMessages = result.errors
@@ -106,9 +118,16 @@ const ExportImportSection = () => {
             }
         } finally {
             setIsUploading(false)
-            if (fileInputRef.current) {
-                fileInputRef.current.value = ''
-            }
+        }
+    }
+
+    const handleCancelImport = () => {
+        if (isUploading) {
+            return
+        }
+        setReviewFile(null)
+        if (fileInputRef.current) {
+            fileInputRef.current.value = ''
         }
     }
 
@@ -144,7 +163,7 @@ const ExportImportSection = () => {
                 handleFileUpload(file)
             }
         },
-        [projectIdNum],
+        [handleFileUpload],
     )
 
     // Очистка участников
@@ -221,7 +240,9 @@ const ExportImportSection = () => {
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
-                        onClick={() => !isUploading && fileInputRef.current?.click()}
+                        onClick={() =>
+                            !isUploading && !reviewFile && fileInputRef.current?.click()
+                        }
                     >
                         {isUploading ? (
                             <div className={styles.uploadLoader}>
@@ -327,6 +348,14 @@ const ExportImportSection = () => {
                 isLoading={isClearingScannerLogs}
                 title="Очистка логов сканеров"
                 warningMessage="Это действие необратимо! Все логи сканеров будут удалены без возможности восстановления."
+            />
+
+            <ImportReviewModal
+                file={reviewFile}
+                fields={scheme?.fields ?? []}
+                isImporting={isUploading}
+                onCancel={handleCancelImport}
+                onContinue={handleImportFile}
             />
         </>
     )

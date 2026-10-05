@@ -9,7 +9,7 @@ interface ScriptEditorProps {
     label: string
     description?: string
     /** Тип скрипта влияет на jsdoc-подсказку для свойства user */
-    scriptType: 'pre' | 'post'
+    scriptType: 'pre' | 'post' | 'runtime'
 }
 
 const PRE_SCRIPT_TYPES = `
@@ -56,7 +56,7 @@ interface Utils {
     /** Лог в серверную консоль */
     log(message: string, meta?: any): Promise<{ ok: boolean }>
     /** Источник регистрации: 'webhook' | 'excel' | 'form' */
-    origin: 'webhook' | 'excel' | 'form'
+    origin: 'webhook' | 'excel' | 'form' | 'runtime'
 }
 /** Данные, которые пришли в теле запроса от пользователя (сырые, до валидации). */
 interface RequestData {
@@ -111,13 +111,31 @@ interface Utils {
     /** Лог в серверную консоль */
     log(message: string, meta?: any): Promise<{ ok: boolean }>
     /** Источник регистрации: 'webhook' | 'excel' | 'form' */
-    origin: 'webhook' | 'excel' | 'form'
+    origin: 'webhook' | 'excel' | 'form' | 'runtime'
 }
 /** Данные участника после сохранения в базе данных. */
 interface RequestData {
     /** Поля участника, сохранённые в БД (прошедшие валидацию) */
     user: Record<string, any>
     /** Набор утилит : axios, translitRuToEn, mail, origin */
+    utils: Utils
+}
+`
+
+const RUNTIME_SCRIPT_TYPES = `
+interface Utils {
+    /** Транслитерация русского текста в латиницу */
+    translitRuToEn(str: string): string
+    /** Лог в серверную консоль */
+    log(message: string, meta?: any): Promise<{ ok: boolean }>
+    /** Источник выполнения */
+    origin: 'runtime'
+}
+/** Данные участника, обрабатываемого runtime-скриптом. */
+interface RequestData {
+    /** Поля участника из базы данных; верните изменённый объект */
+    user: Record<string, any>
+    /** Набор утилит: translitRuToEn, log, origin */
     utils: Utils
 }
 `
@@ -133,82 +151,87 @@ const SPACE_OCEAN_THEME = {
     base: 'vs-dark',
     inherit: false,
     colors: {
-        'editor.background':                    '#0d1b2a',
-        'editor.foreground':                    '#c0c5ce',
-        'editor.lineHighlightBackground':       '#112236',
-        'editor.lineHighlightBorder':           '#112236',
-        'editor.selectionBackground':           '#1e3a5f',
-        'editor.inactiveSelectionBackground':   '#162d48',
-        'editor.selectionHighlightBackground':  '#1b3350',
-        'editor.findMatchBackground':           '#1e3a5f',
-        'editor.findMatchHighlightBackground':  '#162d48',
-        'editorCursor.foreground':              '#96b5b4',
-        'editorLineNumber.foreground':          '#8891a2',
-        'editorLineNumber.activeForeground':    '#c0c5ce',
-        'editorIndentGuide.background':         '#353b49',
-        'editorIndentGuide.activeBackground':   '#669190',
-        'editorWidget.background':              '#0d1b2a',
-        'editorWidget.border':                  '#1e3a5f',
-        'editorSuggestWidget.background':       '#0d1b2a',
-        'editorSuggestWidget.border':           '#1e3a5f',
-        'editorSuggestWidget.foreground':       '#c0c5ce',
-        'editorSuggestWidget.selectedBackground':'#1e3a5f',
-        'editorSuggestWidget.highlightForeground':'#7ec8e3',
-        'editorHoverWidget.background':         '#0d1b2a',
-        'editorHoverWidget.border':             '#1e3a5f',
-        'editorError.foreground':               '#bf5f69',
-        'editorWarning.foreground':             '#ebcb8b',
-        'editorInfo.foreground':                '#96b5b4',
-        'scrollbar.shadow':                     '#060e18',
-        'scrollbarSlider.background':           '#1e3a5f',
-        'scrollbarSlider.hoverBackground':      '#163050',
-        'scrollbarSlider.activeBackground':     '#163050',
+        'editor.background': '#0d1b2a',
+        'editor.foreground': '#c0c5ce',
+        'editor.lineHighlightBackground': '#112236',
+        'editor.lineHighlightBorder': '#112236',
+        'editor.selectionBackground': '#1e3a5f',
+        'editor.inactiveSelectionBackground': '#162d48',
+        'editor.selectionHighlightBackground': '#1b3350',
+        'editor.findMatchBackground': '#1e3a5f',
+        'editor.findMatchHighlightBackground': '#162d48',
+        'editorCursor.foreground': '#96b5b4',
+        'editorLineNumber.foreground': '#8891a2',
+        'editorLineNumber.activeForeground': '#c0c5ce',
+        'editorIndentGuide.background': '#353b49',
+        'editorIndentGuide.activeBackground': '#669190',
+        'editorWidget.background': '#0d1b2a',
+        'editorWidget.border': '#1e3a5f',
+        'editorSuggestWidget.background': '#0d1b2a',
+        'editorSuggestWidget.border': '#1e3a5f',
+        'editorSuggestWidget.foreground': '#c0c5ce',
+        'editorSuggestWidget.selectedBackground': '#1e3a5f',
+        'editorSuggestWidget.highlightForeground': '#7ec8e3',
+        'editorHoverWidget.background': '#0d1b2a',
+        'editorHoverWidget.border': '#1e3a5f',
+        'editorError.foreground': '#bf5f69',
+        'editorWarning.foreground': '#ebcb8b',
+        'editorInfo.foreground': '#96b5b4',
+        'scrollbar.shadow': '#060e18',
+        'scrollbarSlider.background': '#1e3a5f',
+        'scrollbarSlider.hoverBackground': '#163050',
+        'scrollbarSlider.activeBackground': '#163050',
     },
     rules: [
         // базовый текст
-        { token: '',                        foreground: 'c0c5ce' },
+        { token: '', foreground: 'c0c5ce' },
         // ключевые слова: const, let, return, if…
-        { token: 'keyword',                 foreground: 'c792ea', fontStyle: 'italic' },
-        { token: 'keyword.flow',            foreground: 'c792ea', fontStyle: 'italic' },
-        { token: 'storage.type',            foreground: 'c792ea', fontStyle: 'italic' },
-        { token: 'storage',                 foreground: 'c792ea' },
+        { token: 'keyword', foreground: 'c792ea', fontStyle: 'italic' },
+        { token: 'keyword.flow', foreground: 'c792ea', fontStyle: 'italic' },
+        { token: 'storage.type', foreground: 'c792ea', fontStyle: 'italic' },
+        { token: 'storage', foreground: 'c792ea' },
         // строки
-        { token: 'string',                  foreground: 'c3e88d' },
-        { token: 'string.escape',           foreground: '7ec8e3' },
+        { token: 'string', foreground: 'c3e88d' },
+        { token: 'string.escape', foreground: '7ec8e3' },
         // числа
-        { token: 'number',                  foreground: 'f78c6c' },
+        { token: 'number', foreground: 'f78c6c' },
         // булевы / null / undefined / this
-        { token: 'constant',                foreground: '7ec8e3' },
-        { token: 'constant.language',       foreground: '7ec8e3' },
+        { token: 'constant', foreground: '7ec8e3' },
+        { token: 'constant.language', foreground: '7ec8e3' },
         // комментарии
-        { token: 'comment',                 foreground: '546e7a', fontStyle: 'italic' },
+        { token: 'comment', foreground: '546e7a', fontStyle: 'italic' },
         // типы / классы
-        { token: 'type.identifier',         foreground: 'ffcb6b' },
-        { token: 'entity.name.type',        foreground: 'ffcb6b' },
+        { token: 'type.identifier', foreground: 'ffcb6b' },
+        { token: 'entity.name.type', foreground: 'ffcb6b' },
         // идентификаторы
-        { token: 'identifier',              foreground: 'c0c5ce' },
+        { token: 'identifier', foreground: 'c0c5ce' },
         // операторы
-        { token: 'operator',                foreground: '89ddff' },
+        { token: 'operator', foreground: '89ddff' },
         // разделители
-        { token: 'delimiter',               foreground: 'c0c5ce' },
-        { token: 'delimiter.bracket',       foreground: 'c0c5ce' },
-        { token: 'delimiter.parenthesis',   foreground: 'c0c5ce' },
-        { token: 'delimiter.curly',         foreground: 'c0c5ce' },
+        { token: 'delimiter', foreground: 'c0c5ce' },
+        { token: 'delimiter.bracket', foreground: 'c0c5ce' },
+        { token: 'delimiter.parenthesis', foreground: 'c0c5ce' },
+        { token: 'delimiter.curly', foreground: 'c0c5ce' },
         // регулярки
-        { token: 'regexp',                  foreground: '7ec8e3' },
+        { token: 'regexp', foreground: '7ec8e3' },
         // переменные
-        { token: 'variable',                foreground: 'f07178' },
+        { token: 'variable', foreground: 'f07178' },
     ],
 }
 
 // ── Monaco beforeMount: регистрируем тему и типы ──────────────────────────
 const configureMonaco =
-    (scriptType: 'pre' | 'post'): BeforeMount =>
+    (scriptType: 'pre' | 'post' | 'runtime'): BeforeMount =>
     (monaco) => {
         // Тема
         monaco.editor.defineTheme('space-ocean', SPACE_OCEAN_THEME)
 
-        const typeDefs = scriptType === 'pre' ? PRE_SCRIPT_TYPES : POST_SCRIPT_TYPES
+        const typeDefs =
+            scriptType === 'pre'
+                ? PRE_SCRIPT_TYPES
+                : scriptType === 'runtime'
+                  ? RUNTIME_SCRIPT_TYPES
+                  : POST_SCRIPT_TYPES
 
         const tsDefaults = monaco.languages.typescript.typescriptDefaults
 
@@ -246,8 +269,14 @@ export const ScriptEditor = ({
     const exitFullscreen = useCallback(() => setFullscreen(false), [])
 
     useEffect(() => {
-        if (!fullscreen) return
-        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') exitFullscreen() }
+        if (!fullscreen) {
+            return
+        }
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                exitFullscreen()
+            }
+        }
         window.addEventListener('keydown', onKey)
         return () => window.removeEventListener('keydown', onKey)
     }, [fullscreen, exitFullscreen])
@@ -325,45 +354,50 @@ export const ScriptEditor = ({
     return (
         <>
             {/* Fullscreen portal — рендерится в document.body, минуя stacking context Dialog */}
-            {fullscreen && createPortal(
-                <div
-                    style={{
-                        position: 'fixed',
-                        inset: 0,
-                        zIndex: 99999,
-                        background: '#0d1b2a',
-                        display: 'flex',
-                        flexDirection: 'column',
-                    }}
-                >
+            {fullscreen &&
+                createPortal(
                     <div
                         style={{
-                            height: HEADER_H,
+                            position: 'fixed',
+                            inset: 0,
+                            zIndex: 99999,
+                            background: '#0d1b2a',
                             display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            padding: '0 16px',
-                            borderBottom: '1px solid #1e3a5f',
-                            flexShrink: 0,
+                            flexDirection: 'column',
                         }}
                     >
-                        <Text variant="subheader-2" style={{ color: '#c0c5ce' }}>
-                            {label}
-                        </Text>
-                        <Button view="flat" size="s" onClick={exitFullscreen}>
-                            Свернуть ✕
-                        </Button>
-                    </div>
-                    <div style={{ height: `calc(100vh - ${HEADER_H}px)` }}>
-                        {editor}
-                    </div>
-                </div>,
-                document.body
-            )}
+                        <div
+                            style={{
+                                height: HEADER_H,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '0 16px',
+                                borderBottom: '1px solid #1e3a5f',
+                                flexShrink: 0,
+                            }}
+                        >
+                            <Text variant="subheader-2" style={{ color: '#c0c5ce' }}>
+                                {label}
+                            </Text>
+                            <Button view="flat" size="s" onClick={exitFullscreen}>
+                                Свернуть ✕
+                            </Button>
+                        </div>
+                        <div style={{ height: `calc(100vh - ${HEADER_H}px)` }}>{editor}</div>
+                    </div>,
+                    document.body,
+                )}
 
             {/* Обычный вид — всегда в DOM, редактор скрыт когда открыт fullscreen */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                    }}
+                >
                     <label
                         style={{
                             display: 'block',
@@ -402,8 +436,11 @@ export const ScriptEditor = ({
 
                 <Text variant="caption-2" color="secondary">
                     Стрелочная функция{' '}
-                    <code style={{ fontFamily: 'monospace' }}>(data: RequestData) =&gt; {'{ ... }'}</code>
-                    . Введите <code style={{ fontFamily: 'monospace' }}>data.</code> для авто-дополнения. Очистите поле, чтобы отключить скрипт.
+                    <code style={{ fontFamily: 'monospace' }}>
+                        (data: RequestData) =&gt; {'{ ... }'}
+                    </code>
+                    . Введите <code style={{ fontFamily: 'monospace' }}>data.</code> для
+                    авто-дополнения. Очистите поле, чтобы отключить скрипт.
                 </Text>
             </div>
         </>

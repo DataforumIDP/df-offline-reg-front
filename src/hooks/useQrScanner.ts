@@ -130,8 +130,11 @@ export const useQrScanner = ({
                     await printOrSend(blob, printCopies)
                     await fetchPrintParticipant(Number(projectId), participant.id).catch(() => {})
                     enqueueSnackbar('Бейдж отправлен на печать', { variant: 'success' })
-                } catch {
-                    enqueueSnackbar('Ошибка при печати', { variant: 'error' })
+                } catch (error) {
+                    enqueueSnackbar(
+                        error instanceof Error ? error.message : 'Ошибка при печати',
+                        { variant: 'error' },
+                    )
                 }
 
                 return

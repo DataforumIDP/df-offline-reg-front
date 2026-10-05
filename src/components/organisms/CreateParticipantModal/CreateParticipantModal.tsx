@@ -266,7 +266,10 @@ export const CreateParticipantModal = ({
                 await fetchPrintParticipant(Number(projectId), participantId)
             } catch (err) {
                 console.error('Print error:', err)
-                enqueueSnackbar('Ошибка при генерации PDF', { variant: 'error' })
+                enqueueSnackbar(
+                    err instanceof Error ? err.message : 'Ошибка при генерации PDF',
+                    { variant: 'error' },
+                )
             }
         },
         [templateEditor, projectId, printCopies, enqueueSnackbar],

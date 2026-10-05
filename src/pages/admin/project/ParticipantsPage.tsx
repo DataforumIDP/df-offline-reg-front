@@ -1,7 +1,10 @@
-import { Text, Button, Loader, Tooltip, Hotkey } from '@gravity-ui/uikit'
-import { Plus, Printer, Magnifier } from '@gravity-ui/icons'
-import { useMemo, useCallback } from 'react'
+import { Text, Button, Loader, Tooltip, Hotkey, Dialog, Alert } from '@gravity-ui/uikit'
+import { Plus, Printer, Magnifier, TrashBin } from '@gravity-ui/icons'
+import { useMemo, useCallback, useState } from 'react'
+import axios from 'axios'
 import { useParams } from 'react-router-dom'
+import { useSnackbar } from 'notistack'
+import { useQueryClient } from '@tanstack/react-query'
 import { PageWrapper, PageHeader, PageHeaderActions, SearchInput } from '@/components/atoms'
 import { ParticipantsTable } from '@/components/organisms/ParticipantsTable'
 import { ParticipantModal } from '@/components/organisms/ParticipantModal'
@@ -12,11 +15,15 @@ import { useSchemeQuery } from '@/hooks/queries/useSchemeQueries'
 import { useProjectQuery } from '@/hooks/queries/useProjectQueries'
 import { useParticipantsState, useParticipantsHotkeys, useMassPrint } from '@/hooks'
 import { useQrScanner } from '@/hooks/useQrScanner'
-import { type Participant } from '@/services/api/participants'
+import { fetchDeleteParticipants, type Participant } from '@/services/api/participants'
 import { getProjectPrintCopies } from '@/utils/projectPrintSettings'
 
 const ProjectParticipantsPage = () => {
     const { id: projectId } = useParams<{ id: string }>()
+    const { enqueueSnackbar } = useSnackbar()
+    const queryClient = useQueryClient()
+    const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false)
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false)
 
     // Хук управления состоянием с синхронизацией URL
     const state = useParticipantsState({
@@ -91,6 +98,64 @@ const ProjectParticipantsPage = () => {
         [state],
     )
 
+    const handleBulkDelete = async () => {
+        const participantIds = state.selectedIds.map(Number)
+        if (
+            participantIds.length === 0 ||
+            participantIds.some(
+                (participantId) => !Number.isInteger(participantId) || participantId <= 0,
+            )
+        ) {
+            enqueueSnackbar('Не удалось определить выбранных участников', { variant: 'error' })
+            return
+        }
+
+        setIsBulkDeleting(true)
+        try {
+            const result = await fetchDeleteParticipants(Number(projectId), participantIds)
+            enqueueSnackbar(result.message, { variant: 'success' })
+            state.setSelectedIds([])
+            setIsBulkDeleteModalOpen(false)
+            await queryClient.invalidateQueries({ queryKey: ['participants', Number(projectId)] })
+            await queryClient.invalidateQueries({ queryKey: ['participant-logs-stats', Number(projectId)] })
+        } catch (error) {
+            console.error('Bulk participant delete failed:', error)
+            const responseData = axios.isAxiosError(error)
+                ? (error.response?.data as
+                      | { message?: unknown; errors?: unknown }
+                      | undefined)
+                : undefined
+            const responseErrors =
+                responseData?.errors && typeof responseData.errors === 'object'
+                    ? Object.values(responseData.errors as Record<string, unknown>).flatMap(
+                          (value) => {
+                              if (typeof value === 'string') {
+                                  return [value]
+                              }
+                              if (value && typeof value === 'object') {
+                                  return Object.values(value as Record<string, unknown>).filter(
+                                      (nested): nested is string => typeof nested === 'string',
+                                  )
+                              }
+                              return []
+                          },
+                      )
+                    : []
+            const message =
+                (typeof responseData?.message === 'string' && responseData.message) ||
+                responseErrors.join('\n') ||
+                (error instanceof Error
+                    ? error.message
+                    : 'Не удалось удалить выбранных участников')
+            enqueueSnackbar(
+                message,
+                { variant: 'error' },
+            )
+        } finally {
+            setIsBulkDeleting(false)
+        }
+    }
+
     return (
         <PageWrapper>
             <PageHeader>
@@ -111,6 +176,19 @@ const ProjectParticipantsPage = () => {
                                 Печать ({state.selectedIds.length})
                             </Button>
                         </Tooltip>
+                    )}
+                    {state.selectedIds.length > 0 && (
+                        <Button
+                            view="outlined-danger"
+                            size="l"
+                            onClick={() => setIsBulkDeleteModalOpen(true)}
+                            disabled={state.isPrinting}
+                        >
+                            <Button.Icon>
+                                <TrashBin />
+                            </Button.Icon>
+                            Удалить ({state.selectedIds.length})
+                        </Button>
                     )}
                     {hasCodeField && (
                         <Tooltip content={<Hotkey view="dark" value="alt+f" />} placement="top">
@@ -211,6 +289,36 @@ const ProjectParticipantsPage = () => {
                 projectId={projectId || ''}
                 onParticipantFound={state.openParticipantModal}
             />
+
+            <Dialog
+                open={isBulkDeleteModalOpen}
+                onClose={() => {
+                    if (!isBulkDeleting) {
+                        setIsBulkDeleteModalOpen(false)
+                    }
+                }}
+            >
+                <Dialog.Header caption="Удалить выбранных участников?" />
+                <Dialog.Body>
+                    <div style={{ minWidth: '350px' }}>
+                        <Alert
+                            theme="danger"
+                            message={`Будет удалено участников: ${state.selectedIds.length}. Это действие нельзя отменить.`}
+                        />
+                    </div>
+                </Dialog.Body>
+                <Dialog.Footer
+                    onClickButtonCancel={() => setIsBulkDeleteModalOpen(false)}
+                    onClickButtonApply={handleBulkDelete}
+                    textButtonCancel="Отмена"
+                    textButtonApply={`Удалить ${state.selectedIds.length}`}
+                    propsButtonCancel={{ disabled: isBulkDeleting }}
+                    propsButtonApply={{
+                        loading: isBulkDeleting,
+                        view: 'outlined-danger',
+                    }}
+                />
+            </Dialog>
         </PageWrapper>
     )
 }

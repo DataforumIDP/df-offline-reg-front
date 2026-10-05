@@ -126,7 +126,10 @@ export const useMassPrint = ({
             setSelectedIds([])
         } catch (err) {
             console.error('Mass print error:', err)
-            enqueueSnackbar('Ошибка при генерации PDF', { variant: 'error' })
+            enqueueSnackbar(
+                err instanceof Error ? err.message : 'Ошибка при генерации PDF',
+                { variant: 'error' },
+            )
         } finally {
             setIsPrinting(false)
         }

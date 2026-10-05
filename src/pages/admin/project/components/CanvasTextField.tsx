@@ -60,7 +60,9 @@ const CanvasTextField = ({ element, screenPxPerMm, zoom, canvasWidthMm }: Canvas
 
     // Стили текста
     const textStyle: React.CSSProperties = {
-        fontFamily: element.fontFamily,
+        fontFamily: element.fontFamily.startsWith('local::')
+            ? element.fontFamily.slice('local::'.length)
+            : element.fontFamily,
         fontSize: fontSizeInPx,
         fontWeight: element.fontWeight,
         fontStyle: element.fontStyle,

@@ -329,7 +329,11 @@ export async function preloadTemplateFonts(
     const familiesToLoad = new Set<string>()
 
     for (const el of elements) {
-        if (el.type === 'text' && el.fontFamily) {
+        if (
+            el.type === 'text' &&
+            el.fontFamily &&
+            !el.fontFamily.startsWith('local::')
+        ) {
             familiesToLoad.add(el.fontFamily)
         }
     }
@@ -371,6 +375,7 @@ export async function preloadTemplateFonts(
  */
 export function clearFontCache(): void {
     loadedFonts.clear()
+    cloudFontsRegistry.clear()
     console.log('Font cache cleared')
 }
 
@@ -561,7 +566,7 @@ async function loadFontFromUrl(url: string): Promise<ArrayBuffer> {
     // Web (и облачные шрифты в Electron): обычный fetch
     console.log(`Loading font from: ${url}`)
     const response = await fetch(url, {
-        cache: 'force-cache',
+        cache: 'no-cache',
     })
     if (!response.ok) {
         throw new Error(`Failed to load font: ${response.status} ${response.statusText}`)
@@ -636,10 +641,21 @@ async function embedFont(
     weight: 'normal' | 'bold',
     style: 'normal' | 'italic',
 ): Promise<{ fontName: string; fontStyle: string }> {
-    // Получаем URL шрифта (с fallback для системных шрифтов)
-    const { url: fontUrl, actualFont } = getFontUrl(fontFamily, weight, style)
+    const localFontFamily = fontFamily.startsWith('local::')
+        ? fontFamily.slice('local::'.length)
+        : null
+    if (localFontFamily && !window.electronAPI?.readWindowsFontFile) {
+        throw new Error(
+            `Локальный шрифт "${localFontFamily}" можно использовать только в Electron-приложении`,
+        )
+    }
 
-    if (!fontUrl) {
+    // Получаем URL шрифта (с fallback для системных шрифтов)
+    const { url: fontUrl, actualFont } = localFontFamily
+        ? { url: null, actualFont: fontFamily }
+        : getFontUrl(fontFamily, weight, style)
+
+    if (!fontUrl && !localFontFamily) {
         console.warn(`Font ${fontFamily} not available and no fallback found`)
         // Возвращаем Roboto как последний fallback
         const robotoResult = getFontUrl(DEFAULT_CYRILLIC_FONT, weight, style)
@@ -652,7 +668,10 @@ async function embedFont(
 
     // Формируем уникальный ключ для этого варианта шрифта
     const fontKey = getFontKey(actualFont, weight, style)
-    const jsPdfFontName = actualFont.replace(/\s+/g, '') + '_' + fontKey.split('-')[1]
+    const jsPdfFontName =
+        (localFontFamily ? `local_${localFontFamily}` : actualFont).replace(/\s+/g, '') +
+        '_' +
+        fontKey.split('-')[1]
     const jsPdfFontStyle = 'normal' // Мы встраиваем каждый вариант как отдельный шрифт
 
     // Проверяем, уже ли загружен этот шрифт в документ
@@ -667,9 +686,33 @@ async function embedFont(
 
     if (!fontData) {
         try {
-            fontData = await loadFontFromUrl(fontUrl)
+            if (localFontFamily) {
+                const variant = fontKey.split('-').pop() as
+                    | 'normal'
+                    | 'bold'
+                    | 'italic'
+                    | 'bolditalic'
+                const base64 = await window.electronAPI!.readWindowsFontFile(
+                    localFontFamily,
+                    variant,
+                )
+                const binary = atob(base64)
+                const bytes = new Uint8Array(binary.length)
+                for (let i = 0; i < binary.length; i++) {
+                    bytes[i] = binary.charCodeAt(i)
+                }
+                fontData = bytes.buffer
+            } else {
+                fontData = await loadFontFromUrl(fontUrl!)
+            }
             loadedFonts.set(fontKey, fontData)
         } catch (error) {
+            if (localFontFamily) {
+                const detail = error instanceof Error ? error.message : String(error)
+                throw new Error(
+                    `Не удалось загрузить локальный шрифт "${localFontFamily}": ${detail}`,
+                )
+            }
             console.error(`Failed to load font ${actualFont}:`, error)
             // Пробуем Roboto как fallback
             if (actualFont !== DEFAULT_CYRILLIC_FONT) {
@@ -684,7 +727,7 @@ async function embedFont(
 
     // Добавляем шрифт в jsPDF
     // Каждый вариант (regular, bold, italic, bolditalic) - отдельный шрифт
-    const vfsFileName = `${fontKey}.ttf`
+    const vfsFileName = `${localFontFamily ? jsPdfFontName : fontKey}.ttf`
     doc.addFileToVFS(vfsFileName, fontBase64)
     doc.addFont(vfsFileName, jsPdfFontName, jsPdfFontStyle)
 
