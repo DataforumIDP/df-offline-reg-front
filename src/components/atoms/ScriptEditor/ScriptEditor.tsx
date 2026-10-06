@@ -123,6 +123,13 @@ interface RequestData {
 `
 
 const RUNTIME_SCRIPT_TYPES = `
+/** Событие сканирования участника */
+interface ScanEvent {
+    /** Зона, в которой было выполнено сканирование */
+    zone: string | number
+    /** Время события в ISO-формате или timestamp в миллисекундах */
+    timestamp: string | number
+}
 interface Utils {
     /** Транслитерация русского текста в латиницу */
     translitRuToEn(str: string): string
@@ -135,6 +142,8 @@ interface Utils {
 interface RequestData {
     /** Поля участника из базы данных; верните изменённый объект */
     user: Record<string, any>
+    /** События сканирования участника */
+    scans: ScanEvent[]
     /** Набор утилит: translitRuToEn, log, origin */
     utils: Utils
 }
@@ -143,6 +152,13 @@ interface RequestData {
 const PLACEHOLDER = `(data: RequestData) => {
     const user = data.user
     // Верните изменённые данные
+    return user
+}`
+
+const RUNTIME_PLACEHOLDER = `(data: RequestData) => {
+    const user = data.user
+    const scans = data.scans // [{ zone, timestamp }, ...]
+    // Верните изменённые данные участника
     return user
 }`
 
@@ -261,7 +277,8 @@ export const ScriptEditor = ({
     description,
     scriptType,
 }: ScriptEditorProps) => {
-    const displayValue = value ?? PLACEHOLDER
+    const placeholder = scriptType === 'runtime' ? RUNTIME_PLACEHOLDER : PLACEHOLDER
+    const displayValue = value ?? placeholder
     const [fullscreen, setFullscreen] = useState(false)
 
     const editorPath = `webhook-${scriptType}-script.ts`
@@ -283,7 +300,7 @@ export const ScriptEditor = ({
 
     const handleChange = (val: string | undefined) => {
         const trimmed = val?.trim() ?? ''
-        onChange(trimmed === '' || trimmed === PLACEHOLDER.trim() ? null : trimmed)
+        onChange(trimmed === '' || trimmed === placeholder.trim() ? null : trimmed)
     }
 
     const HEADER_H = 49
