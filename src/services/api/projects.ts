@@ -15,7 +15,7 @@ export interface ProjectStats {
 
 export type ScanMode = 'base' | 'direction' | 'view'
 
-export type ScanActionType = 'none' | 'print' | 'change'
+export type ScanActionType = 'none' | 'print' | 'change' | 'view'
 
 export interface ScanAction {
     type: ScanActionType

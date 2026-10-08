@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, Text, Select, RadioGroup, Button, TextInput, Icon } from '@gravity-ui/uikit'
 import { Plus, TrashBin } from '@gravity-ui/icons'
 import { useSnackbar } from 'notistack'
@@ -17,6 +17,7 @@ interface Props {
 
 const ACTION_OPTIONS = [
     { value: 'none', content: 'Ничего' },
+    { value: 'view', content: 'Просмотр' },
     { value: 'print', content: 'Печать' },
     { value: 'change', content: 'Изменение' },
 ]
@@ -41,30 +42,12 @@ const ScanActionSection = ({ project }: Props) => {
         setRules(project.scanActionRules ?? [])
     }, [project.scanActionRules])
 
-    const save = useCallback(
-        (nextRules: ScanActionRule[]) => {
-            updateMutation.mutate(
-                { id: project.id, data: { scanActionRules: nextRules } },
-                {
-                    onSuccess: () => enqueueSnackbar('Сохранено', { variant: 'success' }),
-                    onError: () => enqueueSnackbar('Ошибка сохранения', { variant: 'error' }),
-                },
-            )
-        },
-        [project.id, updateMutation, enqueueSnackbar],
-    )
+    const hasUnsavedChanges =
+        JSON.stringify(rules) !== JSON.stringify(project.scanActionRules ?? [])
 
     const updateRule = (index: number, patch: Partial<ScanActionRule>) => {
         const next = rules.map((r, i) => (i === index ? { ...r, ...patch } : r))
         setRules(next)
-        // Сохраняем только если правило достаточно заполнено
-        const rule = next[index]
-        const isReady =
-            rule.prefix.trim() !== '' &&
-            (rule.type === 'none' ||
-                rule.type === 'print' ||
-                (rule.type === 'change' && rule.fieldKey))
-        if (isReady) save(next)
     }
 
     const addRule = () => {
@@ -74,7 +57,16 @@ const ScanActionSection = ({ project }: Props) => {
     const removeRule = (index: number) => {
         const next = rules.filter((_, i) => i !== index)
         setRules(next)
-        save(next)
+    }
+
+    const handleSave = () => {
+        updateMutation.mutate(
+            { id: project.id, data: { scanActionRules: rules } },
+            {
+                onSuccess: () => enqueueSnackbar('Сохранено', { variant: 'success' }),
+                onError: () => enqueueSnackbar('Ошибка сохранения', { variant: 'error' }),
+            },
+        )
     }
 
     const renderValueInput = (rule: ScanActionRule, index: number) => {
@@ -149,9 +141,13 @@ const ScanActionSection = ({ project }: Props) => {
                                     <TextInput
                                         value={rule.prefix}
                                         onUpdate={(v) => updateRule(index, { prefix: v })}
-                                        placeholder="например: code_"
+                                        placeholder="например: code_ или _"
                                         size="m"
                                     />
+                                    <Text variant="caption-2" color="secondary">
+                                        Для режима без префикса укажите _. Тогда код длиной от 8
+                                        символов будет искаться целиком.
+                                    </Text>
                                 </div>
                                 <Button
                                     view="flat-danger"
@@ -198,10 +194,20 @@ const ScanActionSection = ({ project }: Props) => {
                     <Icon data={Plus} size={16} />
                     Добавить правило
                 </Button>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button
+                        view="action"
+                        size="m"
+                        onClick={handleSave}
+                        disabled={!hasUnsavedChanges || updateMutation.isPending}
+                        loading={updateMutation.isPending}
+                    >
+                        Сохранить
+                    </Button>
+                </div>
             </div>
         </Card>
     )
 }
 
 export default ScanActionSection
-

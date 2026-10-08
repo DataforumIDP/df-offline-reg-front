@@ -8,6 +8,7 @@ import {
     useRunProjectRuntimeScript,
     useUpdateProjectScripts,
 } from '@/hooks/queries/useProjectScriptsQueries'
+import { RuntimeLogsDialog } from './components/RuntimeLogsDialog'
 
 const ProjectScriptsPage = () => {
     const { id: projectId } = useParams<{ id: string }>()
@@ -23,6 +24,7 @@ const ProjectScriptsPage = () => {
     const [runtimeScript, setRuntimeScript] = useState<string | null>(null)
     const [activeTab, setActiveTab] = useState<string>('pre')
     const [isRunConfirmOpen, setIsRunConfirmOpen] = useState(false)
+    const [isRuntimeLogsOpen, setIsRuntimeLogsOpen] = useState(false)
 
     useEffect(() => {
         if (data) {
@@ -81,19 +83,28 @@ const ProjectScriptsPage = () => {
                         Сохранить
                     </Button>
                     {activeTab === 'runtime' && (
-                        <Button
-                            view="outlined"
-                            size="l"
-                            disabled={
-                                !runtimeScript?.trim() ||
-                                hasUnsavedChanges ||
-                                runRuntimeMutation.isPending
-                            }
-                            loading={runRuntimeMutation.isPending}
-                            onClick={() => setIsRunConfirmOpen(true)}
-                        >
-                            Запустить runtime-скрипт
-                        </Button>
+                        <>
+                            <Button
+                                view="outlined"
+                                size="l"
+                                onClick={() => setIsRuntimeLogsOpen(true)}
+                            >
+                                Просмотр логов
+                            </Button>
+                            <Button
+                                view="outlined"
+                                size="l"
+                                disabled={
+                                    !runtimeScript?.trim() ||
+                                    hasUnsavedChanges ||
+                                    runRuntimeMutation.isPending
+                                }
+                                loading={runRuntimeMutation.isPending}
+                                onClick={() => setIsRunConfirmOpen(true)}
+                            >
+                                Запустить runtime-скрипт
+                            </Button>
+                        </>
                     )}
                 </PageHeaderActions>
             </PageHeader>
@@ -228,6 +239,11 @@ const ProjectScriptsPage = () => {
                     }}
                 />
             </Dialog>
+            <RuntimeLogsDialog
+                open={isRuntimeLogsOpen}
+                onClose={() => setIsRuntimeLogsOpen(false)}
+                projectId={pid}
+            />
         </PageWrapper>
     )
 }

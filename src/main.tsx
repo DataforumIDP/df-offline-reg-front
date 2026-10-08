@@ -2,10 +2,10 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { Provider } from 'react-redux'
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
-import { ThemeProvider, configure } from '@gravity-ui/uikit'
+import { configure } from '@gravity-ui/uikit'
 import { settings as dateSettings } from '@gravity-ui/date-utils'
-import App from './App'
 import { store } from '@store/store'
+import { AppThemeProvider } from '@/theme/AppThemeProvider'
 
 import '@gravity-ui/uikit/styles/fonts.css'
 import '@gravity-ui/uikit/styles/styles.css'
@@ -22,9 +22,7 @@ function renderApp() {
         <React.StrictMode>
             <Provider store={store}>
                 <QueryClientProvider client={queryClient}>
-                    <ThemeProvider theme="dark">
-                        <App />
-                    </ThemeProvider>
+                    <AppThemeProvider />
                 </QueryClientProvider>
             </Provider>
         </React.StrictMode>,

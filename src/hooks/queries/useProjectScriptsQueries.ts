@@ -3,6 +3,8 @@ import {
     fetchProjectScripts,
     updateProjectScripts,
     runProjectRuntimeScript,
+    fetchProjectRuntimeRuns,
+    clearProjectRuntimeRuns,
     ProjectScripts,
 } from '@/services/api/projectScripts'
 
@@ -30,9 +32,34 @@ export const useRunProjectRuntimeScript = (projectId: number) => {
     const qc = useQueryClient()
     return useMutation({
         mutationFn: () => runProjectRuntimeScript(projectId),
-        onSuccess: () => {
+        onSettled: () => {
             qc.invalidateQueries({ queryKey: ['participants', projectId] })
             qc.invalidateQueries({ queryKey: ['participant', projectId] })
+            qc.invalidateQueries({ queryKey: ['project-runtime-runs', projectId] })
         },
+    })
+}
+
+export const useProjectRuntimeRunsQuery = (
+    projectId: number,
+    search: string,
+    enabled: boolean,
+) =>
+    useQuery({
+        queryKey: ['project-runtime-runs', projectId, search],
+        queryFn: () => fetchProjectRuntimeRuns(projectId, search),
+        enabled: !!projectId && enabled,
+        staleTime: 0,
+        refetchInterval: enabled ? 3000 : false,
+    })
+
+export const useClearProjectRuntimeRuns = (projectId: number) => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: () => clearProjectRuntimeRuns(projectId),
+        onSuccess: () =>
+            qc.invalidateQueries({
+                queryKey: ['project-runtime-runs', projectId],
+            }),
     })
 }

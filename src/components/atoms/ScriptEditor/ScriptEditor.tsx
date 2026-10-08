@@ -123,18 +123,22 @@ interface RequestData {
 `
 
 const RUNTIME_SCRIPT_TYPES = `
+/** Markdown-текст для записи в runtime-журнал */
+type MD = string
 /** Событие сканирования участника */
 interface ScanEvent {
-    /** Зона, в которой было выполнено сканирование */
-    zone: string | number
-    /** Время события в ISO-формате или timestamp в миллисекундах */
-    timestamp: string | number
+    /** Название зоны сканирования */
+    zone: string
+    /** Время события в формате ISO */
+    timestamp: string
 }
 interface Utils {
     /** Транслитерация русского текста в латиницу */
     translitRuToEn(str: string): string
     /** Лог в серверную консоль */
     log(message: string, meta?: any): Promise<{ ok: boolean }>
+    /** Записать Markdown-сообщение в журнал текущего запуска */
+    logger(text: MD): Promise<{ ok: boolean }>
     /** Источник выполнения */
     origin: 'runtime'
 }
@@ -144,7 +148,7 @@ interface RequestData {
     user: Record<string, any>
     /** События сканирования участника */
     scans: ScanEvent[]
-    /** Набор утилит: translitRuToEn, log, origin */
+    /** Набор утилит: translitRuToEn, log, logger, origin */
     utils: Utils
 }
 `
@@ -158,6 +162,7 @@ const PLACEHOLDER = `(data: RequestData) => {
 const RUNTIME_PLACEHOLDER = `(data: RequestData) => {
     const user = data.user
     const scans = data.scans // [{ zone, timestamp }, ...]
+    // await data.utils.logger('## Отладка: участник ' + data.user.id)
     // Верните изменённые данные участника
     return user
 }`

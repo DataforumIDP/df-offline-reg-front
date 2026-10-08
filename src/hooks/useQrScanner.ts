@@ -59,6 +59,7 @@ export interface UseQrScannerOptions {
  * 3. Если между нажатиями прошло > SCANNER_TIMEOUT_MS — сбрасываем буфер (новый ввод).
  * 4. Enter завершает ввод немедленно.
  * 5. Проверяет совпадение префиксов из scanActionRules — выполняет соответствующее действие.
+ *    Префикс "_" работает как fallback для считанных кодов длиной от 8 символов.
  * 6. Если ни один префикс не совпал — сбрасывает тихо.
  *
  * Требует, чтобы на странице уже работал useMassPrint (он инициализирует templateEditor в Redux).
@@ -88,13 +89,23 @@ export const useQrScanner = ({
                 return
             }
 
-            // Ищем правило с совпадающим префиксом
-            const rule = scanActionRules.find((r) => r.prefix && code.startsWith(r.prefix))
+            // Сначала ищем точное префиксное правило; "_" используется как fallback без префикса.
+            const rule =
+                scanActionRules.find(
+                    (candidate) =>
+                        candidate.prefix.trim() !== '_' &&
+                        candidate.prefix.length > 0 &&
+                        code.startsWith(candidate.prefix),
+                ) ??
+                (code.length >= 8
+                    ? scanActionRules.find((candidate) => candidate.prefix.trim() === '_')
+                    : undefined)
             if (!rule || rule.type === 'none') {
                 return
             }
 
-            const bareCode = code.slice(rule.prefix.length)
+            const bareCode =
+                rule.prefix.trim() === '_' ? code : code.slice(rule.prefix.length)
 
             let participant: Participant
             try {
@@ -105,6 +116,11 @@ export const useQrScanner = ({
                 } else {
                     enqueueSnackbar('Ошибка при поиске участника', { variant: 'error' })
                 }
+                return
+            }
+
+            if (rule.type === 'view') {
+                openParticipantModal(participant.id)
                 return
             }
 
