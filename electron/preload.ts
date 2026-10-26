@@ -42,7 +42,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // Print
     getPrinters: (): Promise<Printer[]> => ipcRenderer.invoke('get-printers'),
     getPrintSettings: async (): Promise<PrintSettings> => {
-        const raw = await ipcRenderer.invoke('get-print-settings');
+        const raw = await ipcRenderer.invoke('get-print-settings')
         // Маппинг selectedPrinter -> printer
         return {
             mode: raw.printMode,
@@ -50,20 +50,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
             labelWidth: raw.labelWidth,
             labelHeight: raw.labelHeight,
             orientation: raw.orientation,
-        };
+        }
     },
     setPrintSettings: async (settings: Partial<PrintSettings>): Promise<boolean> => {
         // Маппинг printer -> selectedPrinter
-        const mapped: any = { ...settings };
+        const mapped: any = { ...settings }
         if ('printer' in mapped) {
-            mapped.selectedPrinter = mapped.printer;
-            delete mapped.printer;
+            mapped.selectedPrinter = mapped.printer
+            delete mapped.printer
         }
         if ('mode' in mapped) {
-            mapped.printMode = mapped.mode;
-            delete mapped.mode;
+            mapped.printMode = mapped.mode
+            delete mapped.mode
         }
-        return ipcRenderer.invoke('set-print-settings', mapped);
+        return ipcRenderer.invoke('set-print-settings', mapped)
     },
     printPdf: (data: {
         pdfBase64: string
@@ -79,6 +79,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     minimize: () => ipcRenderer.send('window-minimize'),
     close: () => ipcRenderer.send('window-close'),
     toggleFullscreen: () => ipcRenderer.send('window-toggle-fullscreen'),
+    openCameraWindow: (deviceId: string): Promise<boolean> =>
+        ipcRenderer.invoke('open-camera-window', deviceId),
+    closeCameraWindow: (): Promise<boolean> => ipcRenderer.invoke('close-camera-window'),
 
     // Font loading for jsPDF (renderer can't fetch file:// fonts)
     readFontFile: (urlOrPath: string): Promise<string> =>
@@ -89,15 +92,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
         variant: 'normal' | 'bold' | 'italic' | 'bolditalic',
     ): Promise<string> => ipcRenderer.invoke('read-windows-font-file', family, variant),
     // Предзагрузить и закэшировать облачные шрифты локально
-    cacheCloudFonts: (urls: string[]): Promise<Array<{ url: string; ok: boolean; error?: string }>> =>
+    cacheCloudFonts: (
+        urls: string[],
+    ): Promise<Array<{ url: string; ok: boolean; error?: string }>> =>
         ipcRenderer.invoke('cache-cloud-fonts', urls),
     clearAppCaches: (): Promise<void> => ipcRenderer.invoke('clear-app-caches'),
 
     // Updates
     checkForUpdates: (): Promise<{ checking: boolean; error?: string }> =>
         ipcRenderer.invoke('check-for-updates'),
-    installUpdate: (): Promise<void> =>
-        ipcRenderer.invoke('install-update'),
+    installUpdate: (): Promise<void> => ipcRenderer.invoke('install-update'),
     onUpdateStatus: (callback: (status: UpdateStatus) => void) => {
         const handler = (_: any, status: UpdateStatus) => callback(status)
         ipcRenderer.on('update-status', handler)
@@ -107,8 +111,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('set-update-server', url),
     getUpdateServer: (): Promise<string> => ipcRenderer.invoke('get-update-server'),
     getUpdateChannel: (): Promise<string> => ipcRenderer.invoke('get-update-channel'),
-    setUpdateChannel: (channel: string): Promise<boolean> => ipcRenderer.invoke('set-update-channel', channel),
+    setUpdateChannel: (channel: string): Promise<boolean> =>
+        ipcRenderer.invoke('set-update-channel', channel),
 
     // Network discovery
-    scanNetwork: (): Promise<Array<{ url: string; name: string }>> => ipcRenderer.invoke('scan-network'),
+    scanNetwork: (): Promise<Array<{ url: string; name: string }>> =>
+        ipcRenderer.invoke('scan-network'),
 })

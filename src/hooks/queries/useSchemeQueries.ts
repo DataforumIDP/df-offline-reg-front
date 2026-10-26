@@ -14,6 +14,7 @@ export interface SchemeField {
         maxLength?: number
         isMark?: boolean // только для bool — поле-отметка для режима выдачи сканера
         isPhone?: boolean // только для text — поле содержит номер телефона
+        live?: boolean // только для img — фотография с камеры
         isHidden?: boolean // true = поле скрыто от операторов (только для admin)
         random?: boolean // только для code — генерировать случайное значение
         codeLength?: number // только для code+random — длина генерируемого кода

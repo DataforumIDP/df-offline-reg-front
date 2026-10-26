@@ -56,7 +56,9 @@ export interface ElectronAPI {
         variant: 'normal' | 'bold' | 'italic' | 'bolditalic',
     ) => Promise<string>
     // Предзагрузить и закэшировать список облачных шрифтов локально (вызывается при старте приложения)
-    cacheCloudFonts: (urls: string[]) => Promise<Array<{ url: string; ok: boolean; error?: string }>>
+    cacheCloudFonts: (
+        urls: string[],
+    ) => Promise<Array<{ url: string; ok: boolean; error?: string }>>
     clearAppCaches: () => Promise<void>
 
     // App info
@@ -66,6 +68,8 @@ export interface ElectronAPI {
     minimize: () => void
     close: () => void
     toggleFullscreen: () => void
+    openCameraWindow: (deviceId: string) => Promise<boolean>
+    closeCameraWindow: () => Promise<boolean>
 
     // Updates
     checkForUpdates: () => Promise<{ checking: boolean; error?: string }>

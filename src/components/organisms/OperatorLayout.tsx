@@ -12,8 +12,10 @@ import {
 } from '@/store/slices/uiSlice'
 import logoUrl from '../../assets/logo.svg?react'
 import styles from './AdminLayout.module.css'
+import { useOperatorControlSocket } from '@/hooks/useOperatorControlSocket'
 
 const OperatorLayout = () => {
+    useOperatorControlSocket()
     const dispatch = useAppDispatch()
     const sidebarCompact = useAppSelector((state) => state.ui.sidebarCompact)
     const sidebarMobileOpen = useAppSelector((state) => state.ui.sidebarMobileOpen)

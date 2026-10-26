@@ -1,6 +1,7 @@
 import { Text } from '@gravity-ui/uikit'
 import { PageWrapper, PageHeader } from '@/components/atoms'
 import { PrintSettings } from '@/components/organisms/PrintSettings'
+import { CameraSettings } from '@/components/organisms/CameraSettings'
 import { SessionsBlock } from '@/components/organisms/SessionsBlock'
 import styles from './AccountSettingsPage.module.css'
 
@@ -21,6 +22,16 @@ const AccountSettingsPage = () => {
                         других устройствах или авторизовать новое устройство по QR коду.
                     </Text>
                     <SessionsBlock />
+                </div>
+
+                <div className={styles.section}>
+                    <Text variant="header-1" className={styles.sectionTitle}>
+                        Камера
+                    </Text>
+                    <Text variant="body-2" color="secondary" className={styles.sectionDescription}>
+                        Выберите устройство для съёмки идентификационного фото.
+                    </Text>
+                    <CameraSettings />
                 </div>
 
                 <div className={styles.section}>

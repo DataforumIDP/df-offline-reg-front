@@ -17,6 +17,7 @@ import { useParticipantsState, useParticipantsHotkeys, useMassPrint } from '@/ho
 import { useQrScanner } from '@/hooks/useQrScanner'
 import { fetchDeleteParticipants, type Participant } from '@/services/api/participants'
 import { getProjectPrintCopies } from '@/utils/projectPrintSettings'
+import { useProjectCameraWindow } from '@/hooks/useProjectCameraWindow'
 
 const ProjectParticipantsPage = () => {
     const { id: projectId } = useParams<{ id: string }>()
@@ -33,6 +34,7 @@ const ProjectParticipantsPage = () => {
     // Запросы данных
     const { data: schemeData, isLoading: schemeLoading } = useSchemeQuery(projectId || '')
     const { data: projectData } = useProjectQuery(projectId ? Number(projectId) : 0)
+    useProjectCameraWindow(projectId || '', projectData?.splitScreenCamera === true)
 
     const {
         data: participantsData,
@@ -117,13 +119,13 @@ const ProjectParticipantsPage = () => {
             state.setSelectedIds([])
             setIsBulkDeleteModalOpen(false)
             await queryClient.invalidateQueries({ queryKey: ['participants', Number(projectId)] })
-            await queryClient.invalidateQueries({ queryKey: ['participant-logs-stats', Number(projectId)] })
+            await queryClient.invalidateQueries({
+                queryKey: ['participant-logs-stats', Number(projectId)],
+            })
         } catch (error) {
             console.error('Bulk participant delete failed:', error)
             const responseData = axios.isAxiosError(error)
-                ? (error.response?.data as
-                      | { message?: unknown; errors?: unknown }
-                      | undefined)
+                ? (error.response?.data as { message?: unknown; errors?: unknown } | undefined)
                 : undefined
             const responseErrors =
                 responseData?.errors && typeof responseData.errors === 'object'
@@ -144,13 +146,8 @@ const ProjectParticipantsPage = () => {
             const message =
                 (typeof responseData?.message === 'string' && responseData.message) ||
                 responseErrors.join('\n') ||
-                (error instanceof Error
-                    ? error.message
-                    : 'Не удалось удалить выбранных участников')
-            enqueueSnackbar(
-                message,
-                { variant: 'error' },
-            )
+                (error instanceof Error ? error.message : 'Не удалось удалить выбранных участников')
+            enqueueSnackbar(message, { variant: 'error' })
         } finally {
             setIsBulkDeleting(false)
         }
@@ -169,6 +166,7 @@ const ProjectParticipantsPage = () => {
                                 size="l"
                                 onClick={handleMassPrint}
                                 loading={state.isPrinting}
+                                disabled={state.isPrinting}
                             >
                                 <Button.Icon>
                                     <Printer />

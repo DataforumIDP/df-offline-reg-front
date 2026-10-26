@@ -1,4 +1,4 @@
-import { app } from 'electron'
+import { app, session } from 'electron'
 import { fileURLToPath } from 'url'
 import * as path from 'path'
 import updaterPkg from 'electron-updater'
@@ -6,7 +6,7 @@ const { autoUpdater } = (updaterPkg as any) || updaterPkg
 import { SimpleStore } from './store.js'
 import { printPdfGhostscript } from './printJob.js'
 import { PrintServer } from './printServer.js'
-import { createMainWindow } from './window.js'
+import { createCameraWindow, createMainWindow } from './window.js'
 import { setupIPC } from './ipc.js'
 
 // Provide __filename and __dirname for ESM runtime
@@ -18,7 +18,6 @@ let mainWindow: Electron.BrowserWindow | null = null
 let printServer: PrintServer | null = null
 let isQuitting = false
 const isDev = !app.isPackaged
-
 
 // ===== Single instance lock =====
 const gotTheLock = app.requestSingleInstanceLock()
@@ -61,41 +60,82 @@ function configureAutoUpdater() {
     })
     autoUpdater.on('update-available', (info: any) => {
         console.log('[Updater] update available:', info)
-        mainWindow?.webContents.send('update-status', { status: 'available', version: info.version })
+        mainWindow?.webContents.send('update-status', {
+            status: 'available',
+            version: info.version,
+        })
     })
     autoUpdater.on('update-not-available', () => {
         console.log('[Updater] update not available')
         mainWindow?.webContents.send('update-status', { status: 'not-available' })
     })
     autoUpdater.on('download-progress', (progress: any) => {
-        mainWindow?.webContents.send('update-status', { status: 'downloading', percent: progress.percent })
+        mainWindow?.webContents.send('update-status', {
+            status: 'downloading',
+            percent: progress.percent,
+        })
     })
     autoUpdater.on('update-downloaded', (info: any) => {
-        mainWindow?.webContents.send('update-status', { status: 'downloaded', version: info.version })
+        mainWindow?.webContents.send('update-status', {
+            status: 'downloaded',
+            version: info.version,
+        })
         // Нативный диалог убран — управление установкой через UI-модалку
     })
     autoUpdater.on('error', (error: any) => {
         console.log('[Updater] error:', error)
         mainWindow?.webContents.send('update-status', { status: 'error', error: error.message })
     })
-    setTimeout(() => { autoUpdater.checkForUpdates().catch(() => {}) }, 5000)
+    setTimeout(() => {
+        autoUpdater.checkForUpdates().catch(() => {})
+    }, 5000)
 }
 
 // ===== App lifecycle =====
 app.whenReady().then(async () => {
     store = new SimpleStore()
+    session.defaultSession.setPermissionRequestHandler(
+        (webContents, permission, callback, details) => {
+            const mediaTypes = 'mediaTypes' in details ? details.mediaTypes : undefined
+            const isVideoOnlyRequest =
+                permission === 'media' &&
+                mediaTypes?.includes('video') === true &&
+                mediaTypes.includes('audio') === false
+            const url = webContents.getURL()
+            const isAppWindow = app.isPackaged
+                ? url.startsWith('file://')
+                : url.startsWith('http://localhost:3100')
+            callback(isVideoOnlyRequest && isAppWindow)
+        },
+    )
     mainWindow = createMainWindow(isDev, getIconPath(), __dirname)
     // Start print server
-    printServer = new PrintServer(store.get('printServerPort'), store.get('selectedPrinter'), async (filePath, printer, copies) => {
-        await printPdfGhostscript(filePath, printer, store.get('labelWidth'), store.get('labelHeight'), copies, store.get('orientation'))
-    })
+    printServer = new PrintServer(
+        store.get('printServerPort'),
+        store.get('selectedPrinter'),
+        async (filePath, printer, copies) => {
+            const printId = `print-server-${Date.now()}`
+            await printPdfGhostscript(
+                filePath,
+                printer,
+                store.get('labelWidth'),
+                store.get('labelHeight'),
+                copies,
+                store.get('orientation'),
+                printId,
+                (id, event, details) => console.info(`[PrintDebug] ${id} ${event}`, details ?? {}),
+            )
+        },
+    )
     try {
         await printServer.start()
         console.log(`[PrintServer] Started on port ${store.get('printServerPort')}`)
     } catch (err) {
         console.error('[PrintServer] Failed to start:', err)
     }
-    setupIPC(store, printServer, mainWindow)
+    setupIPC(store, printServer, mainWindow, (parentWindow, deviceId) =>
+        createCameraWindow(parentWindow, deviceId, __dirname),
+    )
     configureAutoUpdater()
     app.on('activate', () => {
         if (mainWindow === null) {

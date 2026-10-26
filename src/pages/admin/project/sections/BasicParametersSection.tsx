@@ -41,6 +41,7 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
     const [colorRow, setColorRow] = useState(false)
     const [repeatPrintEnabled, setRepeatPrintEnabled] = useState(false)
     const [repeatPrintCount, setRepeatPrintCount] = useState(1)
+    const [splitScreenCamera, setSplitScreenCamera] = useState(false)
     const [dateStart, setDateStart] = useState<Date | null>(null)
     const [dateEnd, setDateEnd] = useState<Date | null>(null)
 
@@ -57,6 +58,7 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
         setColorRow(project.colorRow ?? false)
         setRepeatPrintEnabled(project.repeatPrintEnabled ?? false)
         setRepeatPrintCount(normalizePrintCopies(project.repeatPrintCount))
+        setSplitScreenCamera(project.splitScreenCamera ?? false)
         setDateStart(new Date(project.dateStart))
         setDateEnd(new Date(project.dateEnd))
     }, [project])
@@ -129,7 +131,10 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
             setRepeatPrintEnabled(checked)
             setRepeatPrintCount(nextCount)
             updateMutation.mutate(
-                { id: project.id, data: { repeatPrintEnabled: checked, repeatPrintCount: nextCount } },
+                {
+                    id: project.id,
+                    data: { repeatPrintEnabled: checked, repeatPrintCount: nextCount },
+                },
                 {
                     onSuccess: () => {
                         enqueueSnackbar('Сохранено', { variant: 'success' })
@@ -147,6 +152,21 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
             setRepeatPrintCount(nextCount)
             updateMutation.mutate(
                 { id: project.id, data: { repeatPrintCount: nextCount } },
+                {
+                    onSuccess: () => {
+                        enqueueSnackbar('Сохранено', { variant: 'success' })
+                    },
+                },
+            )
+        },
+        [project.id, updateMutation, enqueueSnackbar],
+    )
+
+    const handleSplitScreenCameraChange = useCallback(
+        (checked: boolean) => {
+            setSplitScreenCamera(checked)
+            updateMutation.mutate(
+                { id: project.id, data: { splitScreenCamera: checked } },
                 {
                     onSuccess: () => {
                         enqueueSnackbar('Сохранено', { variant: 'success' })
@@ -289,6 +309,15 @@ const BasicParametersSection = ({ project }: BasicParametersSectionProps) => {
                         size="l"
                     >
                         Многоразовая печать
+                    </Checkbox>
+                </div>
+                <div style={{ marginTop: '8px' }}>
+                    <Checkbox
+                        checked={splitScreenCamera}
+                        onUpdate={handleSplitScreenCameraChange}
+                        size="l"
+                    >
+                        Split screen для камеры
                     </Checkbox>
                 </div>
                 {repeatPrintEnabled && (

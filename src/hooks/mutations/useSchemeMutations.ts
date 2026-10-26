@@ -9,6 +9,7 @@ interface CreateSchemeFieldPayload {
         type: 'text' | 'list' | 'bool' | 'id' | 'img' | 'code'
         uniq: boolean
         showInScanner?: boolean
+        live?: boolean
         maxLength?: number
         listSettings?: {
             multiple: boolean
@@ -29,6 +30,7 @@ interface UpdateSchemeFieldPayload {
         isMark?: boolean
         isPhone?: boolean
         isHidden?: boolean
+        live?: boolean
         listSettings?: {
             multiple: boolean
             items: Array<{ value: string; color?: string; isHidden?: boolean }>

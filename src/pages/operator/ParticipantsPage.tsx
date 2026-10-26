@@ -14,6 +14,7 @@ import { useParticipantsState, useParticipantsHotkeys, useMassPrint } from '@/ho
 import { useQrScanner } from '@/hooks/useQrScanner'
 import { type Participant } from '@/services/api/participants'
 import { getProjectPrintCopies } from '@/utils/projectPrintSettings'
+import { useProjectCameraWindow } from '@/hooks/useProjectCameraWindow'
 
 const OperatorParticipantsPage = () => {
     const { user, isLoading: authLoading } = useAppSelector((state) => state.auth)
@@ -31,6 +32,7 @@ const OperatorParticipantsPage = () => {
     // Запросы данных
     const { data: schemeData, isLoading: schemeLoading } = useSchemeQuery(projectId || '')
     const { data: projectData } = useProjectQuery(projectId ? Number(projectId) : 0)
+    useProjectCameraWindow(projectId, projectData?.splitScreenCamera === true)
 
     const {
         data: participantsData,
@@ -130,6 +132,7 @@ const OperatorParticipantsPage = () => {
                                 size="l"
                                 onClick={handleMassPrint}
                                 loading={state.isPrinting}
+                                disabled={state.isPrinting}
                             >
                                 <Button.Icon>
                                     <Printer />

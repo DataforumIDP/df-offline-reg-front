@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { useSnackbar } from 'notistack'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAppSelector } from '@/store/hooks'
 import {
     generateMultipleBadgesPdf,
@@ -72,6 +73,7 @@ export const useQrScanner = ({
     enabled = true,
 }: UseQrScannerOptions) => {
     const { enqueueSnackbar } = useSnackbar()
+    const queryClient = useQueryClient()
     const templateEditor = useAppSelector((state) => state.templateEditor)
 
     const bufferRef = useRef<string>('')
@@ -145,6 +147,9 @@ export const useQrScanner = ({
                     ])
                     await printOrSend(blob, printCopies)
                     await fetchPrintParticipant(Number(projectId), participant.id).catch(() => {})
+                    await queryClient.invalidateQueries({
+                        queryKey: ['participant-print-count', Number(projectId), participant.id],
+                    })
                     enqueueSnackbar('Бейдж отправлен на печать', { variant: 'success' })
                 } catch (error) {
                     enqueueSnackbar(
@@ -163,20 +168,52 @@ export const useQrScanner = ({
                 }
 
                 try {
-                    await fetchUpdateParticipant(Number(projectId), participant.id, updatedData)
+                    const updatedParticipant = await fetchUpdateParticipant(
+                        Number(projectId),
+                        participant.id,
+                        updatedData,
+                    )
+                    queryClient.setQueryData(
+                        ['participant', Number(projectId), participant.id],
+                        updatedParticipant,
+                    )
+                    await Promise.all([
+                        queryClient.invalidateQueries({
+                            queryKey: ['participant', Number(projectId), participant.id],
+                        }),
+                        queryClient.invalidateQueries({
+                            queryKey: ['participant-logs', Number(projectId), participant.id],
+                        }),
+                        queryClient.invalidateQueries({
+                            queryKey: ['participants', Number(projectId)],
+                        }),
+                        queryClient.invalidateQueries({
+                            queryKey: ['participant-logs-stats', Number(projectId)],
+                        }),
+                    ])
                     enqueueSnackbar('Данные участника обновлены', { variant: 'success' })
                 } catch {
                     enqueueSnackbar('Ошибка при обновлении участника', { variant: 'error' })
                 }
             }
         },
-        [projectId, scanActionRules, printCopies, openParticipantModal, templateEditor, enqueueSnackbar],
+        [
+            projectId,
+            scanActionRules,
+            printCopies,
+            openParticipantModal,
+            templateEditor,
+            enqueueSnackbar,
+            queryClient,
+        ],
     )
 
     // ── Слушатель клавиатуры ─────────────────────────────────────────────────
 
     useEffect(() => {
-        if (!enabled) return
+        if (!enabled) {
+            return
+        }
 
         const handleKeyDown = (e: KeyboardEvent) => {
             // Не перехватываем когда фокус в текстовом поле
@@ -190,15 +227,21 @@ export const useQrScanner = ({
                     active.tagName.toLowerCase() === 'textarea' ||
                     active.isContentEditable)
 
-            if (isTextInput) return
+            if (isTextInput) {
+                return
+            }
 
             // Пропускаем сочетания с модификаторами (кроме Shift — он нужен для заглавных)
-            if (e.ctrlKey || e.altKey || e.metaKey) return
+            if (e.ctrlKey || e.altKey || e.metaKey) {
+                return
+            }
 
             const isPrintable = e.key.length === 1
             const isEnter = e.key === 'Enter'
 
-            if (!isPrintable && !isEnter) return
+            if (!isPrintable && !isEnter) {
+                return
+            }
 
             const now = Date.now()
 
@@ -216,6 +259,11 @@ export const useQrScanner = ({
                     timerRef.current = null
                 }
                 if (captured.length > 0) {
+                    e.preventDefault()
+                    e.stopImmediatePropagation()
+                    if (active?.tagName.toLowerCase() === 'button') {
+                        active.blur()
+                    }
                     void executeScanAction(captured)
                 }
                 return
@@ -224,7 +272,9 @@ export const useQrScanner = ({
             bufferRef.current += e.key
 
             // Таймер сработает если Enter не придёт (нестандартный сканер без Enter)
-            if (timerRef.current) clearTimeout(timerRef.current)
+            if (timerRef.current) {
+                clearTimeout(timerRef.current)
+            }
             timerRef.current = setTimeout(() => {
                 const captured = bufferRef.current
                 bufferRef.current = ''
@@ -235,10 +285,23 @@ export const useQrScanner = ({
             }, SCANNER_TIMEOUT_MS)
         }
 
-        document.addEventListener('keydown', handleKeyDown)
+        const blurClickedButton = (e: MouseEvent) => {
+            const target = e.target
+            if (!(target instanceof Element)) {
+                return
+            }
+
+            target.closest('button')?.blur()
+        }
+
+        document.addEventListener('keydown', handleKeyDown, true)
+        document.addEventListener('click', blurClickedButton, true)
         return () => {
-            document.removeEventListener('keydown', handleKeyDown)
-            if (timerRef.current) clearTimeout(timerRef.current)
+            document.removeEventListener('keydown', handleKeyDown, true)
+            document.removeEventListener('click', blurClickedButton, true)
+            if (timerRef.current) {
+                clearTimeout(timerRef.current)
+            }
         }
     }, [enabled, executeScanAction])
 }

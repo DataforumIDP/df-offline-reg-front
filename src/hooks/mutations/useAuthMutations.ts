@@ -10,6 +10,8 @@ import {
 } from '@/services/api/auth'
 import type { LoginRequest, LoginResponse, FormErrors, RegisterOperatorRequest } from '@/types/auth'
 import { AxiosError } from 'axios'
+import { useAppSelector } from '@/store/hooks'
+import { UserRole } from '@/types/auth'
 
 const saveTokens = (accessToken: string, refreshToken: string) => {
     localStorage.setItem('accessToken', accessToken)
@@ -160,13 +162,14 @@ export const useRegisterOperatorMutation = () => {
 export const useLogoutMutation = () => {
     const dispatch = useAppDispatch()
     const navigate = useNavigate()
+    const user = useAppSelector((state) => state.auth.user)
 
     return useMutation<void, Error>({
         mutationFn: fetchLogout,
         onSettled: () => {
             clearTokens()
             dispatch(clearUser())
-            navigate('/')
+            navigate(user?.role === UserRole.OPERATOR ? '/operator' : '/')
         },
     })
 }

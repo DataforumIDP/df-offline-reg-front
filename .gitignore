@@ -29,3 +29,4 @@ dist-ssr
 /dist-electron
 /build
 /release
+/public/monaco

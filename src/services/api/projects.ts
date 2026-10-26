@@ -41,6 +41,7 @@ export interface Project {
     colorRow?: boolean
     repeatPrintEnabled?: boolean
     repeatPrintCount?: number
+    splitScreenCamera?: boolean
     journalEnabled?: boolean
     rulesField?: string | null
     scanMode?: ScanMode

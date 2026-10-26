@@ -7,6 +7,7 @@ import { useProjectQuery } from '@/hooks/queries/useProjectQueries'
 import { useDeleteProjectMutation } from '@/hooks/mutations/useProjectMutations'
 import BasicParametersSection from './sections/BasicParametersSection'
 import ExportImportSection from './sections/ExportImportSection'
+import OperatorActionsSection from './sections/OperatorActionsSection'
 import ProjectSchemeSection from './sections/ProjectSchemeSection'
 import ScanActionSection from './sections/ScanActionSection'
 import styles from './SettingsPage.module.css'
@@ -92,6 +93,7 @@ const ProjectSettingsPage = () => {
                 {/* Основные настройки */}
                 <div className={styles.settingsColumn}>
                     {project && <BasicParametersSection project={project} />}
+                    <OperatorActionsSection />
                     <ExportImportSection />
                 </div>
             </div>

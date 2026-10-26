@@ -21,6 +21,7 @@ import { getProjectPrintCopies } from '@/utils/projectPrintSettings'
 import { UserRole } from '@/types/auth'
 import { ConfirmDeleteModal } from './ConfirmDeleteModal'
 import { SelectWithOther, PhoneInput } from '@/components/atoms'
+import CameraImageCapture from '@/components/organisms/CameraImageCapture/CameraImageCapture'
 
 const PRINT_AFTER_SAVE_STORAGE_KEY = 'rega_edit_participant_print_after_save'
 
@@ -38,13 +39,26 @@ const ImageField = ({
     onChange,
     label,
     disabled,
+    live = false,
 }: {
     value: string
     onChange: (v: string) => void
     label: string
     disabled?: boolean
+    live?: boolean
 }) => {
     const [lightboxOpen, setLightboxOpen] = useState(false)
+
+    if (live) {
+        return (
+            <CameraImageCapture
+                value={value}
+                label={label}
+                onChange={onChange}
+                disabled={disabled}
+            />
+        )
+    }
 
     // Если есть URL изображения - показываем его
     if (value && (value.startsWith('http://') || value.startsWith('https://'))) {
@@ -259,10 +273,9 @@ export const ParticipantModal = ({
                 )
             } catch (err) {
                 console.error('Print error:', err)
-                enqueueSnackbar(
-                    err instanceof Error ? err.message : 'Ошибка при генерации PDF',
-                    { variant: 'error' },
-                )
+                enqueueSnackbar(err instanceof Error ? err.message : 'Ошибка при генерации PDF', {
+                    variant: 'error',
+                })
             } finally {
                 setIsPrinting(false)
             }
@@ -331,7 +344,16 @@ export const ParticipantModal = ({
                 enqueueSnackbar('Ошибка при обновлении участника', { variant: 'error' })
             }
         }
-    }, [participantId, scheme, formData, updateMutation, handleClose, enqueueSnackbar, printAfterSave, handlePrint])
+    }, [
+        participantId,
+        scheme,
+        formData,
+        updateMutation,
+        handleClose,
+        enqueueSnackbar,
+        printAfterSave,
+        handlePrint,
+    ])
 
     const handlePrintAfterSaveChange = useCallback((checked: boolean) => {
         setPrintAfterSave(checked)
@@ -367,7 +389,9 @@ export const ParticipantModal = ({
     // Рендер поля в зависимости от типа
     const renderField = (field: SchemeField) => {
         // Скрытые поля не отображаются операторам
-        if (field.config.isHidden && !isAdmin) return null
+        if (field.config.isHidden && !isAdmin) {
+            return null
+        }
 
         if (field.config.type === 'id') {
             // Показываем ID как readonly
@@ -400,6 +424,7 @@ export const ParticipantModal = ({
                         onChange={(v) => updateField(field.key, v)}
                         label={field.label}
                         disabled={!canEdit}
+                        live={field.config.live}
                     />
                 )
 
@@ -416,7 +441,7 @@ export const ParticipantModal = ({
                     </Checkbox>
                 )
 
-            case 'list':
+            case 'list': {
                 const items = field.config.listSettings?.items || []
                 const visibleItems = isAdmin ? items : items.filter((i) => !i.isHidden)
                 const isMultiple = field.config.listSettings?.multiple || false
@@ -453,6 +478,7 @@ export const ParticipantModal = ({
                         )}
                     </div>
                 )
+            }
 
             case 'code':
                 // Код только для чтения
@@ -647,7 +673,9 @@ export const ParticipantModal = ({
                                     </Button.Icon>
                                     Удалить
                                 </Button>
-                            ) : <span />}
+                            ) : (
+                                <span />
+                            )}
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <Button view="flat" size="l" onClick={handleClose}>
                                     Отмена
@@ -657,6 +685,7 @@ export const ParticipantModal = ({
                                     size="l"
                                     onClick={() => handlePrint()}
                                     loading={isPrinting}
+                                    disabled={isPrinting}
                                 >
                                     <Button.Icon>
                                         <Printer />

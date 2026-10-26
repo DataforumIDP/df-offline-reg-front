@@ -46,10 +46,13 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
     const [isPhone, setIsPhone] = useState(false)
     const [isHidden, setIsHidden] = useState(false)
     const [showInScanner, setShowInScanner] = useState(false)
+    const [live, setLive] = useState(false)
 
     // Функция для перезапуска генерации (отключает random, затем включает обратно)
     const handleRestartGeneration = async () => {
-        if (!field || isRestarting) return
+        if (!field || isRestarting) {
+            return
+        }
 
         setIsRestarting(true)
 
@@ -144,6 +147,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
         setIsPhone(field.config?.isPhone || false)
         setIsHidden(field.config?.isHidden || false)
         setShowInScanner(field.config?.showInScanner || false)
+        setLive(field.config?.live === true)
     }, [field, open])
 
     const handleClose = () => {
@@ -166,6 +170,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
         setIsPhone(false)
         setIsHidden(false)
         setShowInScanner(false)
+        setLive(false)
         onClose()
     }
 
@@ -195,6 +200,10 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
             uniq,
             optional,
             showInScanner,
+        }
+
+        if (typeValue === 'img') {
+            config.live = live
         }
 
         if (typeValue === 'text' && maxLength) {
@@ -249,7 +258,10 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
             if (random) {
                 const len = Number(codeLength)
                 if (!Number.isInteger(len) || len < 1 || len > 200) {
-                    setErrors({ ...newErrors, codeLength: 'Длина должна быть целым числом от 1 до 200' })
+                    setErrors({
+                        ...newErrors,
+                        codeLength: 'Длина должна быть целым числом от 1 до 200',
+                    })
                     return
                 }
                 if (!codeChars || codeChars.length < 1) {
@@ -395,6 +407,12 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
                         />
                     </div>
 
+                    {typeValue === 'img' && (
+                        <Checkbox checked={live} onUpdate={setLive}>
+                            Снимать фото с камеры
+                        </Checkbox>
+                    )}
+
                     {/* Уникальное значение */}
                     <div
                         style={{
@@ -410,10 +428,7 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
 
                     {/* Номер телефона - только для text */}
                     {typeValue === 'text' && (
-                        <Checkbox
-                            checked={isPhone}
-                            onUpdate={(checked) => setIsPhone(checked)}
-                        >
+                        <Checkbox checked={isPhone} onUpdate={(checked) => setIsPhone(checked)}>
                             Номер телефона
                         </Checkbox>
                     )}
@@ -582,19 +597,13 @@ const EditSchemeModal = ({ open, onClose, field, projectId }: EditSchemeModalPro
 
                     {/* Поле-отметка для режима выдачи сканера - только для bool */}
                     {typeValue === 'bool' && (
-                        <Checkbox
-                            checked={isMark}
-                            onUpdate={(checked) => setIsMark(checked)}
-                        >
+                        <Checkbox checked={isMark} onUpdate={(checked) => setIsMark(checked)}>
                             Поле отметки (режим выдачи сканера)
                         </Checkbox>
                     )}
 
                     {/* Скрытое поле - доступно только админу */}
-                    <Checkbox
-                        checked={isHidden}
-                        onUpdate={(checked) => setIsHidden(checked)}
-                    >
+                    <Checkbox checked={isHidden} onUpdate={(checked) => setIsHidden(checked)}>
                         Скрытое поле (только для админа)
                     </Checkbox>
 

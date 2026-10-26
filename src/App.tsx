@@ -10,6 +10,7 @@ import { clearFontCache } from '@/services/printService'
 import { useCloudFontsQuery } from '@/hooks/queries/useCloudFontsQueries'
 import type { AuthUser } from '@/types/auth'
 import { PingLayout } from '@/components/layouts'
+import { OPERATOR_CACHE_CLEAR_EVENT } from '@/utils/operatorControlEvents'
 
 function App() {
     const dispatch = useAppDispatch()
@@ -27,9 +28,11 @@ function App() {
 
         if ('caches' in window) {
             cacheTasks.push(
-                window.caches.keys().then((cacheNames) =>
-                    Promise.all(cacheNames.map((cacheName) => window.caches.delete(cacheName))),
-                ),
+                window.caches
+                    .keys()
+                    .then((cacheNames) =>
+                        Promise.all(cacheNames.map((cacheName) => window.caches.delete(cacheName))),
+                    ),
             )
         }
 
@@ -55,6 +58,11 @@ function App() {
 
         window.addEventListener('keydown', handleCacheResetHotkey)
         return () => window.removeEventListener('keydown', handleCacheResetHotkey)
+    }, [resetApplicationCaches])
+
+    useEffect(() => {
+        window.addEventListener(OPERATOR_CACHE_CLEAR_EVENT, resetApplicationCaches)
+        return () => window.removeEventListener(OPERATOR_CACHE_CLEAR_EVENT, resetApplicationCaches)
     }, [resetApplicationCaches])
 
     // При загрузке приложения восстанавливаем сессию из токена

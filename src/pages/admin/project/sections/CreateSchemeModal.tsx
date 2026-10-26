@@ -38,6 +38,7 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
         isPhone: false, // для text — поле телефона
         isHidden: false,
         showInScanner: false,
+        live: false,
     })
 
     const [errors, setErrors] = useState<Record<string, string>>({})
@@ -60,6 +61,7 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
             isPhone: false,
             isHidden: false,
             showInScanner: false,
+            live: false,
         })
         setErrors({})
         onClose()
@@ -91,6 +93,10 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
             uniq: formData.uniq,
             optional: formData.optional,
             showInScanner: formData.showInScanner,
+        }
+
+        if (formData.type === 'img') {
+            config.live = formData.live
         }
 
         if (formData.type === 'text') {
@@ -144,7 +150,10 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
             if (formData.random) {
                 const len = Number(formData.codeLength)
                 if (!Number.isInteger(len) || len < 1 || len > 200) {
-                    setErrors({ ...newErrors, codeLength: 'Длина должна быть целым числом от 1 до 200' })
+                    setErrors({
+                        ...newErrors,
+                        codeLength: 'Длина должна быть целым числом от 1 до 200',
+                    })
                     return
                 }
                 if (!formData.codeChars || formData.codeChars.length < 1) {
@@ -279,6 +288,15 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
                             size="l"
                         />
                     </div>
+
+                    {formData.type === 'img' && (
+                        <Checkbox
+                            checked={formData.live}
+                            onUpdate={(live) => setFormData({ ...formData, live })}
+                        >
+                            Снимать фото с камеры
+                        </Checkbox>
+                    )}
 
                     {/* Обязательное поле - для всех типов кроме id */}
                     {formData.type !== 'id' && (
@@ -460,7 +478,11 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
                                     size="l"
                                 />
                                 {errors.codeLength && (
-                                    <Text variant="caption-2" color="danger" style={{ marginTop: '4px', display: 'block' }}>
+                                    <Text
+                                        variant="caption-2"
+                                        color="danger"
+                                        style={{ marginTop: '4px', display: 'block' }}
+                                    >
                                         {errors.codeLength}
                                     </Text>
                                 )}
@@ -487,7 +509,11 @@ const CreateSchemeModal = ({ open, onClose, projectId }: CreateSchemeModalProps)
                                     size="l"
                                 />
                                 {errors.codeChars && (
-                                    <Text variant="caption-2" color="danger" style={{ marginTop: '4px', display: 'block' }}>
+                                    <Text
+                                        variant="caption-2"
+                                        color="danger"
+                                        style={{ marginTop: '4px', display: 'block' }}
+                                    >
                                         {errors.codeChars}
                                     </Text>
                                 )}

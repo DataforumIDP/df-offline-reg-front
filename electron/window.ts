@@ -36,3 +36,33 @@ export function createMainWindow(isDev: boolean, iconPath: string, __dirname: st
     })
     return mainWindow
 }
+
+export function createCameraWindow(
+    mainWindow: Electron.BrowserWindow,
+    deviceId: string,
+    __dirname: string,
+) {
+    const cameraWindow = new BrowserWindow({
+        width: 720,
+        height: 960,
+        minWidth: 480,
+        minHeight: 640,
+        autoHideMenuBar: true,
+        backgroundColor: '#1a1a2e',
+        webPreferences: {
+            nodeIntegration: true,
+            preload: path.join(__dirname, 'preload.js'),
+            contextIsolation: true,
+            devTools: true,
+            sandbox: false,
+        },
+    })
+    const cameraUrl = new URL(mainWindow.webContents.getURL())
+    cameraUrl.hash = `/camera?deviceId=${encodeURIComponent(deviceId)}`
+    void cameraWindow.loadURL(cameraUrl.toString())
+    cameraWindow.webContents.setWindowOpenHandler(({ url }: HandlerDetails) => {
+        shell.openExternal(url)
+        return { action: 'deny' }
+    })
+    return cameraWindow
+}

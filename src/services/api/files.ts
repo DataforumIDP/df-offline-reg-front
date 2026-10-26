@@ -21,6 +21,7 @@ const compressImage = (file: File, quality: number): Promise<Blob> => {
         const img = new Image()
         const canvas = document.createElement('canvas')
         const ctx = canvas.getContext('2d')
+        const objectUrl = URL.createObjectURL(file)
 
         img.onload = () => {
             canvas.width = img.width
@@ -29,6 +30,7 @@ const compressImage = (file: File, quality: number): Promise<Blob> => {
 
             canvas.toBlob(
                 (blob) => {
+                    URL.revokeObjectURL(objectUrl)
                     if (blob) {
                         resolve(blob)
                     } else {
@@ -40,8 +42,11 @@ const compressImage = (file: File, quality: number): Promise<Blob> => {
             )
         }
 
-        img.onerror = () => reject(new Error('Failed to load image'))
-        img.src = URL.createObjectURL(file)
+        img.onerror = () => {
+            URL.revokeObjectURL(objectUrl)
+            reject(new Error('Failed to load image'))
+        }
+        img.src = objectUrl
     })
 }
 

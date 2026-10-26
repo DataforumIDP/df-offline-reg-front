@@ -12,6 +12,7 @@ export interface ProjectSchemeField {
         optional?: boolean
         showInScanner?: boolean
         isMark?: boolean
+        live?: boolean
         maxLength?: number
         random?: boolean
         codeLength?: number

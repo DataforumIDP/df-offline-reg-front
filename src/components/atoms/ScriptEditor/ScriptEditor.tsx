@@ -1,7 +1,13 @@
-import Editor, { BeforeMount } from '@monaco-editor/react'
+import Editor, { BeforeMount, loader } from '@monaco-editor/react'
 import { Text, Button } from '@gravity-ui/uikit'
 import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
+
+loader.config({
+    paths: {
+        vs: `${import.meta.env.BASE_URL}monaco/vs`,
+    },
+})
 
 interface ScriptEditorProps {
     value: string | null
@@ -132,6 +138,14 @@ interface ScanEvent {
     /** Время события в формате ISO */
     timestamp: string
 }
+/** Событие обновления или печати участника */
+interface RuntimeLogEvent {
+    action: 'UPDATE' | 'PRINT'
+    /** Календарная дата события в базе данных, YYYY-MM-DD */
+    date: string
+    /** Поля типа checkbox, которые были true в данных на момент события */
+    checkedFields: string[]
+}
 interface Utils {
     /** Транслитерация русского текста в латиницу */
     translitRuToEn(str: string): string
@@ -148,6 +162,8 @@ interface RequestData {
     user: Record<string, any>
     /** События сканирования участника */
     scans: ScanEvent[]
+    /** События обновления и печати участника */
+    logs: RuntimeLogEvent[]
     /** Набор утилит: translitRuToEn, log, logger, origin */
     utils: Utils
 }
@@ -162,6 +178,7 @@ const PLACEHOLDER = `(data: RequestData) => {
 const RUNTIME_PLACEHOLDER = `(data: RequestData) => {
     const user = data.user
     const scans = data.scans // [{ zone, timestamp }, ...]
+    const logs = data.logs // [{ action, date, checkedFields }, ...]
     // await data.utils.logger('## Отладка: участник ' + data.user.id)
     // Верните изменённые данные участника
     return user
@@ -332,7 +349,7 @@ export const ScriptEditor = ({
                 suggestOnTriggerCharacters: true,
                 acceptSuggestionOnEnter: 'on',
                 parameterHints: { enabled: true },
-                hover: { enabled: true },
+                hover: { enabled: 'on' },
                 folding: false,
                 renderLineHighlight: 'line',
                 padding: { top: 12, bottom: 12 },
@@ -362,7 +379,7 @@ export const ScriptEditor = ({
                 suggestOnTriggerCharacters: true,
                 acceptSuggestionOnEnter: 'on',
                 parameterHints: { enabled: true },
-                hover: { enabled: true },
+                hover: { enabled: 'on' },
                 folding: false,
                 renderLineHighlight: 'line',
                 padding: { top: 36, bottom: 8 },

@@ -13,7 +13,34 @@ import { PrintServer } from './printServer.js'
 import updaterPkg from 'electron-updater'
 const { autoUpdater } = (updaterPkg as any) || updaterPkg
 
-import { app, session } from 'electron'
+import { app, session, BrowserWindow } from 'electron'
+
+let nativePrintInProgress = false
+let printDebugPathLogged = false
+
+function writePrintDebugLog(
+    printId: string,
+    event: string,
+    details: Record<string, unknown> = {},
+): void {
+    const logPath = path.join(app.getPath('userData'), 'print-debug.log')
+    if (!printDebugPathLogged) {
+        printDebugPathLogged = true
+        console.info(`[PrintDebug] Writing detailed print diagnostics to ${logPath}`)
+    }
+    const entry = {
+        timestamp: new Date().toISOString(),
+        printId,
+        event,
+        details,
+    }
+    try {
+        fs.appendFileSync(logPath, `${JSON.stringify(entry)}\n`, 'utf8')
+        console.info(`[PrintDebug] ${printId} ${event}`, details)
+    } catch (error) {
+        console.error('[PrintDebug] Failed to write print-debug.log', error, entry)
+    }
+}
 
 // ── Шрифты ───────────────────────────────────────────────────────────────────
 
@@ -70,7 +97,10 @@ function downloadFile(url: string, destPath: string): Promise<void> {
                             reject(new Error('Too many redirects while downloading font'))
                             return
                         }
-                        doRequest(new URL(res.headers.location, targetUrl).toString(), redirectsLeft - 1)
+                        doRequest(
+                            new URL(res.headers.location, targetUrl).toString(),
+                            redirectsLeft - 1,
+                        )
                         return
                     }
                     if (res.statusCode !== 200) {
@@ -150,7 +180,11 @@ function getWindowsFontIndex(): Promise<Map<string, WindowsFontFiles>> {
                 (error, stdout) => {
                     if (error) {
                         windowsFontIndexPromise = undefined
-                        reject(new Error(`Не удалось получить список шрифтов Windows: ${error.message}`))
+                        reject(
+                            new Error(
+                                `Не удалось получить список шрифтов Windows: ${error.message}`,
+                            ),
+                        )
                         return
                     }
 
@@ -200,7 +234,9 @@ function getWindowsFontIndex(): Promise<Map<string, WindowsFontFiles>> {
                                 : fontDirectories.map((directory) =>
                                       path.join(directory, path.basename(entry.file)),
                                   )
-                            const filePath = candidates.find((candidate) => fs.existsSync(candidate))
+                            const filePath = candidates.find((candidate) =>
+                                fs.existsSync(candidate),
+                            )
                             if (filePath) {
                                 const files = registryFiles.get(family) ?? {}
                                 files[variant] = filePath
@@ -240,10 +276,54 @@ async function ensureCloudFontCached(url: string): Promise<string> {
     return cachePath
 }
 
-export function setupIPC(store: SimpleStore, printServer: PrintServer, mainWindow: Electron.BrowserWindow) {
+export function setupIPC(
+    store: SimpleStore,
+    printServer: PrintServer,
+    mainWindow: Electron.BrowserWindow,
+    createCameraWindow: (
+        mainWindow: Electron.BrowserWindow,
+        deviceId: string,
+    ) => Electron.BrowserWindow,
+) {
+    let cameraWindow: Electron.BrowserWindow | null = null
+
+    ipcMain.handle('open-camera-window', (event: IpcMainInvokeEvent, deviceId: string) => {
+        if (typeof deviceId !== 'string' || deviceId.length === 0 || deviceId.length > 2048) {
+            throw new Error('Invalid camera device id')
+        }
+        if (BrowserWindow.fromWebContents(event.sender) !== mainWindow) {
+            throw new Error('Camera window can only be opened from the main window')
+        }
+
+        if (cameraWindow && !cameraWindow.isDestroyed()) {
+            const cameraUrl = new URL(mainWindow.webContents.getURL())
+            cameraUrl.hash = `/camera?deviceId=${encodeURIComponent(deviceId)}`
+            void cameraWindow.loadURL(cameraUrl.toString())
+            cameraWindow.focus()
+            return true
+        }
+
+        cameraWindow = createCameraWindow(mainWindow, deviceId)
+        cameraWindow.on('closed', () => {
+            cameraWindow = null
+        })
+        return true
+    })
+
+    ipcMain.handle('close-camera-window', (event: IpcMainInvokeEvent) => {
+        if (BrowserWindow.fromWebContents(event.sender) !== mainWindow) {
+            throw new Error('Camera window can only be closed from the main window')
+        }
+        if (cameraWindow && !cameraWindow.isDestroyed()) {
+            cameraWindow.close()
+        }
+        return true
+    })
+
     ipcMain.handle('get-printers', async () => {
         try {
-            const cmd = 'powershell -Command "Get-Printer | Select-Object Name, Default | ConvertTo-Json"'
+            const cmd =
+                'powershell -Command "Get-Printer | Select-Object Name, Default | ConvertTo-Json"'
             const { exec } = await import('child_process')
             const { promisify } = await import('util')
             const execAsync = promisify(exec)
@@ -259,34 +339,106 @@ export function setupIPC(store: SimpleStore, printServer: PrintServer, mainWindo
         }
     })
     ipcMain.handle('get-print-settings', () => store.getAll())
-    ipcMain.handle('set-print-settings', (_event: IpcMainInvokeEvent, settings: Partial<ReturnType<typeof store.getAll>>) => {
-        Object.entries(settings).forEach(([k, v]) => {
-            // @ts-ignore
-            store.set(k, v)
-        })
-        return true
-    })
-    ipcMain.handle('print-pdf', async (_event: IpcMainInvokeEvent, data: { pdfBase64: string; copies?: number; filename?: string }) => {
-        const { printMode, selectedPrinter, labelWidth, labelHeight, orientation } = store.getAll()
-        const tempDir = path.join(os.tmpdir(), 'rega-desktop')
-        if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true })
-        const filename = data.filename || `print-${Date.now()}.pdf`
-        const filePath = path.join(tempDir, filename)
-        const pdfBuffer = Buffer.from(data.pdfBase64, 'base64')
-        fs.writeFileSync(filePath, pdfBuffer)
-        try {
-            if (printMode === 'pdf-browser') {
-                await shell.openExternal(`file://${filePath}`)
-                return { success: true, mode: 'pdf-browser', message: 'PDF открыт в браузере' }
+    ipcMain.handle(
+        'set-print-settings',
+        (_event: IpcMainInvokeEvent, settings: Partial<ReturnType<typeof store.getAll>>) => {
+            Object.entries(settings).forEach(([k, v]) => {
+                // @ts-ignore
+                store.set(k, v)
+            })
+            return true
+        },
+    )
+    ipcMain.handle(
+        'print-pdf',
+        async (
+            _event: IpcMainInvokeEvent,
+            data: { pdfBase64: string; copies?: number; filename?: string },
+        ) => {
+            const printId = crypto.randomUUID()
+            const startedAt = Date.now()
+            const { printMode, selectedPrinter, labelWidth, labelHeight, orientation } =
+                store.getAll()
+            writePrintDebugLog(printId, 'ipc-print-request', {
+                printMode,
+                selectedPrinter,
+                labelWidth,
+                labelHeight,
+                orientation,
+                copies: data.copies || 1,
+                filename: data.filename,
+                pdfBase64Length: data.pdfBase64?.length,
+                nativePrintInProgress,
+            })
+            if (printMode !== 'pdf-browser' && nativePrintInProgress) {
+                writePrintDebugLog(printId, 'ipc-print-rejected', {
+                    reason: 'native-print-already-in-progress',
+                })
+                return {
+                    success: false,
+                    error: 'Предыдущее задание печати ещё выполняется. Дождитесь завершения печати.',
+                }
             }
-            if (!selectedPrinter) throw new Error('Принтер не выбран')
-            await printPdfGhostscript(filePath, selectedPrinter, labelWidth, labelHeight, data.copies || 1, orientation)
-            setTimeout(() => { try { fs.unlinkSync(filePath) } catch {} }, 5000)
-            return { success: true, mode: 'native', message: 'Отправлено на печать' }
-        } catch (error: any) {
-            return { success: false, error: error.message }
-        }
-    })
+            const tempDir = path.join(os.tmpdir(), 'rega-desktop')
+            if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true })
+            const filename = data.filename || `print-${Date.now()}.pdf`
+            const filePath = path.join(tempDir, filename)
+            const pdfBuffer = Buffer.from(data.pdfBase64, 'base64')
+            fs.writeFileSync(filePath, pdfBuffer)
+            try {
+                if (printMode === 'pdf-browser') {
+                    await shell.openExternal(`file://${filePath}`)
+                    writePrintDebugLog(printId, 'ipc-print-finished', {
+                        mode: 'pdf-browser',
+                        elapsedMs: Date.now() - startedAt,
+                    })
+                    return { success: true, mode: 'pdf-browser', message: 'PDF открыт в браузере' }
+                }
+                if (!selectedPrinter) throw new Error('Принтер не выбран')
+                nativePrintInProgress = true
+                writePrintDebugLog(printId, 'ipc-native-lock-acquired')
+                try {
+                    await printPdfGhostscript(
+                        filePath,
+                        selectedPrinter,
+                        labelWidth,
+                        labelHeight,
+                        data.copies || 1,
+                        orientation,
+                        printId,
+                        writePrintDebugLog,
+                    )
+                } finally {
+                    nativePrintInProgress = false
+                    writePrintDebugLog(printId, 'ipc-native-lock-released')
+                    try {
+                        fs.unlinkSync(filePath)
+                    } catch (error) {
+                        writePrintDebugLog(printId, 'temp-pdf-cleanup-error', {
+                            error: error instanceof Error ? error.message : String(error),
+                        })
+                    }
+                }
+                writePrintDebugLog(printId, 'ipc-print-finished', {
+                    mode: 'native',
+                    completionSignal: 'ghostscript-process-exit-not-physical-print-confirmation',
+                    elapsedMs: Date.now() - startedAt,
+                })
+                return { success: true, mode: 'native', message: 'Задание отправлено на печать' }
+            } catch (error: any) {
+                const debugLogPath = path.join(app.getPath('userData'), 'print-debug.log')
+                writePrintDebugLog(printId, 'ipc-print-failed', {
+                    error: error.message,
+                    elapsedMs: Date.now() - startedAt,
+                    debugLogPath,
+                })
+                return {
+                    success: false,
+                    error: `${error.message} (диагностика: ${debugLogPath})`,
+                }
+            }
+        },
+    )
     ipcMain.handle('check-ghostscript', async () => {
         const { findGhostscript } = await import('./ghostscript.js')
         const gsPath = await findGhostscript()
@@ -345,7 +497,7 @@ export function setupIPC(store: SimpleStore, printServer: PrintServer, mainWindo
         const nets = os.networkInterfaces()
         const subnets: string[] = []
         for (const interfaces of Object.values(nets)) {
-            for (const iface of (interfaces || [])) {
+            for (const iface of interfaces || []) {
                 if (iface.family === 'IPv4' && !iface.internal) {
                     const parts = iface.address.split('.')
                     subnets.push(`${parts[0]}.${parts[1]}.${parts[2]}.`)
@@ -360,9 +512,15 @@ export function setupIPC(store: SimpleStore, printServer: PrintServer, mainWindo
         const checkTCP = (host: string): Promise<boolean> =>
             new Promise((resolve) => {
                 const socket = net.createConnection({ host, port, timeout: 400 })
-                socket.once('connect', () => { socket.destroy(); resolve(true) })
+                socket.once('connect', () => {
+                    socket.destroy()
+                    resolve(true)
+                })
                 socket.once('error', () => resolve(false))
-                socket.once('timeout', () => { socket.destroy(); resolve(false) })
+                socket.once('timeout', () => {
+                    socket.destroy()
+                    resolve(false)
+                })
             })
 
         // HTTP-проверка: отвечает ли /ping как rega-сервер
@@ -370,13 +528,22 @@ export function setupIPC(store: SimpleStore, printServer: PrintServer, mainWindo
             new Promise((resolve) => {
                 const req = http.get(`http://${host}:${port}/ping`, { timeout: 600 }, (res) => {
                     let data = ''
-                    res.on('data', (chunk: Buffer) => { data += chunk.toString() })
+                    res.on('data', (chunk: Buffer) => {
+                        data += chunk.toString()
+                    })
                     res.on('end', () => {
-                        try { resolve(JSON.parse(data)?.status === 'ok') } catch { resolve(false) }
+                        try {
+                            resolve(JSON.parse(data)?.status === 'ok')
+                        } catch {
+                            resolve(false)
+                        }
                     })
                 })
                 req.once('error', () => resolve(false))
-                req.once('timeout', () => { req.destroy(); resolve(false) })
+                req.once('timeout', () => {
+                    req.destroy()
+                    resolve(false)
+                })
             })
 
         const found: Array<{ url: string; name: string }> = []
@@ -441,17 +608,13 @@ export function setupIPC(store: SimpleStore, printServer: PrintServer, mainWindo
 
     ipcMain.handle(
         'read-windows-font-file',
-        async (
-            _event: IpcMainInvokeEvent,
-            family: string,
-            variant: WindowsFontVariant,
-        ) => {
+        async (_event: IpcMainInvokeEvent, family: string, variant: WindowsFontVariant) => {
             const fontIndex = await getWindowsFontIndex()
             const variants = fontIndex.get(family)
             const fontPath =
                 variants?.[variant] ??
                 (variant === 'bolditalic'
-                    ? variants?.bold ?? variants?.italic ?? variants?.normal
+                    ? (variants?.bold ?? variants?.italic ?? variants?.normal)
                     : variant === 'bold' || variant === 'italic'
                       ? variants?.normal
                       : undefined)

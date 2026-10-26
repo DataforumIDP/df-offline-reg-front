@@ -9,6 +9,7 @@ import { useAppSelector } from '@/store/hooks'
 import { previewBadgePdf, PrintTemplate } from '@/services/printService'
 import { UserRole } from '@/types/auth'
 import { SelectWithOther, PhoneInput } from '@/components/atoms'
+import CameraImageCapture from '@/components/organisms/CameraImageCapture/CameraImageCapture'
 
 export interface CreateParticipantModalProps {
     open: boolean
@@ -25,11 +26,13 @@ const ImageInput = ({
     onChange,
     label,
     onError,
+    live = false,
 }: {
     value: string
     onChange: (url: string) => void
     label: string
     onError?: (msg: string) => void
+    live?: boolean
 }) => {
     const [isUploading, setIsUploading] = useState(false)
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -54,6 +57,10 @@ const ImageInput = ({
         } finally {
             setIsUploading(false)
         }
+    }
+
+    if (live) {
+        return <CameraImageCapture value={value} label={label} onChange={onChange} />
     }
 
     // Если есть загруженный URL - показываем изображение
@@ -266,10 +273,9 @@ export const CreateParticipantModal = ({
                 await fetchPrintParticipant(Number(projectId), participantId)
             } catch (err) {
                 console.error('Print error:', err)
-                enqueueSnackbar(
-                    err instanceof Error ? err.message : 'Ошибка при генерации PDF',
-                    { variant: 'error' },
-                )
+                enqueueSnackbar(err instanceof Error ? err.message : 'Ошибка при генерации PDF', {
+                    variant: 'error',
+                })
             }
         },
         [templateEditor, projectId, printCopies, enqueueSnackbar],
@@ -384,6 +390,7 @@ export const CreateParticipantModal = ({
                             onChange={(url) => updateField(field.key, url)}
                             label={field.label}
                             onError={(msg) => setErrors((prev) => ({ ...prev, [field.key]: msg }))}
+                            live={field.config.live}
                         />
                         {error && (
                             <Text
@@ -409,7 +416,7 @@ export const CreateParticipantModal = ({
                     </Checkbox>
                 )
 
-            case 'list':
+            case 'list': {
                 const items = field.config.listSettings?.items || []
                 const visibleItems = isAdmin ? items : items.filter((i) => !i.isHidden)
                 const isMultiple = field.config.listSettings?.multiple || false
@@ -445,6 +452,7 @@ export const CreateParticipantModal = ({
                         )}
                     </div>
                 )
+            }
 
             default:
                 // Телефон или обычный текст
@@ -507,7 +515,9 @@ export const CreateParticipantModal = ({
 
     // Разделяем поля на обычные и чекбоксы
     const visibleScheme = isAdmin ? scheme : scheme.filter((f) => !f.config.isHidden)
-    const nonBoolFields = visibleScheme.filter((f) => f.config.type !== 'bool' && f.config.type !== 'id')
+    const nonBoolFields = visibleScheme.filter(
+        (f) => f.config.type !== 'bool' && f.config.type !== 'id',
+    )
     const boolFields = visibleScheme.filter((f) => f.config.type === 'bool')
 
     return (

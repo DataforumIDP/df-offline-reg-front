@@ -203,7 +203,7 @@ const ProjectScriptsPage = () => {
                         {activeTab === 'runtime' && (
                             <ScriptEditor
                                 label="Runtime-скрипт"
-                                description="Запускается вручную для каждого активного участника проекта. Доступны data.user и data.scans (события сканирования с зоной и таймштампом); верните изменённый объект участника."
+                                description="Запускается вручную для каждого активного участника проекта. Доступны data.user, data.scans и data.logs (события UPDATE/PRINT с датой и отмеченными checkbox-полями); верните изменённый объект участника."
                                 scriptType="runtime"
                                 value={runtimeScript}
                                 onChange={setRuntimeScript}

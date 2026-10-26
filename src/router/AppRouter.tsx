@@ -2,7 +2,9 @@ import { Routes, Route } from 'react-router-dom'
 import { BrowserRouter, HashRouter } from 'react-router-dom'
 import NavigationListener from '@/components/atoms/NavigationListener'
 
-const isElectron = (typeof window !== 'undefined' && window.navigator?.userAgent?.includes('Electron')) || import.meta.env.MODE === 'electron'
+const isElectron =
+    (typeof window !== 'undefined' && window.navigator?.userAgent?.includes('Electron')) ||
+    import.meta.env.MODE === 'electron'
 const Router = isElectron ? HashRouter : BrowserRouter
 
 // Лейауты
@@ -29,6 +31,7 @@ import EmailAccountsPage from '@pages/admin/EmailAccountsPage'
 import OperatorLoginPage from '@pages/operator/LoginPage'
 import OperatorParticipantsPage from '@pages/operator/ParticipantsPage'
 import OperatorSettingsPage from '@pages/operator/SettingsPage'
+import CameraWindowPage from '@pages/CameraWindowPage'
 
 // Служебные страницы
 import NotFoundPage from '@pages/NotFoundPage'
@@ -41,6 +44,7 @@ const AppRouter = () => {
             <Routes>
                 {/* Главная страница */}
                 <Route path="/" element={<MainPage />} />
+                <Route path="/camera" element={<CameraWindowPage />} />
 
                 {/* Вход в админку */}
                 <Route path="/admin" element={<LoginPage />} />
