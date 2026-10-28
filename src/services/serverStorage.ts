@@ -16,6 +16,12 @@ export const DEFAULT_SERVER: ServerEntry = {
     isDefault: true,
 }
 
+export const RESERV_SERVER: ServerEntry = {
+    label: 'Dataforum RESERV1',
+    url: 'https://api-reserv-rega.dataforum.pro',
+    isDefault: true,
+}
+
 /** Загрузить пользовательские серверы из localStorage */
 export const loadCustomServers = (): ServerEntry[] => {
     try {
@@ -33,7 +39,7 @@ export const saveCustomServers = (servers: ServerEntry[]) => {
 
 /** Получить все серверы (дефолтный + пользовательские) */
 export const getAllServers = (): ServerEntry[] => {
-    return [DEFAULT_SERVER, ...loadCustomServers()]
+    return [DEFAULT_SERVER, RESERV_SERVER, ...loadCustomServers()]
 }
 
 /** Добавить пользовательский сервер */
